@@ -3,6 +3,8 @@ use std::cmp;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+use bevy::log::info;
+
 use std::sync::RwLock;
 use std::sync::Arc;
 
@@ -28,27 +30,33 @@ pub fn update_field(
 ) {
     if let Ok(mut field) = field_query.get_single_mut() {
         field.clear();
-
-        //Here we must run parallelization in some manner.....
         
-        let arc_ref_field = Arc::new(field);
-        // xform_query.par_iter().for_each(|(entity, xform)| 
-        // {
-        //     let xform = xform.0;
-        //     field.set_object_location(entity, xform.0);
-        // });
+        for (entity, xform) in &xform_query {
+            info!("primo for");
+            let xform = xform.0;
+            let bag = field.discretize(&xform.0);
+            field.findex.insert(entity, bag);
+            field.floc.insert(entity, xform.0);
+        }
 
-        xform_query.par_iter().for_each(|(entity, xform)|{
-            let mut clone_field = arc_ref_field.clone();
-            let f = move || {
-                clone_field.set_object_location(entity, xform.0.0);
-            };
+        xform_query.par_iter().for_each(|(entity, xform)| {
+            info!("second for");
+            let xform = xform.0;
+            let bag = field.discretize(&xform.0);
+            let fbagClone = field.fbag.clone();
+            let hash = fbagClone.read().unwrap();
+            match hash.get(&bag) {
+                Some(value) => {
+                    value.write().unwrap().push(entity);
+                }
+                None => {
+                    let mut v = Vec::new();
+                    v.push(entity);
+                    // PROBLEM: that is the problem......
+                    //fbagClone.write().unwrap().insert(bag, RwLock::new(v));
+                }
+            }
         });
-
-        // for (entity, xform) in &xform_query {
-        //     let xform = xform.0;
-        //     field.set_object_location(entity, xform.0);
-        // }
     }
 }
 
@@ -210,12 +218,13 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
                     dist,
                     self.toroidal,
                 );
-                let vector = match self.fbag.get(&bag_id) {
+                let t = self.fbag.read().unwrap();
+                let vector = match t.get(&bag_id) {
                     Some(i) => i,
                     None => continue,
                 };
 
-                for elem in vector {
+                for elem in vector.read().unwrap().iter() {
                     if (check == 0
                         && distance(
                             &loc,
@@ -296,11 +305,12 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
                     x: t_transform(i, max_x),
                     y: t_transform(j, max_y),
                 };
-                let vector = match self.fbag.get(&bag_id) {
+                let t = self.fbag.read().unwrap();
+                let vector = match t.get(&bag_id) {
                     Some(i) => i,
                     None => continue,
                 };
-                for elem in vector {
+                for elem in vector.read().unwrap().iter() {
                     neighbors.push(*elem);
                 }
             }
@@ -334,14 +344,16 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
     /// assert_eq!(objects.len(), 2);
     ///
     /// ```
-    pub fn get_objects(&self, loc: Real2D) -> Vec<&O> {
+    pub fn get_objects(&self, loc: Real2D) -> Vec<O> {
         let bag = self.discretize(&loc);
         let mut result = Vec::new();
 
-        match self.fbag.get(&bag) {
+        let t = self.fbag.read().unwrap(); 
+        match t.get(&bag) {
             Some(v) => {
-                for el in v {
-                    result.push(el);
+                let t = v.read().unwrap();
+                for el in t.iter() {
+                    result.push(*el);
                 }
             }
             None => (),
@@ -380,55 +392,55 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
     ///
     pub fn num_objects_at_location(&self, loc: Real2D) -> usize {
         let bag = self.discretize(&loc);
-        match self.fbag.get(&bag) {
-            Some(v) => v.len(),
+        match self.fbag.read().unwrap().get(&bag) {
+            Some(v) => v.read().unwrap().len(),
             None => 0,
         }
     }
 
-    /// Insert an object into a specific position
-    ///
-    /// # Arguments
-    /// * `obj` - Object to insert
-    /// * `loc` - `Real2D` coordinates where to insert the object
-    ///
-    /// # Example
-    /// ```
-    /// struct Object {
-    ///    id: u32
-    /// }
-    ///
-    /// let DISCRETIZATION = 0.5;
-    /// let TOROIDAL = true;
-    /// let mut field = Field2D::new(10.0,  10.0, DISCRETIZATION, TOROIDAL);
-    ///
-    /// field.set_object_location(&Object{id: 0}, Real2D {x: 5.0, y: 5.0} );
-    ///
-    /// let obj = field.get_objects_unbuffered(&Real2D {x: 5.0, y: 5.0});
-    /// assert_eq!(obj.len(), 1);
-    /// assert_eq!(obj[0].id, 0);
-    ///
-    /// field.lazy_update();
-    /// let obj = field.get_objects(&Real2D {x: 5.0, y: 5.0});
-    /// assert_eq!(obj.len(), 1);
-    /// assert_eq!(obj[0].id, 0);
-    ///
-    /// ```
-    pub fn set_object_location(&mut self, object: O, loc: Real2D) {
-        let bag = self.discretize(&loc);
-        self.floc.insert(object, loc);
-        self.findex.insert(object, bag);
-        match self.fbag.get_mut(&bag) {
-            Some(v) => {
-                v.push(object);
-            }
-            None => {
-                let mut v = Vec::new();
-                v.push(object);
-                self.fbag.insert(bag, v);
-            }
-        };
-    }
+    // /// Insert an object into a specific position
+    // ///
+    // /// # Arguments
+    // /// * `obj` - Object to insert
+    // /// * `loc` - `Real2D` coordinates where to insert the object
+    // ///
+    // /// # Example
+    // /// ```
+    // /// struct Object {
+    // ///    id: u32
+    // /// }
+    // ///
+    // /// let DISCRETIZATION = 0.5;
+    // /// let TOROIDAL = true;
+    // /// let mut field = Field2D::new(10.0,  10.0, DISCRETIZATION, TOROIDAL);
+    // ///
+    // /// field.set_object_location(&Object{id: 0}, Real2D {x: 5.0, y: 5.0} );
+    // ///
+    // /// let obj = field.get_objects_unbuffered(&Real2D {x: 5.0, y: 5.0});
+    // /// assert_eq!(obj.len(), 1);
+    // /// assert_eq!(obj[0].id, 0);
+    // ///
+    // /// field.lazy_update();
+    // /// let obj = field.get_objects(&Real2D {x: 5.0, y: 5.0});
+    // /// assert_eq!(obj.len(), 1);
+    // /// assert_eq!(obj[0].id, 0);
+    // ///
+    // /// ```
+    // pub fn set_object_location(&mut self, object: O, loc: Real2D) {
+    //     let bag = self.discretize(&loc);
+    //     self.floc.insert(object, loc);
+    //     self.findex.insert(object, bag);
+    //     match self.fbag.get_mut(&bag) {
+    //         Some(v) => {
+    //             v.push(object);
+    //         }
+    //         None => {
+    //             let mut v = Vec::new();
+    //             v.push(object);
+    //             self.fbag.insert(bag, v);
+    //         }
+    //     };
+    // }
 }
 
 fn t_transform(n: i32, size: i32) -> i32 {
