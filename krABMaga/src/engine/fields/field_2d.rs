@@ -47,6 +47,9 @@ pub struct Field2D<O: Copy + Eq + Hash> {
     pub discretization: f32,
     /// `true` if you want a Toroidal field, `false` otherwise
     pub toroidal: bool,
+
+    strayVectors: Vec<Vec<O>>,
+    alreadyAllocatedStrayVectorsSpace: bool
 }
 
 impl<O: Hash + Eq + Copy> Field2D<O> {
@@ -66,12 +69,31 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
             height: h,
             discretization: d,
             toroidal: t,
+
+            strayVectors: Vec::default(),
+            alreadyAllocatedStrayVectorsSpace: false,
         }
     }
 
     pub fn clear(&mut self) {
         self.findex.clear();
-        self.fbag.clear();
+        
+        // NOTES: don't clear fbag
+        //self.fbag.clear();
+        // Instead try to saves all "stray vectors"
+        if(! self.alreadyAllocatedStrayVectorsSpace)
+        {
+            self.alreadyAllocatedStrayVectorsSpace = true;
+            self.strayVectors.reserve(self.fbag.len());
+        }
+
+        let size = self.fbag.len();
+        for (_, mut v) in self.fbag.drain()
+        {
+            v.clear();
+            self.strayVectors.push(v);
+        }
+
         self.floc.clear();
     }
 
@@ -389,14 +411,35 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
         let bag = self.discretize(&loc);
         self.floc.insert(object, loc);
         self.findex.insert(object, bag);
+        
         match self.fbag.get_mut(&bag) {
             Some(v) => {
                 v.push(object);
             }
             None => {
-                let mut v = Vec::new();
-                v.push(object);
-                self.fbag.insert(bag, v);
+                //NOTES: probably useless, useless reallocations
+                // let mut v = Vec::new();
+                // v.push(object);
+                // self.fbag.insert(bag, v);
+
+                if(! self.strayVectors.is_empty())
+                {
+                    match(self.strayVectors.pop())
+                    {
+                        Some(mut vec) => {
+                            vec.push(object);
+                            self.fbag.insert(bag, vec);
+                        }
+                        None => {
+
+                        }
+                    }
+                }
+                else {
+                    let mut v = Vec::new();
+                    v.push(object);
+                    self.fbag.insert(bag, v);
+                }
             }
         };
     }
