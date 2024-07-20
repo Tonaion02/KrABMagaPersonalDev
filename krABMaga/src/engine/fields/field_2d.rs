@@ -3,7 +3,11 @@ use std::cmp;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
-use bevy::prelude::{Component, Entity, Query};
+use std::sync::RwLock;
+use std::sync::Arc;
+
+use bevy::ecs::{entity, query};
+use bevy::prelude::{default, Component, Entity, Query};
 
 use crate::engine::components::double_buffer::DBWrite;
 use crate::engine::components::position::Real2DTranslation;
@@ -24,10 +28,27 @@ pub fn update_field(
 ) {
     if let Ok(mut field) = field_query.get_single_mut() {
         field.clear();
-        for (entity, xform) in &xform_query {
-            let xform = xform.0;
-            field.set_object_location(entity, xform.0);
-        }
+
+        //Here we must run parallelization in some manner.....
+        
+        let arc_ref_field = Arc::new(field);
+        // xform_query.par_iter().for_each(|(entity, xform)| 
+        // {
+        //     let xform = xform.0;
+        //     field.set_object_location(entity, xform.0);
+        // });
+
+        xform_query.par_iter().for_each(|(entity, xform)|{
+            let mut clone_field = arc_ref_field.clone();
+            let f = move || {
+                clone_field.set_object_location(entity, xform.0.0);
+            };
+        });
+
+        // for (entity, xform) in &xform_query {
+        //     let xform = xform.0;
+        //     field.set_object_location(entity, xform.0);
+        // }
     }
 }
 
@@ -37,7 +58,13 @@ pub fn update_field(
 pub struct Field2D<O: Copy + Eq + Hash> {
     /// Matrix to write data. Vector of vectors that have a generic Object O inside
     pub findex: HashMap<O, Int2D>,
-    pub fbag: HashMap<Int2D, Vec<O>>,
+    // NOTES: modified structure of sparse grid to put that in multithreading
+    // NOTES: Arc(Atomic Reference Counter) to share across multiple threads the strctures
+    // NOTES: RwLock on HashMap in the case we must add a new bag to hashmap and RwLock
+    // NOTES: on the single bag in case we must work with multiple threads on the same
+    // NOTES: bag
+    // pub fbag: HashMap<Int2D, Vec<O>>,
+    pub fbag: Arc<RwLock<HashMap<Int2D, RwLock<Vec<O>>>>>,
     pub floc: HashMap<O, Real2D>,
     /// First dimension of the field
     pub width: f32,
@@ -60,7 +87,8 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
     pub fn new(w: f32, h: f32, d: f32, t: bool) -> Field2D<O> {
         Field2D {
             findex: HashMap::default(),
-            fbag: HashMap::default(),
+            //fbag: HashMap::default(),
+            fbag: Arc::new(RwLock::new(HashMap::default())),
             floc: HashMap::default(),
             width: w,
             height: h,
@@ -71,7 +99,8 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
 
     pub fn clear(&mut self) {
         self.findex.clear();
-        self.fbag.clear();
+        //NOTES: adapted this line of code to multithreading new data structures
+        self.fbag.write().unwrap().clear();
         self.floc.clear();
     }
 

@@ -25,7 +25,7 @@ pub static TOROIDAL: bool = true;
 pub static STEPS: u32 = 200;
 pub static DIM_X: f32 = 800.;
 pub static DIM_Y: f32 = 800.;
-pub static NUM_AGENTS: u32 = 200;
+pub static NUM_AGENTS: u32 = 200000;
 pub static SEED: u64 = 1337;
 
 
@@ -46,7 +46,7 @@ fn build_simulation(simulation: Simulation) -> Simulation {
         .register_double_buffer::<Real2DTranslation>()
         .register_double_buffer::<LastReal2D>()
         .register_step_handler(step_system)
-        //.with_num_threads(20)
+        .with_num_threads(4)
         // .with_rng(SEED) // We cannot use this during parallel iteration due to mutable access being required for RNG.
         .with_engine_configuration(EngineConfiguration::new(Real2D { x: DIM_X, y: DIM_Y }, SEED)); // TODO abstract
     // TODO figure out how configs should work. Either split engine config and simulation config, requiring the latter to be registered, or...?
