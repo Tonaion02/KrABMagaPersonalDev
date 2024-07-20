@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "antsforaging",
+    "flockers",
+    "flockers_mpi",
+    "forestfire",
+    "forestfire_bayesian",
+    "schelling",
+    "sir_ga_exploration",
+    "sugarscape",
+    "template",
+    "virusnetwork",
+    "wolfsheepgrass",
+]

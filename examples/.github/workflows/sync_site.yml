@@ -1,0 +1,32 @@
+name: Sync site
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '**.gif'
+
+  workflow_dispatch:
+      inputs:
+        logLevel:
+          description: 'Log level'     
+          required: true
+          default: 'warning'
+        tags:
+          description: 'Manual update of site'
+
+jobs:
+  if_merged:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch event
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.SITE_REPO_ACCESS_TOKEN }}
+          repository: krABMaga/krABMaga.github.io
+          event-type: updated

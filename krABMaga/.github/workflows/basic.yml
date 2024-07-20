@@ -1,0 +1,110 @@
+on: [push, pull_request]
+
+name: Continuous integration
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo check --release
+
+  checkvis:
+    name: Check visualization and bayesian
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          sudo apt update
+          sudo apt install pkg-config libx11-dev libasound2-dev libudev-dev
+          sudo apt install libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev
+          sudo apt install libxcb-render0-dev libxcb-xfixes0-dev libxcb1-dev
+          sudo apt install libudev-dev libasound2-dev portaudio19-dev build-essential libpulse-dev libdbus-1-dev
+          sudo apt install libfontconfig libfontconfig1-dev
+      - run: cargo check --release --features "visualization, bayesian"
+
+  checkmpi:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: stable
+            mpi: openmpi
+            
+    name: check ${{ matrix.os }} MPI
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup MPI
+        uses: mpi4py/setup-mpi@v1
+        with:
+          mpi: ${{ matrix.mpi }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo check --release --features distributed_mpi
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy
+
+  clippyvis:
+    name: Clippy visualization
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: |
+          sudo apt update
+          sudo apt install pkg-config libx11-dev libasound2-dev libudev-dev
+          sudo apt install libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev
+          sudo apt install libxcb-render0-dev libxcb-xfixes0-dev libxcb1-dev
+          sudo apt install libudev-dev libasound2-dev portaudio19-dev build-essential libpulse-dev libdbus-1-dev
+          sudo apt install libfontconfig libfontconfig1-dev
+      - run: cargo clippy --features "visualization, bayesian"
+
+  clippympi:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: stable
+            mpi: openmpi
+            
+    name: clippy ${{ matrix.os }} MPI
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup MPI
+        uses: mpi4py/setup-mpi@v1
+        with:
+          mpi: ${{ matrix.mpi }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo clippy --features distributed_mpi

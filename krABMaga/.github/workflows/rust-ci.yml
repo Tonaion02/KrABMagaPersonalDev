@@ -1,0 +1,84 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  stdbuild:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        rust:
+          - stable
+          - nightly
+
+    name: ${{ matrix.os }} ${{ matrix.rust }} build 
+    steps:
+      - name: Ubuntu Required Deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install pkg-config libx11-dev libasound2-dev libudev-dev
+          sudo apt install libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev
+          sudo apt install libxcb-render0-dev libxcb-xfixes0-dev libxcb1-dev
+      - uses: actions/checkout@v3
+
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - uses: Swatinem/rust-cache@v2
+   
+      - name: Build
+        run: cargo build --release
+
+      - name: BuildVisualization
+        run: cargo build --release --features "visualization, visualization_wasm"
+
+      - name: BuildBayesian
+        run: cargo build --release --features bayesian
+
+      - name: Test
+        run: cargo test --features parallel
+          
+      - name: TestNoFeatures
+        run: cargo test
+
+  mpibuild:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rust: stable
+            mpi: openmpi
+          - os: macos-latest
+            rust: stable
+            mpi: openmpi
+          - os: windows-2022
+            rust: stable
+            mpi: msmpi
+            
+    name: ${{ matrix.os }} MPI
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup MPI
+        uses: mpi4py/setup-mpi@v1
+        with:
+          mpi: ${{ matrix.mpi }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo build --release --features distributed_mpi
+  
