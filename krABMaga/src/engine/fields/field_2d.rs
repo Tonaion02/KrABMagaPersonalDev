@@ -52,7 +52,7 @@ pub fn update_field(
                 None => {
                     let mut v = Vec::new();
                     v.push(entity);
-                    // PROBLEM: that is the problem......
+                    // PROBLEM: the problem is i'm trying to write on the HashMap and read in contemporary......so i'm fucked up
                     //fbagClone.write().unwrap().insert(bag, RwLock::new(v));
                 }
             }
