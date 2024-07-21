@@ -32,7 +32,7 @@ pub fn update_field(
         field.clear();
         
         for (entity, xform) in &xform_query {
-            info!("primo for");
+            //info!("primo for");
             let xform = xform.0;
             let bag = field.discretize(&xform.0);
             field.findex.insert(entity, bag);
@@ -40,7 +40,7 @@ pub fn update_field(
         }
 
         xform_query.par_iter().for_each(|(entity, xform)| {
-            info!("second for");
+            //info!("second for");
             let xform = xform.0;
             let bag = field.discretize(&xform.0);
             let fbagClone = field.fbag.clone();
@@ -50,10 +50,12 @@ pub fn update_field(
                     value.write().unwrap().push(entity);
                 }
                 None => {
+                    drop(hash);
+                    
                     let mut v = Vec::new();
                     v.push(entity);
-                    // PROBLEM: the problem is i'm trying to write on the HashMap and read in contemporary......so i'm fucked up
-                    //fbagClone.write().unwrap().insert(bag, RwLock::new(v));
+                    fbagClone.write().unwrap().insert(bag, RwLock::new(v));
+                    
                 }
             }
         });
