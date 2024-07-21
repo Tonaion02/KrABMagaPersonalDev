@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 use bevy::log::info;
+use bevy::utils::tracing::*;
 
 use std::sync::RwLock;
 use std::sync::Arc;
@@ -31,14 +32,6 @@ pub fn update_field(
     if let Ok(mut field) = field_query.get_single_mut() {
         field.clear();
         
-        for (entity, xform) in &xform_query {
-            //info!("primo for");
-            let xform = xform.0;
-            let bag = field.discretize(&xform.0);
-            field.findex.insert(entity, bag);
-            field.floc.insert(entity, xform.0);
-        }
-
         xform_query.par_iter().for_each(|(entity, xform)| {
             //info!("second for");
             let xform = xform.0;
@@ -58,6 +51,23 @@ pub fn update_field(
                     
                 }
             }
+        });
+
+        // for (entity, xform) in &xform_query {
+        //     //info!("primo for");
+        //     let xform = xform.0;
+        //     let bag = field.discretize(&xform.0);
+        //     field.findex.insert(entity, bag);
+        //     field.floc.insert(entity, xform.0);
+        // }
+
+        
+        xform_query.iter().for_each(|(entity, xform)| {
+            info_span!("update of others component of fields");
+            let xform = xform.0;
+            let bag = field.discretize(&xform.0);
+            field.findex.insert(entity, bag);
+            field.floc.insert(entity, xform.0);
         });
     }
 }
