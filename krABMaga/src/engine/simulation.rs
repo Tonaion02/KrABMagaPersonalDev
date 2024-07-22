@@ -1,3 +1,6 @@
+use std::thread;
+use std::time::Duration;
+
 use bevy::core::TaskPoolThreadAssignmentPolicy;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -22,9 +25,19 @@ pub struct Simulation {
 
 impl Simulation {
     pub fn build() -> Self {
+    
+
         let mut app = App::new();
         #[cfg(feature = "trace_tracy")]
         app.add_plugins(LogPlugin::default());
+        //CODE TO TRY TO ADD A SPAN
+        // thread::spawn(|| {
+        //     println!("hello world");
+        //     info!("oH\n");
+        //     let r = info_span!("hello");
+        //     let r = r.enter();
+        //     thread::sleep(Duration::from_millis(5000));
+        // });
         app.configure_sets(
             Update,
             (

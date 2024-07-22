@@ -117,7 +117,9 @@ visualization = [
     "bevy/png",
     "image",
     "bevy_egui",
-    "bevy_egui/default_fonts"
+    "bevy_egui/default_fonts",
+
+
 ]
 visualization_wasm = [
     "bevy_prototype_lyon",

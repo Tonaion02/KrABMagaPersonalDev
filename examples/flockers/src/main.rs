@@ -22,10 +22,10 @@ pub static MOMENTUM: f32 = 1.0;
 pub static JUMP: f32 = 0.7;
 pub static DISCRETIZATION: f32 = 10.0 / 1.5;
 pub static TOROIDAL: bool = true;
-pub static STEPS: u32 = 200;
+pub static STEPS: u32 = 100;
 pub static DIM_X: f32 = 800.;
 pub static DIM_Y: f32 = 800.;
-pub static NUM_AGENTS: u32 = 200000;
+pub static NUM_AGENTS: u32 = 200000; //density_field = (DIM_X * DIM_Y) / num_agents
 pub static SEED: u64 = 1337;
 
 

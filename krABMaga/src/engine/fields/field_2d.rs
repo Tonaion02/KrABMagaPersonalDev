@@ -3,6 +3,8 @@ use std::cmp;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+use bevy::log::info_span;
+
 use bevy::prelude::{Component, Entity, Query};
 
 use crate::engine::components::double_buffer::DBWrite;
@@ -23,11 +25,21 @@ pub fn update_field(
     xform_query: Query<(Entity, &DBWrite<Real2DTranslation>)>,
 ) {
     if let Ok(mut field) = field_query.get_single_mut() {
+        
+        let fieldClearSpan = info_span!("fieldClearSpan");
+        let fieldClearSpan = fieldClearSpan.enter();
         field.clear();
+        std::mem::drop(fieldClearSpan);
+        
+
+
+        let setObjectLocationsSpan = info_span!("setObjectLocationsSpan");
+        let setObjectLocationsSpan = setObjectLocationsSpan.enter();
         for (entity, xform) in &xform_query {
             let xform = xform.0;
             field.set_object_location(entity, xform.0);
         }
+        std::mem::drop(setObjectLocationsSpan);
     }
 }
 
@@ -386,7 +398,13 @@ impl<O: Hash + Eq + Copy> Field2D<O> {
     ///
     /// ```
     pub fn set_object_location(&mut self, object: O, loc: Real2D) {
+
+        let discretizationSpan = info_span!("discretizationSpan");
+        let discretizationSpan = discretizationSpan.enter();
         let bag = self.discretize(&loc);
+        std::mem::drop(discretizationSpan);
+
+        
         self.floc.insert(object, loc);
         self.findex.insert(object, bag);
         match self.fbag.get_mut(&bag) {
