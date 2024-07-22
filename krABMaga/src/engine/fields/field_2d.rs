@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 use bevy::log::info;
-use bevy::utils::tracing::*;
+use bevy::log::info_span;
 
 use std::sync::RwLock;
 use std::sync::Arc;
@@ -61,9 +61,12 @@ pub fn update_field(
         //     field.floc.insert(entity, xform.0);
         // }
 
+        //To decoment
         
+
+
         xform_query.iter().for_each(|(entity, xform)| {
-            info_span!("update of others component of fields");
+            
             let xform = xform.0;
             let bag = field.discretize(&xform.0);
             field.findex.insert(entity, bag);

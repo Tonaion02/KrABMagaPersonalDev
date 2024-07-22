@@ -8,6 +8,10 @@ use crate::engine::rng::RNG;
 use crate::engine::systems::double_buffer_sync::double_buffer_sync;
 use crate::engine::systems::engine_config_update::engine_config_update;
 
+use std::thread;
+use std::time::Duration;
+
+
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 enum SimulationSet {
     BeforeStep,
@@ -22,9 +26,20 @@ pub struct Simulation {
 
 impl Simulation {
     pub fn build() -> Self {
+        
+        
+
+        thread::spawn(|| {
+           println!("Managgia");
+            trace!("Helloooooooooooo\n");
+            info!("hello\n");
+            thread::sleep(Duration::from_millis(5000));
+        });
+
+
         let mut app = App::new();
-        #[cfg(feature = "trace_tracy")]
-        app.add_plugins(LogPlugin::default());
+        // #[cfg(feature = "trace_tracy")]
+        //app.add_plugins(LogPlugin::default());
         app.configure_sets(
             Update,
             (
