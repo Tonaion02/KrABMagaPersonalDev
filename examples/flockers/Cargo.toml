@@ -19,6 +19,7 @@ readme = "README.md"
 
 [dependencies]
 krabmaga = {path = "../../krABMaga"}
+lazy_static = "1.5.0"
 
 [features]
 parallel = ["krabmaga/parallel"]

@@ -1,5 +1,8 @@
 use std::time::Instant;
 
+use std::env;
+use lazy_static::lazy_static;
+
 use krabmaga::engine::{Entity, Query, Res};
 use krabmaga::engine::agent::AgentFactory;
 use krabmaga::engine::components::double_buffer::{DBRead, DBWrite};
@@ -23,10 +26,36 @@ pub static JUMP: f32 = 0.7;
 pub static DISCRETIZATION: f32 = 10.0 / 1.5;
 pub static TOROIDAL: bool = true;
 pub static STEPS: u32 = 100;
-pub static DIM_X: f32 = 800.;
-pub static DIM_Y: f32 = 800.;
-pub static NUM_AGENTS: u32 = 200000; //density_field = (DIM_X * DIM_Y) / num_agents
 pub static SEED: u64 = 1337;
+
+// MODIFIED: now we retrieve this parameters from command line
+// but that acts like "static constants", little trick from here: 
+lazy_static! {
+    static ref NUM_THREADS: usize = 
+    match (std::env::args().collect::<Vec<String>>().get(1)) {
+        Some(value) => { value.clone().parse::<usize>().unwrap() }
+        None => { 0usize }
+    };
+
+    static ref NUM_AGENTS: u32 = 
+    match (std::env::args().collect::<Vec<String>>().get(2)) {
+        Some(value) => { value.clone().parse::<u32>().unwrap() }
+        None => { 0u32 }
+    };
+
+    static ref DIM_X: f32 = 
+    match (std::env::args().collect::<Vec<String>>().get(3)) {
+        Some(value) => { value.clone().parse::<f32>().unwrap() }
+        None => { 0. }
+    };
+
+    static ref DIM_Y: f32 = *DIM_X;
+}
+
+
+
+
+
 
 
 // Main used when only the simulation should run, without any visualization.
@@ -40,15 +69,15 @@ fn main() {
 }
 
 fn build_simulation(simulation: Simulation) -> Simulation {
-    let field: Field2D<Entity> = Field2D::new(DIM_X, DIM_Y, DISCRETIZATION, TOROIDAL);
+    let field: Field2D<Entity> = Field2D::new(*DIM_X, *DIM_Y, DISCRETIZATION, TOROIDAL);
 
     let mut simulation = simulation
         .register_double_buffer::<Real2DTranslation>()
         .register_double_buffer::<LastReal2D>()
         .register_step_handler(step_system)
-        .with_num_threads(4)
+        .with_num_threads(*NUM_THREADS)
         // .with_rng(SEED) // We cannot use this during parallel iteration due to mutable access being required for RNG.
-        .with_engine_configuration(EngineConfiguration::new(Real2D { x: DIM_X, y: DIM_Y }, SEED)); // TODO abstract
+        .with_engine_configuration(EngineConfiguration::new(Real2D { x: *DIM_X, y: *DIM_Y }, SEED)); // TODO abstract
     // TODO figure out how configs should work. Either split engine config and simulation config, requiring the latter to be registered, or...?
     init_world(&mut simulation, field);
 
@@ -60,12 +89,12 @@ fn build_simulation(simulation: Simulation) -> Simulation {
 // TODO: this bundle prototype must be passed to the simulation so that, along with NUM_AGENTS, the simulation
 // TODO: can be programmatically restarted.
 fn init_world(simulation: &mut Simulation, field: Field2D<Entity>) {
-    for bird_id in 0..NUM_AGENTS {
+    for bird_id in 0..*NUM_AGENTS {
         let mut rng = RNG::new(SEED, bird_id as u64);
         let r1: f32 = rng.gen();
         let r2: f32 = rng.gen();
 
-        let position = Real2D { x: DIM_X * r1, y: DIM_Y * r2 };
+        let position = Real2D { x: *DIM_X * r1, y: *DIM_Y * r2 };
         let current_pos = Real2DTranslation(position);
 
         let mut agent = AgentFactory::new(simulation);
@@ -108,8 +137,8 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
             let elem_loc = elem_loc.0.0;
             let last_elem_loc = last_elem_loc.0.0;
 
-            let dx = toroidal_distance(cur_pos.x, elem_loc.x, DIM_X);
-            let dy = toroidal_distance(cur_pos.y, elem_loc.y, DIM_Y);
+            let dx = toroidal_distance(cur_pos.x, elem_loc.x, *DIM_X);
+            let dy = toroidal_distance(cur_pos.y, elem_loc.y, *DIM_Y);
             count += 1;
 
             //avoidance calculation
@@ -169,8 +198,8 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
             dy = dy / dis * JUMP;
         }
 
-        let loc_x = toroidal_transform(cur_pos.x + dx, DIM_X);
-        let loc_y = toroidal_transform(cur_pos.y + dy, DIM_Y);
+        let loc_x = toroidal_transform(cur_pos.x + dx, *DIM_X);
+        let loc_y = toroidal_transform(cur_pos.y + dy, *DIM_Y);
         /* if config.current_step == 200 {
             println!("Bird {} - Step {}: - cohesion {:?}, avoidance {:?}, consistency {:?}, randomness {:?}, mom {:?}, loc {:?}",
                      bird.id, config.current_step, (x_cohesion, y_cohesion), (x_avoidance,y_avoidance), (x_consistency,y_consistency), (x_randomness, y_randomness),
