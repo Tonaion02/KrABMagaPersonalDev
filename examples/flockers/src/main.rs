@@ -25,7 +25,7 @@ pub static MOMENTUM: f32 = 1.0;
 pub static JUMP: f32 = 0.7;
 pub static DISCRETIZATION: f32 = 10.0 / 1.5;
 pub static TOROIDAL: bool = true;
-pub static STEPS: u32 = 100;
+//pub static STEPS: u32 = 100;
 pub static SEED: u64 = 1337;
 
 // MODIFIED: now we retrieve this parameters from command line
@@ -49,6 +49,12 @@ lazy_static! {
         None => { 0. }
     };
 
+    static ref STEPS: u32 =
+    match (std::env::args().collect::<Vec<String>>().get(4)) {
+        Some(value) => { value.clone().parse::<u32>().unwrap() }
+        None => { 0u32 }
+    };
+
     static ref DIM_Y: f32 = *DIM_X;
 }
 
@@ -61,11 +67,11 @@ lazy_static! {
 // Main used when only the simulation should run, without any visualization.
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
 fn main() {
-    let mut simulation = build_simulation(Simulation::build().with_steps(STEPS));
+    let mut simulation = build_simulation(Simulation::build().with_steps(*STEPS));
     let now = Instant::now();
     simulation.run();
     let elapsed = now.elapsed();
-    println!("Elapsed: {:.2?}, steps per second: {}", elapsed, STEPS as f64 / elapsed.as_secs_f64());
+    println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
 }
 
 fn build_simulation(simulation: Simulation) -> Simulation {
