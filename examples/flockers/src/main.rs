@@ -17,6 +17,14 @@ use crate::model::bird::{Bird, LastReal2D};
 
 mod model;
 
+use std::path::Path;
+use std::fs::File;
+use std::io::prelude::*;
+
+
+
+
+
 pub static COHESION: f32 = 0.8;
 pub static AVOIDANCE: f32 = 1.0;
 pub static RANDOMNESS: f32 = 1.1;
@@ -72,6 +80,33 @@ fn main() {
     simulation.run();
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
+    
+    
+    
+    save_elapsed_time(elapsed);    
+}
+
+
+fn save_elapsed_time(elapsed_time: core::time::Duration) {
+
+    //Write on file the elapsed time
+    let path = Path::new("elapsed_time.txt");
+    let display = path.display();
+
+    // Open a file in write-only mode, returns `io::Result<File>`
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    let elapsed_time_s: String = elapsed_time.as_nanos().to_string();
+
+    //Write on file the elapsed time
+    match file.write_all(elapsed_time_s.as_bytes()) {
+        Err(why) => panic!("couldn't write to {}: {}", display, why),
+        Ok(_) => println!("successfully wrote to {}", display),
+    }
+    //Write on file the elapsed time
 }
 
 fn build_simulation(simulation: Simulation) -> Simulation {
