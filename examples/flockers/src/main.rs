@@ -90,18 +90,18 @@ fn main() {
 fn save_elapsed_time(elapsed_time: core::time::Duration) {
 
     //Write on file the elapsed time
-    let path = Path::new("elapsed_time.txt");
+    let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");
     let display = path.display();
 
-    // Open a file in write-only mode, returns `io::Result<File>`
+    // Open a file in write-only mode
     let mut file = match File::create(&path) {
         Err(why) => panic!("couldn't create {}: {}", display, why),
         Ok(file) => file,
     };
 
-    let elapsed_time_s: String = elapsed_time.as_nanos().to_string();
+    let mut elapsed_time_s: String = String::from("elapsed_time=");
+    elapsed_time_s.push_str(&elapsed_time.as_nanos().to_string());
 
-    //Write on file the elapsed time
     match file.write_all(elapsed_time_s.as_bytes()) {
         Err(why) => panic!("couldn't write to {}: {}", display, why),
         Ok(_) => println!("successfully wrote to {}", display),
