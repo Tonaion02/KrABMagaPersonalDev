@@ -32,8 +32,10 @@ impl Simulation {
     
 
         let mut app = App::new();
-        #[cfg(feature = "trace_tracy")]
-        app.add_plugins(LogPlugin::default());
+        //T: removed for now for the problems of the plugins
+        //T: TODO reactivate it......
+        // #[cfg(feature = "trace_tracy")]
+        // app.add_plugins(LogPlugin::default());
         //CODE TO TRY TO ADD A SPAN
         // thread::spawn(|| {
         //     println!("hello world");
@@ -140,25 +142,21 @@ impl Simulation {
         self.app.world.spawn(())
     }
 
-
-
     //T: added to make working the plugins
     pub fn _build_(&mut self) 
     {
-        self.app.add_plugins(DefaultPlugins.
-            set(TaskPoolPlugin {
-                task_pool_options: TaskPoolOptions {
-                    // Assign all threads to compute
-                    compute: TaskPoolThreadAssignmentPolicy {
-                        // set the minimum # of compute threads
-                        // to the total number of available threads
-                        min_threads: self.num_threads,
-                        max_threads: self.num_threads, // unlimited max threads
-                        percent: 1.0,             // this value is irrelevant in this case
+        self.app.add_plugins(TaskPoolPlugin {
+                    task_pool_options: TaskPoolOptions {
+                        // Assign all threads to compute
+                        compute: TaskPoolThreadAssignmentPolicy {
+                            // set the minimum # of compute threads
+                            // to the total number of available threads
+                            min_threads: self.num_threads,
+                            max_threads: self.num_threads, // unlimited max threads
+                            percent: 1.0,             // this value is irrelevant in this case
+                        },
+                        ..default()
                     },
-                    ..default()
-                },
-            })
-        );
+                });
     }
 }

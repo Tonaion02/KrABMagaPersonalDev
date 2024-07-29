@@ -281,7 +281,6 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
 #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn main()
 {
-    println!("hm");
     let mut simulation = build_simulation(Simulation::build().with_steps(*STEPS));
 
 

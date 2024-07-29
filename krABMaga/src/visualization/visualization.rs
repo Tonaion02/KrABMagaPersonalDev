@@ -8,7 +8,11 @@ use std::sync::{Arc, Mutex};
 
 use crate::engine::simulation::Simulation;
 
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, window::WindowPlugin, DefaultPlugins};
+//use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, window::WindowPlugin, DefaultPlugins};
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::window::WindowPlugin;
+use bevy::winit::WinitPlugin;
+use bevy::a11y::AccessibilityPlugin;
 use bevy::render::RenderPlugin;
 use bevy::prelude::PluginGroup;
 use bevy::utils::default;
@@ -159,14 +163,10 @@ impl Visualization {
     {
         let mut app = &mut simulation.app;
 
-        //app.add_plugins(DefaultPlugins.set(RenderPlugin { ..default() }));
-
-        // let windowPlugin = WindowPlugin { ..default() };
-        // match windowPlugin.primary_window {
-        //     Some(value) => println!("Some"),
-        //     None => println!("None")
-        // };
-        // app.add_plugins(windowPlugin);
+        //T: TODO Add plugins here
+        app.add_plugins(AccessibilityPlugin {});
+        app.add_plugins(WindowPlugin {..default()});
+        app.add_plugins(WinitPlugin {..default()});
 
         app.insert_resource(SimulationDescriptor {
             title: self
