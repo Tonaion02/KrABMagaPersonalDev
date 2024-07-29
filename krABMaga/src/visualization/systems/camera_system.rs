@@ -4,8 +4,8 @@ use bevy::{
 };
 use bevy::prelude::EventReader;
 
-use crate::bevy::prelude::Res;
-use crate::bevy::render::camera::Camera;
+use bevy::prelude::Res;
+use bevy::render::camera::Camera;
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
 
 pub fn camera_system(

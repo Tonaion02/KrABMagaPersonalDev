@@ -1,17 +1,20 @@
+//#[cfg(any(feature = "visualization"))]
 pub extern crate bevy_prototype_lyon;
 
 use std::f32::consts::PI;
 use std::fmt::Display;
 use std::hash::Hash;
 
-pub use bevy::prelude::Color;
+//pub use bevy::prelude::Color;
 use bevy::prelude::{Commands, Component, Query, Transform};
 use bevy_prototype_lyon::draw::{Fill, Stroke};
 use bevy_prototype_lyon::path::ShapePath;
 use bevy_prototype_lyon::prelude::{GeometryBuilder, Path};
 use bevy_prototype_lyon::shapes::Line;
 
-use crate::bevy::prelude::{Res, Vec2};
+use bevy::render::color::Color;
+
+use bevy::prelude::{Res, Vec2};
 use crate::engine::{
     fields::network::{Edge, Network},
     location::Real2D,

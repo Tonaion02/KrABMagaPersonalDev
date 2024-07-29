@@ -1,22 +1,36 @@
 use std::sync::{Arc, Mutex};
 
-use bevy::render::RenderPlugin;
-use bevy::{prelude::*, window::WindowResizeConstraints, DefaultPlugins};
-use bevy_egui::EguiPlugin;
-use bevy_prototype_lyon::prelude::ShapePlugin;
+//T: Comment for errors
+// use bevy::render::RenderPlugin;
+// use bevy::{prelude::*, window::WindowResizeConstraints, DefaultPlugins};
+// use bevy_egui::EguiPlugin;
+// use bevy_prototype_lyon::prelude::ShapePlugin;
 
-use crate::bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use crate::engine::{schedule::Schedule, state::State};
-use crate::visualization::{
-    asset_handle_factory::AssetHandleFactory,
-    simulation_descriptor::SimulationDescriptor,
-    systems::{
-        camera_system::camera_system, init_system::init_system, renderer_system::renderer_system,
-        simulation_system::simulation_system, ui_system::ui_system,
-    },
-    visualization_state::VisualizationState,
-    wrappers::{ActiveSchedule, ActiveState, Initializer},
-};
+use crate::engine::simulation::Simulation;
+
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, window::WindowPlugin, DefaultPlugins};
+use bevy::render::RenderPlugin;
+use bevy::prelude::PluginGroup;
+use bevy::utils::default;
+//T: This elements are removed from the krabmaga framework
+//use crate::engine::{schedule::Schedule, state::State}; 
+
+//T: Comments for errors
+// use crate::visualization::{
+//     asset_handle_factory::AssetHandleFactory,
+//     simulation_descriptor::SimulationDescriptor,
+//     systems::{
+//         camera_system::camera_system, init_system::init_system, renderer_system::renderer_system,
+//         simulation_system::simulation_system, ui_system::ui_system,
+//     },
+//     visualization_state::VisualizationState,
+//     wrappers::{ActiveSchedule, ActiveState, Initializer},
+// };
+
+use crate::visualization::simulation_descriptor::SimulationDescriptor;
+
+//T: resolve errors about Color not found
+use bevy::render::color::Color;
 
 // The application main struct, used to build and start the event loop. Offers several methods in a builder-pattern style
 // to allow for basic customization, such as background color, asset path and custom systems. Right now the framework
@@ -62,46 +76,97 @@ impl Visualization {
         self
     }
 
+    //T: Commented because i think that we don't need it anymore
     // Create the application and start it immediately. Requires a startup callback defined as a struct
     // that implements [OnStateInit], along with the state and the schedule, which you manually create.
-    pub fn start<I: VisualizationState<S> + 'static + bevy::prelude::Resource + Clone, S: State>(
-        self,
-        init_call: I,
-        state: S,
-    ) {
-        let mut app_builder = self.setup(init_call, state);
-        app_builder.run()
+    // pub fn start<I: VisualizationState<S> + 'static + bevy::prelude::Resource + Clone, S: State>(
+    //     self,
+    //     init_call: I,
+    //     state: S,
+    // ) {
+    //     let mut app_builder = self.setup(init_call, state);
+    //     app_builder.run()
+    // }
+
+    //T: Probably we don't need anymore this method, for now it produces only error
+    pub fn start(self)
+    {
+
     }
 
+    //T: Commented for a great numbers of errors
     // Sets up the application, exposing the [AppBuilder]. Useful if you want to directly interface Bevy
     // and add plugins, resources or systems yourself.
-    pub fn setup<I: VisualizationState<S> + Clone + 'static + bevy::prelude::Resource, S: State>(
-        &self,
-        init_call: I,
-        mut state: S,
-    ) -> App {
-        //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
-        let mut window_constraints = WindowResizeConstraints::default();
-        window_constraints.min_width = 600.;
-        window_constraints.min_height = 300.;
+    // pub fn setup<I: VisualizationState<S> + Clone + 'static + bevy::prelude::Resource, S: State>(
+    //     &self,
+    //     init_call: I,
+    //     mut state: S,
+    // ) -> App {
+    //     //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
+    //     let mut window_constraints = WindowResizeConstraints::default();
+    //     window_constraints.min_width = 600.;
+    //     window_constraints.min_height = 300.;
 
-        let mut app = App::new();
-        let mut schedule = Schedule::new();
-        state.init(&mut schedule);
-        let cloned_init_call = init_call.clone();
+    //     let mut app = App::new();
+    //     let mut schedule = Schedule::new();
+    //     state.init(&mut schedule);
+    //     let cloned_init_call = init_call.clone();
 
-        app.add_plugins(DefaultPlugins.set(RenderPlugin {
-            // Resolves false positive error spam in console for AMD GPUs, but it breaks WebGL: https://github.com/bevyengine/bevy/issues/9975
-            // render_creation: RenderCreation::Automatic(WgpuSettings {
-            //     backends: Some(Backends::VULKAN),
-            //     ..default()
-            // }),
-            ..default()
-        }))
-        .add_plugins(EguiPlugin);
+        // app.add_plugins(DefaultPlugins.set(RenderPlugin {
+        //     // Resolves false positive error spam in console for AMD GPUs, but it breaks WebGL: https://github.com/bevyengine/bevy/issues/9975
+        //     // render_creation: RenderCreation::Automatic(WgpuSettings {
+        //     //     backends: Some(Backends::VULKAN),
+        //     //     ..default()
+        //     // }),
+        //     ..default()
+        // }))
+        // .add_plugins(EguiPlugin);
 
-        // Required for network visualization
-        app.add_plugins(ShapePlugin);
+    //     // Required for network visualization
+    //     app.add_plugins(ShapePlugin);
+
+    //     app.insert_resource(SimulationDescriptor {
+    //         title: self
+    //             .window_name
+    //             .parse()
+    //             .expect("Error: can't parse window name"),
+    //         width: self.sim_width,
+    //         height: self.sim_height,
+    //         center_x: (self.width * 0.5) - (self.width - self.sim_width as f32) / 2.,
+    //         center_y: (self.height * 0.5) - (self.height - self.sim_height as f32) / 2.,
+    //         paused: true,
+    //         ui_width: 300.,
+    //     })
+    //     .insert_resource(ClearColor(self.background_color))
+    //     .insert_resource(AssetHandleFactory::new())
+    //     .insert_resource(init_call)
+    //     .insert_resource(ActiveState(Arc::new(Mutex::new(state))))
+    //     .insert_resource(ActiveSchedule(Arc::new(Mutex::new(schedule))))
+    //     .insert_resource(Initializer(cloned_init_call, Default::default()))
+    //     .add_systems(FixedPreUpdate, simulation_system::<S>)
+    //     .add_systems(Update, ui_system::<I, S>)
+    //     .add_systems(FixedPostUpdate, renderer_system::<I, S>)
+    //     .insert_resource(Time::<Fixed>::default())
+    //     .add_systems(Startup, init_system::<I, S>)
+    //     .add_plugins(FrameTimeDiagnosticsPlugin::default())
+    //     .add_systems(Update, camera_system);
+
+    //     app
+    // }
+
+    //T: rewriting this functions
+    pub fn setup(&self, simulation: &mut Simulation)
+    {
+        let mut app = &mut simulation.app;
+
+        //app.add_plugins(DefaultPlugins.set(RenderPlugin { ..default() }));
+
+        // let windowPlugin = WindowPlugin { ..default() };
+        // match windowPlugin.primary_window {
+        //     Some(value) => println!("Some"),
+        //     None => println!("None")
+        // };
+        // app.add_plugins(windowPlugin);
 
         app.insert_resource(SimulationDescriptor {
             title: self
@@ -114,23 +179,9 @@ impl Visualization {
             center_y: (self.height * 0.5) - (self.height - self.sim_height as f32) / 2.,
             paused: true,
             ui_width: 300.,
-        })
-        .insert_resource(ClearColor(self.background_color))
-        .insert_resource(AssetHandleFactory::new())
-        .insert_resource(init_call)
-        .insert_resource(ActiveState(Arc::new(Mutex::new(state))))
-        .insert_resource(ActiveSchedule(Arc::new(Mutex::new(schedule))))
-        .insert_resource(Initializer(cloned_init_call, Default::default()))
-        .add_systems(FixedPreUpdate, simulation_system::<S>)
-        .add_systems(Update, ui_system::<I, S>)
-        .add_systems(FixedPostUpdate, renderer_system::<I, S>)
-        .insert_resource(Time::<Fixed>::default())
-        .add_systems(Startup, init_system::<I, S>)
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
-        .add_systems(Update, camera_system);
-
-        app
+        });
     }
+
 }
 
 impl Default for Visualization {

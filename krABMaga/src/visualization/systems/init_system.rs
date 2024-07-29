@@ -3,10 +3,10 @@ use bevy::prelude::{Camera2dBundle, Commands, Res, ResMut};
 use bevy::prelude::{Query, With};
 use bevy::window::{PrimaryWindow, Window};
 
-use crate::bevy::prelude::Transform;
-use crate::bevy::render::camera::OrthographicProjection;
-use crate::bevy::render::camera::ScalingMode;
-use crate::bevy::utils::default;
+use bevy::prelude::Transform;
+use bevy::render::camera::OrthographicProjection;
+use bevy::render::camera::ScalingMode;
+use bevy::utils::default;
 use crate::engine::state::State;
 use crate::visualization::{
     asset_handle_factory::AssetHandleFactoryResource,

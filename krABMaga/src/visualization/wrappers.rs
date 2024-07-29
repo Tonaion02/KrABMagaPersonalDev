@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
-use crate::bevy::ecs::system::Resource;
+use bevy::ecs::system::Resource;
 use crate::engine::{schedule::Schedule, state::State};
 use crate::visualization::visualization_state::VisualizationState;
 

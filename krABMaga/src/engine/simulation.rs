@@ -1,3 +1,4 @@
+use core::num;
 use std::thread;
 use std::time::Duration;
 
@@ -19,8 +20,11 @@ enum SimulationSet {
 }
 
 pub struct Simulation {
-    app: App,
+    pub(crate) app: App,
     steps: Option<u32>,
+
+    //T: added to add only at the end 
+    num_threads: usize,
 }
 
 impl Simulation {
@@ -52,23 +56,26 @@ impl Simulation {
             (engine_config_update,).in_set(SimulationSet::BeforeStep),
         );
 
-        Self { app, steps: None }
+        Self { app, steps: None, num_threads: 0 }
     }
 
     pub fn with_num_threads(mut self, num_threads: usize) -> Self {
-        self.app.add_plugins(TaskPoolPlugin {
-            task_pool_options: TaskPoolOptions {
-                // Assign all threads to compute
-                compute: TaskPoolThreadAssignmentPolicy {
-                    // set the minimum # of compute threads
-                    // to the total number of available threads
-                    min_threads: num_threads,
-                    max_threads: num_threads, // unlimited max threads
-                    percent: 1.0,             // this value is irrelevant in this case
-                },
-                ..default()
-            },
-        });
+        // self.app.add_plugins(TaskPoolPlugin {
+        //     task_pool_options: TaskPoolOptions {
+        //         // Assign all threads to compute
+        //         compute: TaskPoolThreadAssignmentPolicy {
+        //             // set the minimum # of compute threads
+        //             // to the total number of available threads
+        //             min_threads: num_threads,
+        //             max_threads: num_threads, // unlimited max threads
+        //             percent: 1.0,             // this value is irrelevant in this case
+        //         },
+        //         ..default()
+        //     },
+        // });
+
+        self.num_threads = num_threads;
+
         self
     }
 
@@ -131,5 +138,27 @@ impl Simulation {
 
     pub(crate) fn spawn_agent(&mut self) -> EntityWorldMut {
         self.app.world.spawn(())
+    }
+
+
+
+    //T: added to make working the plugins
+    pub fn _build_(&mut self) 
+    {
+        self.app.add_plugins(DefaultPlugins.
+            set(TaskPoolPlugin {
+                task_pool_options: TaskPoolOptions {
+                    // Assign all threads to compute
+                    compute: TaskPoolThreadAssignmentPolicy {
+                        // set the minimum # of compute threads
+                        // to the total number of available threads
+                        min_threads: self.num_threads,
+                        max_threads: self.num_threads, // unlimited max threads
+                        percent: 1.0,             // this value is irrelevant in this case
+                    },
+                    ..default()
+                },
+            })
+        );
     }
 }

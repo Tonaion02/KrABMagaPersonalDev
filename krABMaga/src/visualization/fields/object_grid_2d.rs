@@ -4,7 +4,7 @@ use std::marker::Sync;
 
 use bevy::prelude::{Commands, Component, Handle, Image, Query, Res, Transform};
 
-use crate::bevy::math::Quat;
+use bevy::math::Quat;
 use crate::engine::{
     fields::{dense_object_grid_2d::DenseGrid2D, sparse_object_grid_2d::SparseGrid2D},
     location::Int2D,

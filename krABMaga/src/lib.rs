@@ -348,6 +348,8 @@
 
 /// Main module, with structs for Agents, Fields and Schedule
 pub mod engine;
+//#[cfg(feature="visualization")]
+pub mod visualization;
 
 // TODO refactor macros one by one
 // TODO reimplement visualization

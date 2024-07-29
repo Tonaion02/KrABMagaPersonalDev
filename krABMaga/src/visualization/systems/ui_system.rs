@@ -6,9 +6,9 @@ use bevy_egui::egui;
 use bevy_egui::egui::{Color32, RichText};
 use bevy_egui::EguiContexts;
 
-use crate::bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use crate::bevy::prelude::{Commands, Res, ResMut};
-use crate::bevy::render::camera::Camera;
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::prelude::{Commands, Res, ResMut};
+use bevy::render::camera::Camera;
 use crate::engine::{schedule::Schedule, state::State};
 use crate::visualization::{
     asset_handle_factory::AssetHandleFactoryResource,

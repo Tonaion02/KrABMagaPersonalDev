@@ -1,9 +1,9 @@
 use bevy::prelude::{Commands, SpriteBundle};
 
-use crate::bevy::ecs::system::Resource;
-use crate::bevy::prelude::{Quat, Transform, Vec3};
+use bevy::ecs::system::Resource;
+use bevy::prelude::{Quat, Transform, Vec3};
 use crate::engine::{agent::Agent, schedule::Schedule, state::State};
-use crate::visualization::{
+use visualization::{
     agent_render::{AgentRender, SpriteType},
     asset_handle_factory::AssetHandleFactoryResource,
     simulation_descriptor::SimulationDescriptor,
@@ -51,7 +51,7 @@ pub trait VisualizationState<S: State>: Send + Sync + Resource {
 
     fn setup_agent_graphics(
         &self,
-        agent: &Box<dyn Agent>,
+        agent: &Box<Agent>,
         agent_render: Box<dyn AgentRender>,
         mut sprite_bundle: SpriteBundle,
         commands: &mut Commands,

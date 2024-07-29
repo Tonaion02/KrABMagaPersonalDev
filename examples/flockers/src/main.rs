@@ -21,6 +21,11 @@ use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 
+//For visualization
+
+use krabmaga::visualization::visualization::Visualization;
+//For visualization
+
 
 
 
@@ -121,6 +126,9 @@ fn build_simulation(simulation: Simulation) -> Simulation {
         .with_engine_configuration(EngineConfiguration::new(Real2D { x: *DIM_X, y: *DIM_Y }, SEED)); // TODO abstract
     // TODO figure out how configs should work. Either split engine config and simulation config, requiring the latter to be registered, or...?
     init_world(&mut simulation, field);
+
+    //T: added to make working plugins
+    simulation._build_();
 
     simulation
 }
@@ -237,7 +245,7 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
         if dis > 0.0 {
             dx = dx / dis * JUMP;
             dy = dy / dis * JUMP;
-        }
+        }   
 
         let loc_x = toroidal_transform(cur_pos.x + dx, *DIM_X);
         let loc_y = toroidal_transform(cur_pos.y + dy, *DIM_Y);
@@ -257,7 +265,7 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
     //println!("Elapsed: {:?}", now.elapsed());
 }
 //
-// // Main used when a visualization feature is applied.
+// Main used when a visualization feature is applied.
 // #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 // fn main() {
 //     let dim = (200., 200.);
@@ -270,3 +278,21 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
 //         .with_name("Flockers")
 //         .start::<VisState, Flocker>(VisState, state);
 // }
+#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
+fn main()
+{
+    println!("hm");
+    let mut simulation = build_simulation(Simulation::build().with_steps(*STEPS));
+
+
+    Visualization::default().setup(&mut simulation);
+
+    let now = Instant::now();
+    simulation.run();
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
+    
+    
+    
+    save_elapsed_time(elapsed);
+}

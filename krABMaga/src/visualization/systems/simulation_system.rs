@@ -1,6 +1,6 @@
 use bevy::prelude::ResMut;
 
-use crate::bevy::prelude::Res;
+use bevy::prelude::Res;
 use crate::engine::state::State;
 use crate::visualization::{
     simulation_descriptor::SimulationDescriptor,
