@@ -23,7 +23,7 @@ use bevy::prelude::ClearColor;
 pub use bevy::render::color::Color as Color;
 
 //T: This elements are removed from the krabmaga framework
-//use crate::engine::{schedule::Schedule, state::State}; 
+//use crate::engine::{schedule::Schedule, state::State};
 
 //T: Comments for errors
 // use crate::visualization::{
@@ -36,6 +36,11 @@ pub use bevy::render::color::Color as Color;
 //     visualization_state::VisualizationState,
 //     wrappers::{ActiveSchedule, ActiveState, Initializer},
 // };
+
+//T: temporary
+use bevy::app::Startup;
+use bevy::app::Update;
+use bevy::prelude::*;
 
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
 
@@ -172,20 +177,48 @@ impl Visualization {
         // app.add_plugins(WinitPlugin {..default()});
         // app.add_plugins(RenderPlugin {..default()});
 
-        // app.insert_resource(ClearColor(self.background_color));
+        // fn setup(mut commands: Commands) {
+        //     commands.spawn(Camera2dBundle::default());
+        
+        //     println!("Porcodio");
+        // }
+        
+        // fn draw_cursor(
+        //     camera_query: Query<(&Camera, &GlobalTransform)>,
+        //     windows: Query<&Window>,
+        //     mut gizmos: Gizmos,
+        // ) {
+        //     let (camera, camera_transform) = camera_query.single();
+        
+        //     let Some(cursor_position) = windows.single().cursor_position() else {
+        //         return;
+        //     };
+        
+        //     // Calculate a world position based on the cursor's position.
+        //     let Some(point) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
+        //         return;
+        //     };
+        
+        //     gizmos.circle_2d(point, 10.,Color::rgb(1., 0., 0.));
+        // }
 
-        // app.insert_resource(SimulationDescriptor {
-        //     title: self
-        //         .window_name
-        //         .parse()
-        //         .expect("Error: can't parse window name"),
-        //     width: self.sim_width,
-        //     height: self.sim_height,
-        //     center_x: (self.width * 0.5) - (self.width - self.sim_width as f32) / 2.,
-        //     center_y: (self.height * 0.5) - (self.height - self.sim_height as f32) / 2.,
-        //     paused: true,
-        //     ui_width: 300.,
-        // });
+        // app.add_systems(Startup, setup);
+        // app.add_systems(Update, draw_cursor);
+
+        app.insert_resource(ClearColor(self.background_color));
+
+        app.insert_resource(SimulationDescriptor {
+            title: self
+                .window_name
+                .parse()
+                .expect("Error: can't parse window name"),
+            width: self.sim_width,
+            height: self.sim_height,
+            center_x: (self.width * 0.5) - (self.width - self.sim_width as f32) / 2.,
+            center_y: (self.height * 0.5) - (self.height - self.sim_height as f32) / 2.,
+            paused: true,
+            ui_width: 300.,
+        });
     }
 
 }

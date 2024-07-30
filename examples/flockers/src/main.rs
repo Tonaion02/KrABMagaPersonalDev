@@ -98,7 +98,7 @@ fn main()
     let mut simulation = build_simulation(Simulation::build());
     //let mut simulation = Simulation::build();
 
-    Visualization::default().with_background_color(Color::rgb(0., 0., 0.)).setup(&mut simulation);
+    Visualization::default().with_background_color(Color::rgb(0.5, 0., 0.)).setup(&mut simulation);
     //Visualization::default().setup(&mut simulation);
 
     let now = Instant::now();
@@ -144,10 +144,7 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
         .with_engine_configuration(EngineConfiguration::new(Real2D { x: *DIM_X, y: *DIM_Y }, SEED)); // TODO abstract
     // TODO figure out how configs should work. Either split engine config and simulation config, requiring the latter to be registered, or...?
     init_world(&mut simulation, field);
-
-    //T: added to make working plugins
     
-
     simulation
 }
 
@@ -183,6 +180,7 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
                neighbour_query: Query<(&DBRead<Real2DTranslation>, &DBRead<LastReal2D>)>,
                field_query: Query<&Field2D<Entity>>,
                config: Res<EngineConfiguration>) {
+        
     let field = field_query.single();
     //println!("Step #{}", config.current_step);
     let now = Instant::now();

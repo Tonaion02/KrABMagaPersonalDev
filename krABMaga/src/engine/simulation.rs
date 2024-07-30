@@ -29,7 +29,6 @@ pub struct Simulation {
 
 impl Simulation {
     pub fn build() -> Self {
-    
 
         let mut app = App::new();
         //T: removed for now for the problems of the plugins
@@ -52,8 +51,6 @@ impl Simulation {
                 ..default()
             },
         }));
-
-
 
         app.configure_sets(
             Update,
