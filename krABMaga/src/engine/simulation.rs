@@ -36,14 +36,25 @@ impl Simulation {
         //T: TODO reactivate it......
         // #[cfg(feature = "trace_tracy")]
         // app.add_plugins(LogPlugin::default());
-        //CODE TO TRY TO ADD A SPAN
-        // thread::spawn(|| {
-        //     println!("hello world");
-        //     info!("oH\n");
-        //     let r = info_span!("hello");
-        //     let r = r.enter();
-        //     thread::sleep(Duration::from_millis(5000));
-        // });
+
+
+        //T: add plugins here
+        app.add_plugins(DefaultPlugins.set(TaskPoolPlugin {
+            task_pool_options: TaskPoolOptions {
+                // Assign all threads to compute
+                compute: TaskPoolThreadAssignmentPolicy {
+                    // set the minimum # of compute threads
+                    // to the total number of available threads
+                    min_threads: 4,
+                    max_threads: 4, // unlimited max threads
+                    percent: 1.0,             // this value is irrelevant in this case
+                },
+                ..default()
+            },
+        }));
+
+
+
         app.configure_sets(
             Update,
             (
@@ -54,8 +65,8 @@ impl Simulation {
                 .chain(),
         )
         .add_systems(
-            Update,
-            (engine_config_update,).in_set(SimulationSet::BeforeStep),
+             Update,
+             (engine_config_update,).in_set(SimulationSet::BeforeStep),
         );
 
         Self { app, steps: None, num_threads: 0 }
@@ -140,23 +151,5 @@ impl Simulation {
 
     pub(crate) fn spawn_agent(&mut self) -> EntityWorldMut {
         self.app.world.spawn(())
-    }
-
-    //T: added to make working the plugins
-    pub fn _build_(&mut self) 
-    {
-        self.app.add_plugins(TaskPoolPlugin {
-                    task_pool_options: TaskPoolOptions {
-                        // Assign all threads to compute
-                        compute: TaskPoolThreadAssignmentPolicy {
-                            // set the minimum # of compute threads
-                            // to the total number of available threads
-                            min_threads: self.num_threads,
-                            max_threads: self.num_threads, // unlimited max threads
-                            percent: 1.0,             // this value is irrelevant in this case
-                        },
-                        ..default()
-                    },
-                });
     }
 }

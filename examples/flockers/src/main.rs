@@ -22,8 +22,8 @@ use std::fs::File;
 use std::io::prelude::*;
 
 //For visualization
-
 use krabmaga::visualization::visualization::Visualization;
+use krabmaga::visualization::visualization::Color;
 //For visualization
 
 
@@ -91,6 +91,24 @@ fn main() {
     save_elapsed_time(elapsed);    
 }
 
+#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
+fn main()
+{
+    //let mut simulation = build_simulation(Simulation::build().with_steps(*STEPS));
+    let mut simulation = build_simulation(Simulation::build());
+    //let mut simulation = Simulation::build();
+
+    Visualization::default().with_background_color(Color::rgb(0., 0., 0.)).setup(&mut simulation);
+    //Visualization::default().setup(&mut simulation);
+
+    let now = Instant::now();
+    simulation.run();
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
+       
+    save_elapsed_time(elapsed);
+}
+
 
 fn save_elapsed_time(elapsed_time: core::time::Duration) {
 
@@ -114,7 +132,7 @@ fn save_elapsed_time(elapsed_time: core::time::Duration) {
     //Write on file the elapsed time
 }
 
-fn build_simulation(simulation: Simulation) -> Simulation {
+fn build_simulation(mut simulation: Simulation) -> Simulation {
     let field: Field2D<Entity> = Field2D::new(*DIM_X, *DIM_Y, DISCRETIZATION, TOROIDAL);
 
     let mut simulation = simulation
@@ -128,7 +146,7 @@ fn build_simulation(simulation: Simulation) -> Simulation {
     init_world(&mut simulation, field);
 
     //T: added to make working plugins
-    simulation._build_();
+    
 
     simulation
 }
@@ -278,20 +296,3 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
 //         .with_name("Flockers")
 //         .start::<VisState, Flocker>(VisState, state);
 // }
-#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
-fn main()
-{
-    let mut simulation = build_simulation(Simulation::build().with_steps(*STEPS));
-
-
-    Visualization::default().setup(&mut simulation);
-
-    let now = Instant::now();
-    simulation.run();
-    let elapsed = now.elapsed();
-    println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
-    
-    
-    
-    save_elapsed_time(elapsed);
-}

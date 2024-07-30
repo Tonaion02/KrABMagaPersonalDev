@@ -8,7 +8,6 @@ use std::sync::{Arc, Mutex};
 
 use crate::engine::simulation::Simulation;
 
-//use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, window::WindowPlugin, DefaultPlugins};
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::window::WindowPlugin;
 use bevy::winit::WinitPlugin;
@@ -16,6 +15,13 @@ use bevy::a11y::AccessibilityPlugin;
 use bevy::render::RenderPlugin;
 use bevy::prelude::PluginGroup;
 use bevy::utils::default;
+
+//T: added this for ClearColor
+use bevy::prelude::ClearColor;
+
+//T: resolve errors about Color not found
+pub use bevy::render::color::Color as Color;
+
 //T: This elements are removed from the krabmaga framework
 //use crate::engine::{schedule::Schedule, state::State}; 
 
@@ -32,9 +38,6 @@ use bevy::utils::default;
 // };
 
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
-
-//T: resolve errors about Color not found
-use bevy::render::color::Color;
 
 // The application main struct, used to build and start the event loop. Offers several methods in a builder-pattern style
 // to allow for basic customization, such as background color, asset path and custom systems. Right now the framework
@@ -164,22 +167,25 @@ impl Visualization {
         let mut app = &mut simulation.app;
 
         //T: TODO Add plugins here
-        app.add_plugins(AccessibilityPlugin {});
-        app.add_plugins(WindowPlugin {..default()});
-        app.add_plugins(WinitPlugin {..default()});
+        // app.add_plugins(AccessibilityPlugin {});
+        // app.add_plugins(WindowPlugin {..default()});
+        // app.add_plugins(WinitPlugin {..default()});
+        // app.add_plugins(RenderPlugin {..default()});
 
-        app.insert_resource(SimulationDescriptor {
-            title: self
-                .window_name
-                .parse()
-                .expect("Error: can't parse window name"),
-            width: self.sim_width,
-            height: self.sim_height,
-            center_x: (self.width * 0.5) - (self.width - self.sim_width as f32) / 2.,
-            center_y: (self.height * 0.5) - (self.height - self.sim_height as f32) / 2.,
-            paused: true,
-            ui_width: 300.,
-        });
+        // app.insert_resource(ClearColor(self.background_color));
+
+        // app.insert_resource(SimulationDescriptor {
+        //     title: self
+        //         .window_name
+        //         .parse()
+        //         .expect("Error: can't parse window name"),
+        //     width: self.sim_width,
+        //     height: self.sim_height,
+        //     center_x: (self.width * 0.5) - (self.width - self.sim_width as f32) / 2.,
+        //     center_y: (self.height * 0.5) - (self.height - self.sim_height as f32) / 2.,
+        //     paused: true,
+        //     ui_width: 300.,
+        // });
     }
 
 }
