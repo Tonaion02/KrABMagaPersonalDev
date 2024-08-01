@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 //T: Comment for errors
 // use bevy::render::RenderPlugin;
 // use bevy::{prelude::*, window::WindowResizeConstraints, DefaultPlugins};
-// use bevy_egui::EguiPlugin;
+use bevy_egui::EguiPlugin;
 // use bevy_prototype_lyon::prelude::ShapePlugin;
 
 use crate::engine::simulation::Simulation;
@@ -15,6 +15,8 @@ use bevy::a11y::AccessibilityPlugin;
 use bevy::render::RenderPlugin;
 use bevy::prelude::PluginGroup;
 use bevy::utils::default;
+
+use bevy::prelude::Update;
 
 //T: added this for ClearColor
 use bevy::prelude::ClearColor;
@@ -37,12 +39,9 @@ pub use bevy::render::color::Color as Color;
 //     wrappers::{ActiveSchedule, ActiveState, Initializer},
 // };
 
-//T: temporary
-use bevy::app::Startup;
-use bevy::app::Update;
-use bevy::prelude::*;
-
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
+
+use super::systems::ui_system::ui_system;
 
 // The application main struct, used to build and start the event loop. Offers several methods in a builder-pattern style
 // to allow for basic customization, such as background color, asset path and custom systems. Right now the framework
@@ -204,6 +203,11 @@ impl Visualization {
 
         // app.add_systems(Startup, setup);
         // app.add_systems(Update, draw_cursor);
+
+        app.add_plugins(EguiPlugin);
+        app.add_plugins(FrameTimeDiagnosticsPlugin::default());
+
+        app.add_systems(Update, ui_system);
 
         app.insert_resource(ClearColor(self.background_color));
 

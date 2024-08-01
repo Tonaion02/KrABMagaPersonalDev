@@ -76,7 +76,6 @@ lazy_static! {
 
 
 
-
 // Main used when only the simulation should run, without any visualization.
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
 fn main() {
@@ -85,8 +84,6 @@ fn main() {
     simulation.run();
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
-    
-    
     
     save_elapsed_time(elapsed);    
 }
@@ -99,7 +96,6 @@ fn main()
     //let mut simulation = Simulation::build();
 
     Visualization::default().with_background_color(Color::rgb(0.5, 0., 0.)).setup(&mut simulation);
-    //Visualization::default().setup(&mut simulation);
 
     let now = Instant::now();
     simulation.run();
@@ -107,29 +103,6 @@ fn main()
     println!("Elapsed: {:.2?}, steps per second: {}", elapsed, *STEPS as f64 / elapsed.as_secs_f64());
        
     save_elapsed_time(elapsed);
-}
-
-
-fn save_elapsed_time(elapsed_time: core::time::Duration) {
-
-    //Write on file the elapsed time
-    let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");
-    let display = path.display();
-
-    // Open a file in write-only mode
-    let mut file = match File::create(&path) {
-        Err(why) => panic!("couldn't create {}: {}", display, why),
-        Ok(file) => file,
-    };
-
-    let mut elapsed_time_s: String = String::from("elapsed_time=");
-    elapsed_time_s.push_str(&elapsed_time.as_nanos().to_string());
-
-    match file.write_all(elapsed_time_s.as_bytes()) {
-        Err(why) => panic!("couldn't write to {}: {}", display, why),
-        Ok(_) => println!("successfully wrote to {}", display),
-    }
-    //Write on file the elapsed time
 }
 
 fn build_simulation(mut simulation: Simulation) -> Simulation {
@@ -280,7 +253,30 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
     });
     //println!("Elapsed: {:?}", now.elapsed());
 }
-//
+
+fn save_elapsed_time(elapsed_time: core::time::Duration) {
+    //Write on file the elapsed time
+    let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");
+    let display = path.display();
+
+    // Open a file in write-only mode
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    let mut elapsed_time_s: String = String::from("elapsed_time=");
+    elapsed_time_s.push_str(&elapsed_time.as_nanos().to_string());
+
+    match file.write_all(elapsed_time_s.as_bytes()) {
+        Err(why) => panic!("couldn't write to {}: {}", display, why),
+        Ok(_) => println!("successfully wrote to {}", display),
+    }
+    //Write on file the elapsed time
+}
+
+
+
 // Main used when a visualization feature is applied.
 // #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 // fn main() {
