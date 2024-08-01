@@ -9,6 +9,10 @@ use bevy_egui::EguiContexts;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::{Commands, Res, ResMut};
 
+use crate::engine::agent::Agent;
+
+use crate::engine::resources::engine_configuration::EngineConfiguration;
+
 
 //T: commented for keep working
 // use bevy::render::camera::Camera;
@@ -127,38 +131,44 @@ use bevy::prelude::{Commands, Res, ResMut};
 
 pub fn ui_system(
     mut egui_context: EguiContexts,
-    // // mut sim_data: ResMut<SimulationDescriptor>,
-    // // active_schedule_wrapper: ResMut<ActiveSchedule>,
-    // // active_state_wrapper: ResMut<ActiveState<S>>,
-    // // on_init: Res<I>,
-    // // mut sprite_factory: AssetHandleFactoryResource,
-    // // query: Query<Entity, (Without<Camera>, Without<Window>)>,
+    // mut sim_data: ResMut<SimulationDescriptor>,
+    // active_schedule_wrapper: ResMut<ActiveSchedule>,
+    // active_state_wrapper: ResMut<ActiveState<S>>,
+    // on_init: Res<I>,
+    // mut sprite_factory: AssetHandleFactoryResource,
+
+    //T: now is more easier to obtain the entities that are agents
+    // query: Query<Entity, (Without<Camera>, Without<Window>)>,
+    query_agents: Query<(Entity, &Agent)>,
     diagnostics: Res<DiagnosticsStore>,
     mut commands: Commands,
     mut time: ResMut<Time<Fixed>>,
+
+    //T: Added to substitute SimulationDescriptor
+    mut engine_configuration: ResMut<EngineConfiguration>,
 ) {
     egui::SidePanel::left("main").show(egui_context.ctx_mut(), |ui| {
         ui.vertical_centered(|ui| {
             //T: temporary
             //ui.heading(sim_data.title.clone());
             ui.heading(String::from("Titolo").clone());
+
             ui.separator();
             ui.label("Press start to let the simulation begin!");
             ui.label(format!(
                 "Step: {}",
 
-                //T: substutte with engine_configuration
+                //T: substitute with engine_configuration
                 // active_schedule_wrapper
                 //     .0
                 //     .lock()
                 //     .expect("error on lock")
                 //     .step
-
-                0
+                engine_configuration.current_step
             ));
             //T: substitute with the query about entitites that has Agent Component
             //ui.label(format!("Number of entities: {}", query.iter().count()));
-
+            ui.label(format!("Number of agents: {}", query_agents.iter().count()));
 
             let fps = match diagnostics.get_measurement(&FrameTimeDiagnosticsPlugin::FPS) {
                 Some(fps_measurement) => fps_measurement.value,
@@ -183,6 +193,9 @@ pub fn ui_system(
                     // if ui.add(start_button).clicked() {
                     //     sim_data.paused = false;
                     // }
+                    if ui.add(start_button).clicked() {
+                        engine_configuration.paused = false;
+                    }
 
                     let stop_button =
                         egui::Button::new(egui::RichText::new("⏹ Stop").color(egui::Color32::RED));
@@ -190,6 +203,7 @@ pub fn ui_system(
                     //T: find a way to reset the simulation
                     if ui.add(stop_button).clicked() {
                         // sim_data.paused = true;
+                        engine_configuration.paused = true;
 
                         // // Despawn all existing entities (agents)
                         // for entity in query.iter() {
@@ -227,6 +241,7 @@ pub fn ui_system(
                     //T: substitute with engine config
                     if ui.button("⏸ Pause").clicked() {
                         // sim_data.paused = true;
+                        engine_configuration.paused = true;
                     }
                 });
             });
