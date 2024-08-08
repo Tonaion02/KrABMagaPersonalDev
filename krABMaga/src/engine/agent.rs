@@ -34,6 +34,8 @@ impl<'w> AgentFactory<'w> {
         self
     }
 
+    //T: TODO make a way that automatically recognizes the Component that are double buffered
+    //T: so you can simply insert_data and if a component is double buffered it's automatically double buffered
     /// Insert double buffered data associated to this agent. This method automatically generates two buffers that the user can use, one to read values from and one to write updated values in.
     pub fn insert_double_buffered<T: Component + Copy>(&mut self, value: T) -> &mut Self {
         self.entity.insert(DoubleBuffered::new(value));

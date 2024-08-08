@@ -75,7 +75,6 @@ lazy_static! {
 
 
 
-
 // Main used when only the simulation should run, without any visualization.
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
 fn main() {

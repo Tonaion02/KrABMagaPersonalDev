@@ -1,8 +1,10 @@
 use std::sync::{Arc, Mutex};
 
+use bevy::app::FixedPostUpdate;
 //T: Comment for errors
 // use bevy::render::RenderPlugin;
 // use bevy::{prelude::*, window::WindowResizeConstraints, DefaultPlugins};
+use bevy::window::WindowResizeConstraints;
 use bevy_egui::EguiPlugin;
 // use bevy_prototype_lyon::prelude::ShapePlugin;
 
@@ -204,13 +206,17 @@ impl Visualization {
         // app.add_systems(Startup, setup);
         // app.add_systems(Update, draw_cursor);
 
+        //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
+        let mut window_constraints = WindowResizeConstraints::default();
+        window_constraints.min_width = 600.;
+        window_constraints.min_height = 300.;
+
         app.add_plugins(EguiPlugin);
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
         app.add_systems(Update, ui_system);
 
         app.insert_resource(ClearColor(self.background_color));
-
         app.insert_resource(SimulationDescriptor {
             title: self
                 .window_name
@@ -224,7 +230,6 @@ impl Visualization {
             ui_width: 300.,
         });
     }
-
 }
 
 impl Default for Visualization {

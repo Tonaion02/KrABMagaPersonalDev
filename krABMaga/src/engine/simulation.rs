@@ -60,11 +60,23 @@ impl Simulation {
                 SimulationSet::AfterStep,
             )
                 .chain(),
-        )
-        .add_systems(
-             Update,
+        );
+        
+        //T: In case where is defined feature visualization 
+        #[cfg(feature = "visualization")]
+        app.add_systems(
+             FixedPreUpdate,
              (engine_config_update,).in_set(SimulationSet::BeforeStep),
         );
+        //T: In case where is defined feature visualization
+
+        //T: In case where is not defined feature visualization
+        #[cfg(not(feature = "visualization"))]
+        app.add_systems(
+            Update,
+            (engine_config_update,).in_set(SimulationSet::BeforeStep),
+        );
+        //T: In case where is not defined feature visualization
 
         Self { app, steps: None, num_threads: 0 }
     }
@@ -95,7 +107,8 @@ impl Simulation {
         step_handler: impl IntoSystemConfigs<Params>,
     ) -> Self {
         self.app
-            .add_systems(Update, (step_handler,).in_set(SimulationSet::Step));
+            //.add_systems(Update, (step_handler,).in_set(SimulationSet::Step));
+            .add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step));
         self
     }
 
