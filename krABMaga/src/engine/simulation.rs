@@ -106,9 +106,11 @@ impl Simulation {
         mut self,
         step_handler: impl IntoSystemConfigs<Params>,
     ) -> Self {
-        self.app
-            //.add_systems(Update, (step_handler,).in_set(SimulationSet::Step));
-            .add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step));
+        #[cfg(not(feature = "visualization"))]
+        self.app.add_systems(Update, (step_handler,).in_set(SimulationSet::Step));
+
+        #[cfg(feature = "visualization")]
+        self.app.add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step));
         self
     }
 

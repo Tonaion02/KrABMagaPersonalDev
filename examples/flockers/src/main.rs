@@ -42,7 +42,8 @@ pub static TOROIDAL: bool = true;
 pub static SEED: u64 = 1337;
 
 // MODIFIED: now we retrieve this parameters from command line
-// but that acts like "static constants", little trick from here: 
+// but that acts like "static constants", little trick from here:
+// https://stackoverflow.com/questions/37405835/populating-a-static-const-with-an-environment-variable-at-runtime-in-rust
 lazy_static! {
     static ref NUM_THREADS: usize = 
     match (std::env::args().collect::<Vec<String>>().get(1)) {
@@ -94,7 +95,7 @@ fn main()
     let mut simulation = build_simulation(Simulation::build());
     //let mut simulation = Simulation::build();
 
-    Visualization::default().with_background_color(Color::rgb(0.5, 0., 0.)).setup(&mut simulation);
+    Visualization::default().with_background_color(Color::rgb(0.5, 0.5, 0.5)).setup(&mut simulation);
 
     let now = Instant::now();
     simulation.run();

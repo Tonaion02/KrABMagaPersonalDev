@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use bevy::app::FixedPostUpdate;
+use bevy::window::PrimaryWindow;
 //T: Comment for errors
 // use bevy::render::RenderPlugin;
 // use bevy::{prelude::*, window::WindowResizeConstraints, DefaultPlugins};
@@ -23,8 +24,22 @@ use bevy::prelude::Update;
 //T: added this for ClearColor
 use bevy::prelude::ClearColor;
 
-//T: resolve errors about Color not found
+//T: resolve errors about Color not found in main
+// Export Color directly from here with 'pub'
 pub use bevy::render::color::Color as Color;
+
+//T: TEMP
+use crate::engine::Query;
+use crate::engine::With;
+use bevy::window::Window;
+use bevy::prelude::Commands;
+use bevy::prelude::Startup;
+use bevy::ecs::system::ResMut;
+use bevy::prelude::Transform;
+use bevy::prelude::Vec2;
+use bevy::render::camera::ScalingMode;
+use bevy::render::camera::OrthographicProjection;
+use bevy::prelude::Camera2dBundle;
 
 //T: This elements are removed from the krabmaga framework
 //use crate::engine::{schedule::Schedule, state::State};
@@ -43,7 +58,9 @@ pub use bevy::render::color::Color as Color;
 
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
 
+use super::systems::camera_system::camera_system;
 use super::systems::ui_system::ui_system;
+use super::systems::init_system::init_system;
 
 // The application main struct, used to build and start the event loop. Offers several methods in a builder-pattern style
 // to allow for basic customization, such as background color, asset path and custom systems. Right now the framework
@@ -178,33 +195,41 @@ impl Visualization {
         // app.add_plugins(WinitPlugin {..default()});
         // app.add_plugins(RenderPlugin {..default()});
 
-        // fn setup(mut commands: Commands) {
-        //     commands.spawn(Camera2dBundle::default());
-        
-        //     println!("Porcodio");
-        // }
-        
-        // fn draw_cursor(
-        //     camera_query: Query<(&Camera, &GlobalTransform)>,
-        //     windows: Query<&Window>,
-        //     mut gizmos: Gizmos,
-        // ) {
-        //     let (camera, camera_transform) = camera_query.single();
-        
-        //     let Some(cursor_position) = windows.single().cursor_position() else {
-        //         return;
-        //     };
-        
-        //     // Calculate a world position based on the cursor's position.
-        //     let Some(point) = camera.viewport_to_world_2d(camera_transform, cursor_position) else {
-        //         return;
-        //     };
-        
-        //     gizmos.circle_2d(point, 10.,Color::rgb(1., 0., 0.));
-        // }
-
         // app.add_systems(Startup, setup);
         // app.add_systems(Update, draw_cursor);
+
+        //T: temp...Spawn a Camera2D, move this out in init_system
+        // fn spawn_camera(
+        //     mut commands: Commands,
+        //     window: Query<&Window, With<PrimaryWindow>>,
+        //     mut sim: ResMut<SimulationDescriptor>,
+        // ) {
+        //     if let Ok(window) = window.get_single() {
+        //         // Right handed coordinate system, equal to how it is implemented in [`OrthographicProjection::new_2d()`].
+        //         let far = 1000.;
+        //         // Offset the whole simulation to the left to take the width of the UI panel into account.
+        //         let ui_offset = -sim.ui_width;
+        //         // Scale the simulation so it fills the portion of the screen not covered by the UI panel.
+        //         let scale_x = sim.width / (window.width() + ui_offset);
+        //         // The translation x must depend on the scale_x to keep the left offset constant between window resizes.
+        //         let mut initial_transform = Transform::from_xyz(ui_offset * scale_x, 0., far - 0.1);
+        //         initial_transform.scale.x = scale_x;
+        //         initial_transform.scale.y = sim.height / window.height();
+                
+        //         commands.spawn(Camera2dBundle {
+        //             projection: OrthographicProjection {
+        //                 far,
+        //                 scaling_mode: ScalingMode::WindowSize(1.),
+        //                 viewport_origin: Vec2::new(0., 0.),
+        //                 ..default()
+        //             }
+        //             .into(),
+        //             transform: initial_transform,
+        //             ..default()
+        //         });
+
+        //     }
+        // }
 
         //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
         let mut window_constraints = WindowResizeConstraints::default();
@@ -214,7 +239,14 @@ impl Visualization {
         app.add_plugins(EguiPlugin);
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
+        //T: temp
+        //app.add_systems(Startup, spawn_camera);
+
+        //T: added at startup this system
+        app.add_systems(Startup, init_system);
+
         app.add_systems(Update, ui_system);
+        app.add_systems(Update, camera_system);
 
         app.insert_resource(ClearColor(self.background_color));
         app.insert_resource(SimulationDescriptor {
