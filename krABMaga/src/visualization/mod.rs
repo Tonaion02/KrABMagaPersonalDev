@@ -5,5 +5,6 @@ pub mod simulation_descriptor;
 mod systems;
 // pub mod utils;
 pub mod visualization;
+pub mod graphic_initializer;
 // pub mod visualization_state;
 // pub mod wrappers;

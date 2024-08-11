@@ -22,8 +22,14 @@ use std::fs::File;
 use std::io::prelude::*;
 
 //For visualization
+mod visualization;
+
 use krabmaga::visualization::visualization::Visualization;
 use krabmaga::visualization::visualization::Color;
+
+
+use krabmaga::visualization::graphic_initializer::GraphicInitializer;
+use crate::visualization::graphic_initializer::GI;
 //For visualization
 
 
@@ -95,7 +101,7 @@ fn main()
     let mut simulation = build_simulation(Simulation::build());
     //let mut simulation = Simulation::build();
 
-    Visualization::default().with_background_color(Color::rgb(0.5, 0.5, 0.5)).setup(&mut simulation);
+    Visualization::default().with_background_color(Color::rgb(0.5, 0.5, 0.5)).setup::<GI>(&mut simulation, GI);
 
     let now = Instant::now();
     simulation.run();
@@ -125,7 +131,10 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
 // TODO: there needs to be a way to specify initialization logic too though.
 // TODO: this bundle prototype must be passed to the simulation so that, along with NUM_AGENTS, the simulation
 // TODO: can be programmatically restarted.
-fn init_world(simulation: &mut Simulation, field: Field2D<Entity>) {
+fn init_world(
+    simulation: &mut Simulation, 
+    field: Field2D<Entity>,
+    ) {
     for bird_id in 0..*NUM_AGENTS {
         let mut rng = RNG::new(SEED, bird_id as u64);
         let r1: f32 = rng.gen();

@@ -20,26 +20,35 @@ use bevy::prelude::PluginGroup;
 use bevy::utils::default;
 
 use bevy::prelude::Update;
+use bevy::prelude::Startup;
 
 //T: added this for ClearColor
 use bevy::prelude::ClearColor;
+
+//T: added this for Insertion of resource Time
+use bevy::time::Time;
+use bevy::time::Fixed;
+
+use bevy::ecs::system::Resource;
+
+use super::graphic_initializer::GraphicInitializer;
 
 //T: resolve errors about Color not found in main
 // Export Color directly from here with 'pub'
 pub use bevy::render::color::Color as Color;
 
 //T: TEMP
-use crate::engine::Query;
-use crate::engine::With;
-use bevy::window::Window;
-use bevy::prelude::Commands;
-use bevy::prelude::Startup;
-use bevy::ecs::system::ResMut;
-use bevy::prelude::Transform;
-use bevy::prelude::Vec2;
-use bevy::render::camera::ScalingMode;
-use bevy::render::camera::OrthographicProjection;
-use bevy::prelude::Camera2dBundle;
+// use crate::engine::Query;
+// use crate::engine::With;
+// use bevy::window::Window;
+// use bevy::prelude::Commands;
+// use bevy::prelude::Startup;
+// use bevy::ecs::system::ResMut;
+// use bevy::prelude::Transform;
+// use bevy::prelude::Vec2;
+// use bevy::render::camera::ScalingMode;
+// use bevy::render::camera::OrthographicProjection;
+// use bevy::prelude::Camera2dBundle;
 
 //T: This elements are removed from the krabmaga framework
 //use crate::engine::{schedule::Schedule, state::State};
@@ -185,8 +194,11 @@ impl Visualization {
     // }
 
     //T: rewriting this functions
-    pub fn setup(&self, simulation: &mut Simulation)
-    {
+    pub fn setup<GI: GraphicInitializer + Resource + 'static>(
+        &self, 
+        simulation: &mut Simulation,
+        graphic_initializer: impl GraphicInitializer,
+    ) {
         let mut app = &mut simulation.app;
 
         //T: TODO Add plugins here
@@ -194,42 +206,6 @@ impl Visualization {
         // app.add_plugins(WindowPlugin {..default()});
         // app.add_plugins(WinitPlugin {..default()});
         // app.add_plugins(RenderPlugin {..default()});
-
-        // app.add_systems(Startup, setup);
-        // app.add_systems(Update, draw_cursor);
-
-        //T: temp...Spawn a Camera2D, move this out in init_system
-        // fn spawn_camera(
-        //     mut commands: Commands,
-        //     window: Query<&Window, With<PrimaryWindow>>,
-        //     mut sim: ResMut<SimulationDescriptor>,
-        // ) {
-        //     if let Ok(window) = window.get_single() {
-        //         // Right handed coordinate system, equal to how it is implemented in [`OrthographicProjection::new_2d()`].
-        //         let far = 1000.;
-        //         // Offset the whole simulation to the left to take the width of the UI panel into account.
-        //         let ui_offset = -sim.ui_width;
-        //         // Scale the simulation so it fills the portion of the screen not covered by the UI panel.
-        //         let scale_x = sim.width / (window.width() + ui_offset);
-        //         // The translation x must depend on the scale_x to keep the left offset constant between window resizes.
-        //         let mut initial_transform = Transform::from_xyz(ui_offset * scale_x, 0., far - 0.1);
-        //         initial_transform.scale.x = scale_x;
-        //         initial_transform.scale.y = sim.height / window.height();
-                
-        //         commands.spawn(Camera2dBundle {
-        //             projection: OrthographicProjection {
-        //                 far,
-        //                 scaling_mode: ScalingMode::WindowSize(1.),
-        //                 viewport_origin: Vec2::new(0., 0.),
-        //                 ..default()
-        //             }
-        //             .into(),
-        //             transform: initial_transform,
-        //             ..default()
-        //         });
-
-        //     }
-        // }
 
         //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
         let mut window_constraints = WindowResizeConstraints::default();
@@ -239,15 +215,16 @@ impl Visualization {
         app.add_plugins(EguiPlugin);
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
-        //T: temp
-        //app.add_systems(Startup, spawn_camera);
-
         //T: added at startup this system
-        app.add_systems(Startup, init_system);
+        app.add_systems(Startup, init_system::<GI>);
 
         app.add_systems(Update, ui_system);
         app.add_systems(Update, camera_system);
 
+        //T: added to create a callback to initialize graphic elements of simulatino
+        app.insert_resource(graphic_initializer);
+
+        app.insert_resource(Time::<Fixed>::default());
         app.insert_resource(ClearColor(self.background_color));
         app.insert_resource(SimulationDescriptor {
             title: self

@@ -9,6 +9,7 @@ pub use bevy::prelude::ResMut;
 
 //T: added by me
 pub use bevy::prelude::With;
+pub use bevy::prelude::Commands;
 
 /// Module to define Agent methods
 pub mod agent;

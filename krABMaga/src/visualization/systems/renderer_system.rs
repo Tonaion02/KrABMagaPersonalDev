@@ -1,14 +1,15 @@
-use bevy::prelude::{Handle, Image, Query, Res, Transform, Visibility};
+//T: commented for error
+// use bevy::prelude::{Handle, Image, Query, Res, Transform, Visibility};
 
-use bevy::prelude::{Commands, ResMut};
-use crate::engine::state::State;
-use crate::visualization::{
-    agent_render::{AgentRender, SpriteType},
-    asset_handle_factory::AssetHandleFactoryResource,
-    simulation_descriptor::SimulationDescriptor,
-    visualization_state::VisualizationState,
-    wrappers::{ActiveSchedule, ActiveState},
-};
+// use bevy::prelude::{Commands, ResMut};
+// use crate::engine::state::State;
+// use crate::visualization::{
+//     agent_render::{AgentRender, SpriteType},
+//     asset_handle_factory::AssetHandleFactoryResource,
+//     simulation_descriptor::SimulationDescriptor,
+//     visualization_state::VisualizationState,
+//     wrappers::{ActiveSchedule, ActiveState},
+// };
 
 // // The system that updates the visual representation of each agent of our simulation.
 // pub fn renderer_system<

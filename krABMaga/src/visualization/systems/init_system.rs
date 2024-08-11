@@ -3,11 +3,14 @@ use bevy::prelude::{Camera2dBundle, Commands, Res, ResMut};
 use bevy::prelude::{Query, With};
 use bevy::window::{PrimaryWindow, Window};
 
+use bevy::ecs::system::Resource;
+
 use bevy::prelude::Transform;
 use bevy::render::camera::OrthographicProjection;
 use bevy::render::camera::ScalingMode;
 use bevy::utils::default;
-use crate::engine::state::State;
+//T: commented for errors
+//use crate::engine::state::State;
 //T: commented for errors
 // use crate::visualization::{
 //     asset_handle_factory::AssetHandleFactoryResource,
@@ -16,7 +19,11 @@ use crate::engine::state::State;
 //     wrappers::{ActiveSchedule, ActiveState},
 // };
 
-use crate::visualization::simulation_descriptor::SimulationDescriptor;
+use bevy::prelude::AssetServer;
+use bevy::sprite::SpriteBundle;
+
+use crate::visualization::graphic_initializer::GraphicInitializer;
+use crate::visualization::simulation_descriptor::{self, SimulationDescriptor};
 
 // T: Commented to rewrite
 /// The main startup system which bootstraps a simple orthographic camera, centers it to aim at the simulation,
@@ -72,10 +79,12 @@ use crate::visualization::simulation_descriptor::SimulationDescriptor;
 
 
 //T: rewrited from me
-pub fn init_system(
+pub fn init_system<GI: GraphicInitializer + Resource + 'static>(
     mut commands: Commands,
     window: Query<&Window, With<PrimaryWindow>>,
     mut sim: ResMut<SimulationDescriptor>,
+    asset_server: Res<AssetServer>,
+    graphic_initializer: Res<GI>,
 ) {
     if let Ok(window) = window.get_single() {
         // Right handed coordinate system, equal to how it is implemented in [`OrthographicProjection::new_2d()`].
@@ -89,6 +98,7 @@ pub fn init_system(
         initial_transform.scale.x = scale_x;
         initial_transform.scale.y = sim.height / window.height();
 
+        //T: Spawn a necessary 2D Camera
         commands.spawn(Camera2dBundle {
             projection: OrthographicProjection {
                 far,
@@ -100,7 +110,20 @@ pub fn init_system(
             transform: initial_transform,
             ..default()
         });
+        
+        //T: temp
+        commands.spawn(
+            SpriteBundle {
+                transform: Transform::default(),
+                texture: asset_server.load("emojis/bird.png"),
+                ..default()
+            }
+        );
 
+        graphic_initializer.on_init(&mut commands, &mut sim);
+
+        //T: find a method to substitute this call that permits to execute code to initialize
+        //T: graphic components of simulation
         // on_init.on_init(
         //     &mut commands,
         //     &mut sprite_factory,
