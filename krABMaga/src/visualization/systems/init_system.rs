@@ -86,7 +86,6 @@ pub fn init_system(
 ) {
     if let Ok(window) = window.get_single() {
 
-
         println!("init_system is executed");
 
         // Right handed coordinate system, equal to how it is implemented in [`OrthographicProjection::new_2d()`].
@@ -112,15 +111,6 @@ pub fn init_system(
             transform: initial_transform,
             ..default()
         });
-        
-        //T: temp
-        commands.spawn(
-            SpriteBundle {
-                transform: Transform::default(),
-                texture: asset_server.load("emojis/bird.png"),
-                ..default()
-            }
-        );
 
         //T: find a method to substitute this call that permits to execute code to initialize
         //T: graphic components of simulation

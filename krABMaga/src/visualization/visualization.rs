@@ -195,6 +195,8 @@ impl Visualization {
     // }
 
     //T: rewriting this functions
+    //T: TODO try to create a way to pass the g_initializer throug a different function
+    //T: and execute that after init_system
     pub fn setup<Params>(
         &self, 
         simulation: &mut Simulation,

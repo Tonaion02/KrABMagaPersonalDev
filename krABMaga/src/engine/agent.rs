@@ -1,9 +1,11 @@
 use bevy::prelude::{Component, EntityWorldMut};
+use bevy::prelude::Entity;
+use bevy::ecs::query::QueryData;
 
 use crate::engine::components::double_buffer::DoubleBuffered;
 use crate::engine::simulation::Simulation;
 
-#[derive(Component)]
+#[derive(Component, QueryData)]
 pub struct Agent;
 
 /// A helper struct to properly create agents and add data to it with the ECS architecture

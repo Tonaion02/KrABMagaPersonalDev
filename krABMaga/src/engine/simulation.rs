@@ -111,6 +111,7 @@ impl Simulation {
 
         #[cfg(feature = "visualization")]
         self.app.add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step));
+        
         self
     }
 
@@ -120,23 +121,27 @@ impl Simulation {
             Update,
             (double_buffer_sync::<T>,).in_set(SimulationSet::BeforeStep),
         );
+        
         self
     }
 
     pub fn with_steps(mut self, steps: u32) -> Self {
         self.steps = Some(steps);
+
         self
     }
 
     // TODO specify this is required (SimulationBuilder with validation, which generates a Simulation on build()?)
     pub fn with_engine_configuration(mut self, config: EngineConfiguration) -> Self {
         self.app.insert_resource(config);
+
         self
     }
 
     pub fn with_rng(mut self, seed: u64) -> Self {
         let rng = RNG::new(seed, 0);
         self.app.insert_resource(rng);
+
         self
     }
 
@@ -144,6 +149,7 @@ impl Simulation {
         self.app.world.spawn((field,));
         self.app
             .add_systems(Update, (update_field,).in_set(SimulationSet::BeforeStep));
+
         self
     }
 

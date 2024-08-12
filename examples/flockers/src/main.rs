@@ -34,6 +34,13 @@ use krabmaga::visualization::visualization::Visualization;
 use krabmaga::visualization::visualization::Color;
 
 use krabmaga::engine::agent::Agent;
+use krabmaga::engine::Commands;
+use krabmaga::engine::With;
+
+use krabmaga::visualization::AssetServer;
+use krabmaga::visualization::Transform;
+use krabmaga::visualization::SpriteBundle;
+use krabmaga::visualization::Vec3;
 //For visualization
 
 
@@ -98,10 +105,6 @@ fn main() {
     save_elapsed_time(elapsed);    
 }
 
-fn g_initializer() {
-    println!("g_initalizer is executed!");
-}
-
 #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn main()
 {
@@ -109,7 +112,9 @@ fn main()
     let mut simulation = build_simulation(Simulation::build());
     //let mut simulation = Simulation::build();
 
-    Visualization::default().with_background_color(Color::rgb(0.5, 0.5, 0.5)).setup(&mut simulation, g_initializer);
+    Visualization::default()
+    .with_background_color(Color::rgb(0.5, 0.5, 0.5))
+    .setup(&mut simulation, graphic_initializer);
 
     let now = Instant::now();
     simulation.run();
@@ -269,6 +274,34 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
         //println!("Elapsed 4 agent {}: {:?}", bird.id, now.elapsed());
     });
     //println!("Elapsed: {:?}", now.elapsed());
+}
+
+//#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
+fn graphic_initializer(
+    mut commands: Commands,
+    query_agents: Query<(Entity, &DBWrite<Real2DTranslation>), (With<Bird>)>,
+    asset_server: Res<AssetServer>,
+    ) {
+
+    println!("graphic_initalizer is executed!");
+
+    let mut cont = 0;
+    for (entity_id, cur_pos) in &query_agents {
+        
+        println!("hello: {}", cont);
+
+        let mut transform = Transform::default();
+        //transform.translation = (cont as f32, 0., 0.);
+        transform.translation = Vec3::new(cur_pos.0.0.x, cur_pos.0.0.y, 0.);
+        commands.entity(entity_id).insert(
+        SpriteBundle {
+            transform: transform,
+            texture: asset_server.load("emojis/bird.png"),
+            ..Default::default()
+        });
+
+        cont = cont + 1;
+    }
 }
 
 fn save_elapsed_time(elapsed_time: core::time::Duration) {

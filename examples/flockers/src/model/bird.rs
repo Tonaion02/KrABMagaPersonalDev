@@ -1,4 +1,5 @@
 use std::hash::Hash;
+use krabmaga::engine::bevy_ecs::query::QueryData;
 use krabmaga::engine::Component;
 use krabmaga::engine::bevy_ecs;
 
