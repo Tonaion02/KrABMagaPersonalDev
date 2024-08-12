@@ -2,6 +2,8 @@ use bevy::prelude::Resource;
 
 use crate::engine::location::Real2D;
 
+//T: probably must become SimulationDescriptor and SimulationDescriptor must change concept
+//T: and must become a descriptor of the GraphicalPart
 /// Specifies the krABMaga configuration, always present for any kind of simulation developed with this framework.
 #[derive(Resource)]
 pub struct EngineConfiguration {

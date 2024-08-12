@@ -3,8 +3,11 @@
 // pub mod fields;
 pub mod simulation_descriptor;
 mod systems;
+
+//T: verify if we need this things
 // pub mod utils;
 pub mod visualization;
-pub mod graphic_initializer;
+
+//T: removed because we don't need anymore this things
 // pub mod visualization_state;
 // pub mod wrappers;

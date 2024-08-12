@@ -3,23 +3,29 @@ use std::time::Instant;
 use std::env;
 use lazy_static::lazy_static;
 
-use krabmaga::engine::{Entity, Query, Res};
+use std::path::Path;
+use std::fs::File;
+use std::io::prelude::*;
+
+use krabmaga::engine::Entity;
+use krabmaga::engine::Query;
+use krabmaga::engine::Res;
 use krabmaga::engine::agent::AgentFactory;
-use krabmaga::engine::components::double_buffer::{DBRead, DBWrite};
+use krabmaga::engine::components::double_buffer::DBRead;
+use krabmaga::engine::components::double_buffer::DBWrite;
 use krabmaga::engine::components::position::Real2DTranslation;
-use krabmaga::engine::fields::field_2d::{Field2D, toroidal_distance, toroidal_transform};
+use krabmaga::engine::fields::field_2d::Field2D;
+use krabmaga::engine::fields::field_2d::toroidal_distance; 
+use krabmaga::engine::fields::field_2d::toroidal_transform;
 use krabmaga::engine::location::Real2D;
 use krabmaga::engine::resources::engine_configuration::EngineConfiguration;
 use krabmaga::engine::rng::RNG;
 use krabmaga::engine::simulation::Simulation;
 
-use crate::model::bird::{Bird, LastReal2D};
+use crate::model::bird::Bird; 
+use crate::model::bird::LastReal2D;
 
 mod model;
-
-use std::path::Path;
-use std::fs::File;
-use std::io::prelude::*;
 
 //For visualization
 mod visualization;
@@ -27,9 +33,7 @@ mod visualization;
 use krabmaga::visualization::visualization::Visualization;
 use krabmaga::visualization::visualization::Color;
 
-
-use krabmaga::visualization::graphic_initializer::GraphicInitializer;
-use crate::visualization::graphic_initializer::GI;
+use krabmaga::engine::agent::Agent;
 //For visualization
 
 
@@ -94,6 +98,10 @@ fn main() {
     save_elapsed_time(elapsed);    
 }
 
+fn g_initializer() {
+    println!("g_initalizer is executed!");
+}
+
 #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn main()
 {
@@ -101,7 +109,7 @@ fn main()
     let mut simulation = build_simulation(Simulation::build());
     //let mut simulation = Simulation::build();
 
-    Visualization::default().with_background_color(Color::rgb(0.5, 0.5, 0.5)).setup::<GI>(&mut simulation, GI);
+    Visualization::default().with_background_color(Color::rgb(0.5, 0.5, 0.5)).setup(&mut simulation, g_initializer);
 
     let now = Instant::now();
     simulation.run();

@@ -22,7 +22,6 @@ use bevy::utils::default;
 use bevy::prelude::AssetServer;
 use bevy::sprite::SpriteBundle;
 
-use crate::visualization::graphic_initializer::GraphicInitializer;
 use crate::visualization::simulation_descriptor::{self, SimulationDescriptor};
 
 // T: Commented to rewrite
@@ -79,14 +78,17 @@ use crate::visualization::simulation_descriptor::{self, SimulationDescriptor};
 
 
 //T: rewrited from me
-pub fn init_system<GI: GraphicInitializer + Resource + 'static>(
+pub fn init_system(
     mut commands: Commands,
     window: Query<&Window, With<PrimaryWindow>>,
     mut sim: ResMut<SimulationDescriptor>,
     asset_server: Res<AssetServer>,
-    graphic_initializer: Res<GI>,
 ) {
     if let Ok(window) = window.get_single() {
+
+
+        println!("init_system is executed");
+
         // Right handed coordinate system, equal to how it is implemented in [`OrthographicProjection::new_2d()`].
         let far = 1000.;
         // Offset the whole simulation to the left to take the width of the UI panel into account.
@@ -119,8 +121,6 @@ pub fn init_system<GI: GraphicInitializer + Resource + 'static>(
                 ..default()
             }
         );
-
-        graphic_initializer.on_init(&mut commands, &mut sim);
 
         //T: find a method to substitute this call that permits to execute code to initialize
         //T: graphic components of simulation

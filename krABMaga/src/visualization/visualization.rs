@@ -31,7 +31,8 @@ use bevy::time::Fixed;
 
 use bevy::ecs::system::Resource;
 
-use super::graphic_initializer::GraphicInitializer;
+use bevy::prelude::IntoSystemConfigs;
+use super::systems::renderer_system::renderer_system;
 
 //T: resolve errors about Color not found in main
 // Export Color directly from here with 'pub'
@@ -194,10 +195,10 @@ impl Visualization {
     // }
 
     //T: rewriting this functions
-    pub fn setup<GI: GraphicInitializer + Resource + 'static>(
+    pub fn setup<Params>(
         &self, 
         simulation: &mut Simulation,
-        graphic_initializer: impl GraphicInitializer,
+        g_initializer: impl IntoSystemConfigs<Params>,
     ) {
         let mut app = &mut simulation.app;
 
@@ -216,13 +217,14 @@ impl Visualization {
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
         //T: added at startup this system
-        app.add_systems(Startup, init_system::<GI>);
+        app.add_systems(Startup, 
+            (init_system, g_initializer.after(init_system)));
 
         app.add_systems(Update, ui_system);
         app.add_systems(Update, camera_system);
 
-        //T: added to create a callback to initialize graphic elements of simulatino
-        app.insert_resource(graphic_initializer);
+        //T: added temporary
+        app.add_systems(Update, renderer_system);
 
         app.insert_resource(Time::<Fixed>::default());
         app.insert_resource(ClearColor(self.background_color));

@@ -16,6 +16,8 @@ impl<T: Component + Copy + Send> DoubleBuffered<T> {
     }
 }
 
+//T: problem, probably there isn't a bundle version for reading and writing, probably Bundle is used only
+//T: for insertions.
 // TODO simplify querying those structs by offering a complete read+write bundle and a read one? Would the user ever need to only query the write buffer?
 #[derive(Component)]
 pub struct DBRead<T: Component + Copy + Send>(pub T);

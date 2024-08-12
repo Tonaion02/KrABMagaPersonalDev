@@ -140,11 +140,12 @@ pub fn ui_system(
     //T: now is more easier to obtain the entities that are agents
     // query: Query<Entity, (Without<Camera>, Without<Window>)>,
     query_agents: Query<(Entity, &Agent)>,
+    
     diagnostics: Res<DiagnosticsStore>,
     mut commands: Commands,
     mut time: ResMut<Time<Fixed>>,
 
-    //T: Added to substitute SimulationDescriptor
+    //T: Added to obtain information that aren't in SimulationDescriptor
     mut engine_configuration: ResMut<EngineConfiguration>,
 ) {
     egui::SidePanel::left("main").show(egui_context.ctx_mut(), |ui| {

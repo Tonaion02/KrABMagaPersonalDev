@@ -66,6 +66,10 @@
 //     }
 // }
 
-pub fn renderer_system() {
-    
+use crate::engine::resources::engine_configuration::EngineConfiguration;
+use crate::engine::Res;
+
+pub fn renderer_system(
+    engine_configuration: Res<EngineConfiguration>,
+    ) {
 }
