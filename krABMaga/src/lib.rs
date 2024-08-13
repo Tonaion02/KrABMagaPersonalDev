@@ -347,6 +347,7 @@
 //!
 
 
+//T: temp
 #![allow(warnings)]
 /// Main module, with structs for Agents, Fields and Schedule
 pub mod engine;
@@ -354,4 +355,3 @@ pub mod engine;
 pub mod visualization;
 
 // TODO refactor macros one by one
-// TODO reimplement visualization

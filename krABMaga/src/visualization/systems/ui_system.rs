@@ -126,9 +126,6 @@ use crate::engine::resources::engine_configuration::EngineConfiguration;
 
 
 
-
-
-
 pub fn ui_system(
     mut egui_context: EguiContexts,
     // mut sim_data: ResMut<SimulationDescriptor>,

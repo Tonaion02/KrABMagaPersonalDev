@@ -1,3 +1,4 @@
+//T: temp
 #![allow(warnings)]
 
 use std::time::Instant;
@@ -110,13 +111,14 @@ fn main() {
 #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn main()
 {
-    //let mut simulation = build_simulation(Simulation::build().with_steps(*STEPS));
     let mut simulation = build_simulation(Simulation::build());
-    //let mut simulation = Simulation::build();
 
     Visualization::default()
+    .with_name("flockers_modified")
+    .with_window_dimensions(1000., 700.)
+    .with_simulation_dimensions(*DIM_X, *DIM_Y)
     .with_background_color(Color::rgb(0.5, 0.5, 0.5))
-    .setup(&mut simulation, graphic_initializer);
+    .setup(&mut simulation, graphic_initializer, render_system);
 
     let now = Instant::now();
     simulation.run();
@@ -287,10 +289,7 @@ fn graphic_initializer(
 
     println!("graphic_initalizer is executed!");
 
-    let mut cont = 0;
     for (entity_id, cur_pos) in &query_agents {
-        
-        println!("hello: {}", cont);
 
         let mut transform = Transform::default();
         transform.translation = Vec3::new(cur_pos.0.0.x, cur_pos.0.0.y, 0.);
@@ -303,8 +302,19 @@ fn graphic_initializer(
             texture: asset_server.load("emojis/bird.png"),
             ..Default::default()
         });
+    }
+}
 
-        cont = cont + 1;
+fn render_system(
+    mut query_agents: Query<(&Bird, &DBWrite<Real2DTranslation>, &mut Transform)>,
+    ) {
+
+    // println!("render_system is running!");
+
+    for (bird_id, cur_pos, mut transform) in &mut query_agents {
+
+        transform.translation.x = cur_pos.0.0.x;
+        transform.translation.y = cur_pos.0.0.y;
     }
 }
 

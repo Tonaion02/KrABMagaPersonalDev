@@ -32,7 +32,7 @@ use bevy::time::Fixed;
 use bevy::ecs::system::Resource;
 
 use bevy::prelude::IntoSystemConfigs;
-use super::systems::renderer_system::renderer_system;
+//use super::systems::renderer_system::renderer_system;
 
 //T: resolve errors about Color not found in main
 // Export Color directly from here with 'pub'
@@ -197,10 +197,11 @@ impl Visualization {
     //T: rewriting this functions
     //T: TODO try to create a way to pass the g_initializer throug a different function
     //T: and execute that after init_system
-    pub fn setup<Params>(
+    pub fn setup<Params, Params2>(
         &self, 
         simulation: &mut Simulation,
-        g_initializer: impl IntoSystemConfigs<Params>,
+        graphic_initializer_system: impl IntoSystemConfigs<Params>,
+        renderer_system: impl IntoSystemConfigs<Params2>,
     ) {
         let mut app = &mut simulation.app;
 
@@ -220,13 +221,13 @@ impl Visualization {
 
         //T: added at startup this system
         app.add_systems(Startup, 
-            (init_system, g_initializer.after(init_system)));
+            (init_system, graphic_initializer_system.after(init_system)));
 
         app.add_systems(Update, ui_system);
         app.add_systems(Update, camera_system);
 
         //T: added temporary
-        app.add_systems(Update, renderer_system);
+        app.add_systems(FixedPostUpdate, renderer_system);
 
         app.insert_resource(Time::<Fixed>::default());
         app.insert_resource(ClearColor(self.background_color));
