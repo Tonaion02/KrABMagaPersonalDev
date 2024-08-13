@@ -113,14 +113,11 @@ visualization = [
     "bevy_prototype_lyon",
     "bevy/bevy_winit",
     "bevy/bevy_render",
-    "bevy/bevy_gltf",
+    # "bevy/bevy_gltf",
     "bevy/png",
     "image",
     "bevy_egui",
     "bevy_egui/default_fonts",
-    
-    # Added by me
-    # "bevy/bevy_gizmos",
 ]
 visualization_wasm = [
     "bevy_prototype_lyon",

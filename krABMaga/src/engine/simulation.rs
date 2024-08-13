@@ -12,6 +12,21 @@ use crate::engine::rng::RNG;
 use crate::engine::systems::double_buffer_sync::double_buffer_sync;
 use crate::engine::systems::engine_config_update::engine_config_update;
 
+//T: for testing of plugins
+use bevy::time::TimePlugin;
+use bevy::diagnostic::DiagnosticsPlugin;
+use bevy::input::InputPlugin;
+use bevy::winit::WinitPlugin;
+use bevy::render::RenderPlugin;
+use bevy::render::pipelined_rendering::PipelinedRenderingPlugin;
+use bevy::core_pipeline::CorePipelinePlugin;
+use bevy::sprite::SpritePlugin;
+use bevy::asset::AssetPlugin;
+use bevy::a11y::AccessibilityPlugin;
+
+
+
+
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 enum SimulationSet {
     BeforeStep,
@@ -37,20 +52,30 @@ impl Simulation {
         // app.add_plugins(LogPlugin::default());
 
 
-        //T: add plugins here
-        app.add_plugins(DefaultPlugins.set(TaskPoolPlugin {
-            task_pool_options: TaskPoolOptions {
-                // Assign all threads to compute
-                compute: TaskPoolThreadAssignmentPolicy {
-                    // set the minimum # of compute threads
-                    // to the total number of available threads
-                    min_threads: 4,
-                    max_threads: 4, // unlimited max threads
-                    percent: 1.0,             // this value is irrelevant in this case
-                },
-                ..default()
-            },
-        }));
+
+        // T: trying to make working with less plugins possible
+        app.add_plugins(LogPlugin::default());
+        app.add_plugins(TaskPoolPlugin::default());
+        app.add_plugins(TypeRegistrationPlugin);
+        app.add_plugins(FrameCountPlugin);
+        app.add_plugins(TimePlugin);
+        app.add_plugins(TransformPlugin);
+        app.add_plugins(HierarchyPlugin);
+        app.add_plugins(DiagnosticsPlugin);
+        app.add_plugins(InputPlugin);
+        app.add_plugins(WindowPlugin::default());
+        app.add_plugins(AccessibilityPlugin);
+    
+        app.add_plugins(AssetPlugin::default());
+        app.add_plugins(WinitPlugin::default());
+            
+        app.add_plugins(RenderPlugin::default());
+        app.add_plugins(ImagePlugin::default());
+        //app.add_plugins(PipelinedRenderingPlugin {..default()});
+        app.add_plugins(CorePipelinePlugin::default());
+        app.add_plugins(SpritePlugin);
+            
+    
 
         app.configure_sets(
             Update,
@@ -61,7 +86,15 @@ impl Simulation {
             )
                 .chain(),
         );
-        
+
+        //T: In case where is not defined feature visualization
+        #[cfg(not(feature = "visualization"))]
+        app.add_systems(
+                Update,
+                (engine_config_update,).in_set(SimulationSet::BeforeStep),
+        );
+        //T: In case where is not defined feature visualization
+
         //T: In case where is defined feature visualization 
         #[cfg(feature = "visualization")]
         app.add_systems(
@@ -70,32 +103,10 @@ impl Simulation {
         );
         //T: In case where is defined feature visualization
 
-        //T: In case where is not defined feature visualization
-        #[cfg(not(feature = "visualization"))]
-        app.add_systems(
-            Update,
-            (engine_config_update,).in_set(SimulationSet::BeforeStep),
-        );
-        //T: In case where is not defined feature visualization
-
         Self { app, steps: None, num_threads: 0 }
     }
 
     pub fn with_num_threads(mut self, num_threads: usize) -> Self {
-        // self.app.add_plugins(TaskPoolPlugin {
-        //     task_pool_options: TaskPoolOptions {
-        //         // Assign all threads to compute
-        //         compute: TaskPoolThreadAssignmentPolicy {
-        //             // set the minimum # of compute threads
-        //             // to the total number of available threads
-        //             min_threads: num_threads,
-        //             max_threads: num_threads, // unlimited max threads
-        //             percent: 1.0,             // this value is irrelevant in this case
-        //         },
-        //         ..default()
-        //     },
-        // });
-
         self.num_threads = num_threads;
 
         self
@@ -170,4 +181,20 @@ impl Simulation {
     pub(crate) fn spawn_agent(&mut self) -> EntityWorldMut {
         self.app.world.spawn(())
     }
+
+    // pub fn add_plugins(&mut self) {
+    //     self.app.add_plugins(DefaultPlugins.set(TaskPoolPlugin {
+    //         task_pool_options: TaskPoolOptions {
+    //             // Assign all threads to compute
+    //             compute: TaskPoolThreadAssignmentPolicy {
+    //                 // set the minimum # of compute threads
+    //                 // to the total number of available threads
+    //                 min_threads: 4,
+    //                 max_threads: 4, // unlimited max threads
+    //                 percent: 1.0,             // this value is irrelevant in this case
+    //             },
+    //             ..default()
+    //         },
+    //     }));
+    // }
 }

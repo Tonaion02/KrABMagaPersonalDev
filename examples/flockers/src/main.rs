@@ -305,6 +305,7 @@ fn graphic_initializer(
     }
 }
 
+//#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn render_system(
     mut query_agents: Query<(&Bird, &DBWrite<Real2DTranslation>, &mut Transform)>,
     ) {
