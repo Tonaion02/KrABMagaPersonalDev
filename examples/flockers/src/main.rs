@@ -34,7 +34,6 @@ mod model;
 mod visualization;
 
 use krabmaga::visualization::visualization::Visualization;
-use krabmaga::visualization::visualization::Color;
 
 use krabmaga::engine::agent::Agent;
 use krabmaga::engine::Commands;
@@ -44,6 +43,7 @@ use krabmaga::visualization::AssetServer;
 use krabmaga::visualization::Transform;
 use krabmaga::visualization::SpriteBundle;
 use krabmaga::visualization::Vec3;
+use krabmaga::visualization::Color;
 //For visualization
 
 

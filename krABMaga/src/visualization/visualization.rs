@@ -1,70 +1,46 @@
 use std::sync::{Arc, Mutex};
 
-use bevy::app::FixedPostUpdate;
-use bevy::window::PrimaryWindow;
 //T: Comment for errors
-// use bevy::render::RenderPlugin;
-// use bevy::{prelude::*, window::WindowResizeConstraints, DefaultPlugins};
-use bevy::window::WindowResizeConstraints;
-use bevy_egui::EguiPlugin;
 // use bevy_prototype_lyon::prelude::ShapePlugin;
-
-use crate::engine::simulation::Simulation;
-
-use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use bevy::window::WindowPlugin;
-use bevy::winit::WinitPlugin;
-use bevy::a11y::AccessibilityPlugin;
-use bevy::render::RenderPlugin;
-use bevy::prelude::PluginGroup;
-use bevy::utils::default;
-
-use bevy::prelude::Update;
-use bevy::prelude::Startup;
 
 //T: added this for ClearColor
 use bevy::prelude::ClearColor;
+use bevy::render::color::Color;
 
-//T: added this for Insertion of resource Time
 use bevy::time::Time;
 use bevy::time::Fixed;
 
+use bevy::app::FixedPostUpdate;
+use bevy::prelude::Update;
+use bevy::prelude::Startup;
+
 use bevy::ecs::system::Resource;
-
 use bevy::prelude::IntoSystemConfigs;
-//use super::systems::renderer_system::renderer_system;
 
-//T: resolve errors about Color not found in main
-// Export Color directly from here with 'pub'
-pub use bevy::render::color::Color as Color;
+use bevy::window::WindowResizeConstraints;
+use bevy::window::PrimaryWindow;
+use bevy_egui::EguiPlugin;
 
-//T: TEMP
-// use crate::engine::Query;
-// use crate::engine::With;
-// use bevy::window::Window;
-// use bevy::prelude::Commands;
-// use bevy::prelude::Startup;
-// use bevy::ecs::system::ResMut;
-// use bevy::prelude::Transform;
-// use bevy::prelude::Vec2;
-// use bevy::render::camera::ScalingMode;
-// use bevy::render::camera::OrthographicProjection;
-// use bevy::prelude::Camera2dBundle;
+//T: for plugins
+use bevy::time::TimePlugin;
+use bevy::diagnostic::DiagnosticsPlugin;
+use bevy::input::InputPlugin;
+use bevy::winit::WinitPlugin;
+use bevy::render::RenderPlugin;
+use bevy::render::pipelined_rendering::PipelinedRenderingPlugin;
+use bevy::core_pipeline::CorePipelinePlugin;
+use bevy::sprite::SpritePlugin;
+use bevy::asset::AssetPlugin;
+use bevy::a11y::AccessibilityPlugin;
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::hierarchy::HierarchyPlugin;
+use bevy::core::TypeRegistrationPlugin;
+use bevy::core::FrameCountPlugin;
+use bevy::transform::TransformPlugin;
+use bevy::window::WindowPlugin;
+use bevy::render::texture::ImagePlugin;
 
-//T: This elements are removed from the krabmaga framework
-//use crate::engine::{schedule::Schedule, state::State};
-
-//T: Comments for errors
-// use crate::visualization::{
-//     asset_handle_factory::AssetHandleFactory,
-//     simulation_descriptor::SimulationDescriptor,
-//     systems::{
-//         camera_system::camera_system, init_system::init_system, renderer_system::renderer_system,
-//         simulation_system::simulation_system, ui_system::ui_system,
-//     },
-//     visualization_state::VisualizationState,
-//     wrappers::{ActiveSchedule, ActiveState, Initializer},
-// };
+use crate::engine::simulation::Simulation;
 
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
 
@@ -205,16 +181,27 @@ impl Visualization {
     ) {
         let mut app = &mut simulation.app;
 
-        //T: TODO Add plugins here
-        // app.add_plugins(AccessibilityPlugin {});
-        // app.add_plugins(WindowPlugin {..default()});
-        // app.add_plugins(WinitPlugin {..default()});
-        // app.add_plugins(RenderPlugin {..default()});
-
         //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
         let mut window_constraints = WindowResizeConstraints::default();
         window_constraints.min_width = 600.;
         window_constraints.min_height = 300.;
+
+        //T: TODO Add plugins here
+        app.add_plugins(TypeRegistrationPlugin);
+        app.add_plugins(FrameCountPlugin);
+        app.add_plugins(TimePlugin);
+        app.add_plugins(TransformPlugin);
+        app.add_plugins(HierarchyPlugin);
+        app.add_plugins(DiagnosticsPlugin);
+        app.add_plugins(InputPlugin);
+        app.add_plugins(WindowPlugin::default());
+        app.add_plugins(AccessibilityPlugin);
+        app.add_plugins(AssetPlugin::default());
+        app.add_plugins(WinitPlugin::default());
+        app.add_plugins(RenderPlugin::default());
+        app.add_plugins(ImagePlugin::default());
+        app.add_plugins(CorePipelinePlugin::default());
+        app.add_plugins(SpritePlugin);
 
         app.add_plugins(EguiPlugin);
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());

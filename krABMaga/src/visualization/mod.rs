@@ -12,9 +12,10 @@ pub mod visualization;
 // pub mod visualization_state;
 // pub mod wrappers;
 
-//T: added from me, probably we must remove that in the future
-//T: because we can do without these
+//T: added from me, export this keyword cause we need in main
+//T: probably temporary until we find a better architecture solution
 pub use bevy::prelude::AssetServer;
 pub use bevy::prelude::Transform;
 pub use bevy::sprite::SpriteBundle;
 pub use bevy::prelude::Vec3;
+pub use bevy::render::color::Color as Color;
