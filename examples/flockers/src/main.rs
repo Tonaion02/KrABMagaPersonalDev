@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use std::time::Instant;
 
 use std::env;
@@ -291,8 +293,10 @@ fn graphic_initializer(
         println!("hello: {}", cont);
 
         let mut transform = Transform::default();
-        //transform.translation = (cont as f32, 0., 0.);
         transform.translation = Vec3::new(cur_pos.0.0.x, cur_pos.0.0.y, 0.);
+        transform.scale.x = 0.1;
+        transform.scale.y = 0.1;
+
         commands.entity(entity_id).insert(
         SpriteBundle {
             transform: transform,
