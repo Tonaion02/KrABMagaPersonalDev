@@ -322,6 +322,7 @@ fn render_system(
     }
 }
 
+// T: check what macro make this work before ECS experiment
 fn save_elapsed_time(elapsed_time: core::time::Duration) {
     //Write on file the elapsed time
     let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");

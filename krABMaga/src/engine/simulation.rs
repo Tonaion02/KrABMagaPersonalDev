@@ -14,6 +14,8 @@ use crate::engine::systems::simulation_descriptor_update::simulation_descriptor_
 
 use crate::engine::resources::simulation_descriptor::SimulationDescriptorT;
 
+use super::resources::simulation_descriptor;
+
 
 
 
@@ -86,8 +88,8 @@ impl Simulation {
         //T: decide how much time in a seconds we want to run this systems 
         #[cfg(feature = "visualization")]
         app.add_systems(
-             FixedPreUpdate,
-             (simulation_descriptor_update_system,).in_set(SimulationSet::BeforeStep),
+            FixedPreUpdate,
+            (simulation_descriptor_update_system).in_set(SimulationSet::BeforeStep).run_if(Simulation::is_not_paused),
         );
         //T: In case feature visualization is defined
 
@@ -127,7 +129,7 @@ impl Simulation {
         self.app.add_systems(Update, (step_handler,).in_set(SimulationSet::Step));
 
         #[cfg(feature = "visualization")]
-        self.app.add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step));
+        self.app.add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step).run_if(Simulation::is_not_paused));
         
         self
     }
@@ -192,4 +194,14 @@ impl Simulation {
     pub(crate) fn spawn_agent(&mut self) -> EntityWorldMut {
         self.app.world.spawn(())
     }
+
+
+
+
+
+    // T: static function/system that works like run conditions(RC) for the simulation
+    // T: this function/system determines if the simulation is paused
+    pub(crate) fn is_not_paused(simulation_descriptor: Res<SimulationDescriptorT>) -> bool {
+        ! simulation_descriptor.paused
+    } 
 }

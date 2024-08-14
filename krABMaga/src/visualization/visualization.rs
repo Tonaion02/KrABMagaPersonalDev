@@ -19,6 +19,7 @@ use bevy::prelude::IntoSystemConfigs;
 
 use bevy::window::WindowResizeConstraints;
 use bevy::window::PrimaryWindow;
+use bevy::window::Window;
 use bevy_egui::EguiPlugin;
 
 //T: for plugins
@@ -40,10 +41,12 @@ use bevy::transform::TransformPlugin;
 use bevy::window::WindowPlugin;
 use bevy::render::texture::ImagePlugin;
 
+use crate::engine::resources::simulation_descriptor::SimulationDescriptorT;
 use crate::engine::simulation::Simulation;
 
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
 
+use super::simulation_descriptor;
 use super::systems::camera_system::camera_system;
 use super::systems::ui_system::ui_system;
 use super::systems::init_system::init_system;
@@ -180,13 +183,15 @@ impl Visualization {
         renderer_system: impl IntoSystemConfigs<Params2>,
     ) {
         let mut app = &mut simulation.app;
+        //let simulation_descriptor = app.world.get_resource::<SimulationDescriptorT>().unwrap("");
 
         //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
         let mut window_constraints = WindowResizeConstraints::default();
         window_constraints.min_width = 600.;
         window_constraints.min_height = 300.;
 
-        //T: TODO Add plugins here
+        // T: all plugins we need
+        // T: base plugins
         app.add_plugins(TypeRegistrationPlugin);
         app.add_plugins(FrameCountPlugin);
         app.add_plugins(TimePlugin);
@@ -194,7 +199,15 @@ impl Visualization {
         app.add_plugins(HierarchyPlugin);
         app.add_plugins(DiagnosticsPlugin);
         app.add_plugins(InputPlugin);
-        app.add_plugins(WindowPlugin::default());
+        
+        app.add_plugins(WindowPlugin {
+            primary_window: Some(Window{
+                title: self.window_name.to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        });
+        
         app.add_plugins(AccessibilityPlugin);
         app.add_plugins(AssetPlugin::default());
         app.add_plugins(WinitPlugin::default());
@@ -202,11 +215,13 @@ impl Visualization {
         app.add_plugins(ImagePlugin::default());
         app.add_plugins(CorePipelinePlugin::default());
         app.add_plugins(SpritePlugin);
+        // T: base plugins
 
         app.add_plugins(EguiPlugin);
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());
+        // T: all plugins we need
 
-        //T: added at startup this systems
+        //T: run at startup this systems
         app.add_systems(Startup, 
             (init_system, graphic_initializer_system.after(init_system)));
 

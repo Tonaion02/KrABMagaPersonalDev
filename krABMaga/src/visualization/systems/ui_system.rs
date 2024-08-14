@@ -11,7 +11,8 @@ use bevy::prelude::{Commands, Res, ResMut};
 
 use crate::engine::agent::Agent;
 
-use crate::engine::resources::simulation_descriptor::SimulationDescriptorT;
+use crate::engine::resources::simulation_descriptor::{self, SimulationDescriptorT};
+
 
 
 //T: commented for keep working
@@ -143,26 +144,26 @@ pub fn ui_system(
     mut time: ResMut<Time<Fixed>>,
 
     //T: Added to obtain information that aren't in SimulationDescriptor
-    mut engine_configuration: ResMut<SimulationDescriptorT>,
+    mut simulation_descriptor: ResMut<SimulationDescriptorT>,
 ) {
     egui::SidePanel::left("main").show(egui_context.ctx_mut(), |ui| {
         ui.vertical_centered(|ui| {
             //T: temporary
             //ui.heading(sim_data.title.clone());
-            ui.heading(String::from("Titolo").clone());
+            ui.heading(String::from("Titolo"));
 
             ui.separator();
             ui.label("Press start to let the simulation begin!");
             ui.label(format!(
                 "Step: {}",
 
-                //T: substitute with engine_configuration
+                //T: substitute with simulation_descriptor
                 // active_schedule_wrapper
                 //     .0
                 //     .lock()
                 //     .expect("error on lock")
                 //     .step
-                engine_configuration.current_step
+                simulation_descriptor.current_step
             ));
             //T: substitute with the query about entitites that has Agent Component
             //ui.label(format!("Number of entities: {}", query.iter().count()));
@@ -192,16 +193,15 @@ pub fn ui_system(
                     //     sim_data.paused = false;
                     // }
                     if ui.add(start_button).clicked() {
-                        engine_configuration.paused = false;
+                        simulation_descriptor.paused = false;
                     }
 
-                    let stop_button =
-                        egui::Button::new(egui::RichText::new("⏹ Stop").color(egui::Color32::RED));
+                    let stop_button = egui::Button::new(egui::RichText::new("⏹ Stop").color(egui::Color32::RED));
                     //T: substitute with engine config
                     //T: find a way to reset the simulation
                     if ui.add(stop_button).clicked() {
                         // sim_data.paused = true;
-                        engine_configuration.paused = true;
+                        simulation_descriptor.paused = true;
 
                         // // Despawn all existing entities (agents)
                         // for entity in query.iter() {
@@ -239,7 +239,7 @@ pub fn ui_system(
                     //T: substitute with engine config
                     if ui.button("⏸ Pause").clicked() {
                         // sim_data.paused = true;
-                        engine_configuration.paused = true;
+                        simulation_descriptor.paused = true;
                     }
                 });
             });
