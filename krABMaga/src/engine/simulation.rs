@@ -7,10 +7,13 @@ use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
 use crate::engine::fields::field_2d::{update_field, Field2D};
-use crate::engine::resources::engine_configuration::EngineConfiguration;
+//use crate::engine::resources::engine_configuration::EngineConfiguration;
 use crate::engine::rng::RNG;
 use crate::engine::systems::double_buffer_sync::double_buffer_sync;
-use crate::engine::systems::engine_config_update::engine_config_update;
+use crate::engine::systems::simulation_descriptor_update::simulation_descriptor_update_system;
+
+use crate::engine::resources::simulation_descriptor::SimulationDescriptorT;
+
 
 
 
@@ -65,24 +68,30 @@ impl Simulation {
                 .chain(),
         );
 
+        //T: make SimulationDescriptor a Resource
+        let simulation_descriptor = SimulationDescriptorT::default();
+        app.insert_resource(simulation_descriptor);
+
         //T: In case feature visualization not is defined
         #[cfg(not(feature = "visualization"))]
         app.add_systems(
                 Update,
-                (engine_config_update,).in_set(SimulationSet::BeforeStep),
+                (simulation_descriptor_update_system,).in_set(SimulationSet::BeforeStep),
         );
         //T: In case feature visualization not is defined
 
         //T: In case feature visualization is defined
-        //T: In fact in the case where we define visualization we need to 
+        //T: In fact in the case where we define visualization we need to
+        //T: run engine_config_update and step in FixedPreUpdate so we can
+        //T: decide how much time in a seconds we want to run this systems 
         #[cfg(feature = "visualization")]
         app.add_systems(
              FixedPreUpdate,
-             (engine_config_update,).in_set(SimulationSet::BeforeStep),
+             (simulation_descriptor_update_system,).in_set(SimulationSet::BeforeStep),
         );
         //T: In case feature visualization is defined
 
-        Self { app, steps: None, num_threads: 0 }
+        Self { app, steps: None, num_threads: 1 }
     }
 
     pub fn with_num_threads(mut self, num_threads: usize) -> Self {
@@ -100,7 +109,12 @@ impl Simulation {
             },
         });
 
+        // T: can't panick, we inserted resource during build...
+        self.app.world.get_resource_mut::<SimulationDescriptorT>().unwrap().num_threads = num_threads;
+
+        // T: TODO remove, cause it's now useless
         self.num_threads = num_threads;
+
         self
     }
 
@@ -129,17 +143,22 @@ impl Simulation {
     }
 
     pub fn with_steps(mut self, steps: u32) -> Self {
+        // T: TODO remove, cause it's now useless
         self.steps = Some(steps);
 
+        // T: can't panick, we inserted resource during build...
+        self.app.world.get_resource_mut::<SimulationDescriptorT>().unwrap().steps = Some(steps);
+
         self
     }
 
+    //T: commented cause we probably we don't need this anymore
     // TODO specify this is required (SimulationBuilder with validation, which generates a Simulation on build()?)
-    pub fn with_engine_configuration(mut self, config: EngineConfiguration) -> Self {
-        self.app.insert_resource(config);
+    // pub fn with_engine_configuration(mut self, config: EngineConfiguration) -> Self {
+    //     self.app.insert_resource(config);
 
-        self
-    }
+    //     self
+    // }
 
     pub fn with_rng(mut self, seed: u64) -> Self {
         let rng = RNG::new(seed, 0);

@@ -128,15 +128,15 @@ impl Visualization {
     //     state.init(&mut schedule);
     //     let cloned_init_call = init_call.clone();
 
-        // app.add_plugins(DefaultPlugins.set(RenderPlugin {
-        //     // Resolves false positive error spam in console for AMD GPUs, but it breaks WebGL: https://github.com/bevyengine/bevy/issues/9975
-        //     // render_creation: RenderCreation::Automatic(WgpuSettings {
-        //     //     backends: Some(Backends::VULKAN),
-        //     //     ..default()
-        //     // }),
-        //     ..default()
-        // }))
-        // .add_plugins(EguiPlugin);
+    // app.add_plugins(DefaultPlugins.set(RenderPlugin {
+    //     // Resolves false positive error spam in console for AMD GPUs, but it breaks WebGL: https://github.com/bevyengine/bevy/issues/9975
+    //     // render_creation: RenderCreation::Automatic(WgpuSettings {
+    //     //     backends: Some(Backends::VULKAN),
+    //     //     ..default()
+    //     // }),
+    //     ..default()
+    // }))
+    // .add_plugins(EguiPlugin);
 
     //     // Required for network visualization
     //     app.add_plugins(ShapePlugin);
@@ -170,9 +170,9 @@ impl Visualization {
     //     app
     // }
 
-    //T: rewriting this functions
-    //T: TODO try to create a way to pass the g_initializer throug a different function
-    //T: and execute that after init_system
+    // T: rewriting this functions
+    // T: TODO try to create a way to pass the g_initializer throug a different function
+    // T: and execute that after init_system
     pub fn setup<Params, Params2>(
         &self, 
         simulation: &mut Simulation,
@@ -206,14 +206,14 @@ impl Visualization {
         app.add_plugins(EguiPlugin);
         app.add_plugins(FrameTimeDiagnosticsPlugin::default());
 
-        //T: added at startup this system
+        //T: added at startup this systems
         app.add_systems(Startup, 
             (init_system, graphic_initializer_system.after(init_system)));
 
         app.add_systems(Update, ui_system);
         app.add_systems(Update, camera_system);
 
-        //T: added temporary
+        //T: temp
         app.add_systems(FixedPostUpdate, renderer_system);
 
         app.insert_resource(Time::<Fixed>::default());

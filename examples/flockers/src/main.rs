@@ -21,7 +21,7 @@ use krabmaga::engine::fields::field_2d::Field2D;
 use krabmaga::engine::fields::field_2d::toroidal_distance; 
 use krabmaga::engine::fields::field_2d::toroidal_transform;
 use krabmaga::engine::location::Real2D;
-use krabmaga::engine::resources::engine_configuration::EngineConfiguration;
+use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
 use krabmaga::engine::rng::RNG;
 use krabmaga::engine::simulation::Simulation;
 
@@ -30,7 +30,7 @@ use crate::model::bird::LastReal2D;
 
 mod model;
 
-//For visualization
+// T: For visualization
 mod visualization;
 
 use krabmaga::visualization::visualization::Visualization;
@@ -44,7 +44,7 @@ use krabmaga::visualization::Transform;
 use krabmaga::visualization::SpriteBundle;
 use krabmaga::visualization::Vec3;
 use krabmaga::visualization::Color;
-//For visualization
+// T: For visualization
 
 
 
@@ -135,9 +135,12 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
         .register_double_buffer::<Real2DTranslation>()
         .register_double_buffer::<LastReal2D>()
         .register_step_handler(step_system)
-        .with_num_threads(*NUM_THREADS)
+        .with_num_threads(*NUM_THREADS);
         // .with_rng(SEED) // We cannot use this during parallel iteration due to mutable access being required for RNG.
-        .with_engine_configuration(EngineConfiguration::new(Real2D { x: *DIM_X, y: *DIM_Y }, SEED)); // TODO abstract
+        
+        // T: commented for error
+        //.with_engine_configuration(EngineConfiguration::new(Real2D { x: *DIM_X, y: *DIM_Y }, SEED)); // TODO abstract
+    
     // TODO figure out how configs should work. Either split engine config and simulation config, requiring the latter to be registered, or...?
     init_world(&mut simulation, field);
     
@@ -178,7 +181,7 @@ fn init_world(
 fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBRead<LastReal2D>, &mut DBWrite<Real2DTranslation>, &mut DBWrite<LastReal2D>)>,
                neighbour_query: Query<(&DBRead<Real2DTranslation>, &DBRead<LastReal2D>)>,
                field_query: Query<&Field2D<Entity>>,
-               config: Res<EngineConfiguration>) {
+               config: Res<SimulationDescriptorT>) {
         
     let field = field_query.single();
     //println!("Step #{}", config.current_step);

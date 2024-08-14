@@ -11,7 +11,7 @@ use bevy::prelude::{Commands, Res, ResMut};
 
 use crate::engine::agent::Agent;
 
-use crate::engine::resources::engine_configuration::EngineConfiguration;
+use crate::engine::resources::simulation_descriptor::SimulationDescriptorT;
 
 
 //T: commented for keep working
@@ -143,7 +143,7 @@ pub fn ui_system(
     mut time: ResMut<Time<Fixed>>,
 
     //T: Added to obtain information that aren't in SimulationDescriptor
-    mut engine_configuration: ResMut<EngineConfiguration>,
+    mut engine_configuration: ResMut<SimulationDescriptorT>,
 ) {
     egui::SidePanel::left("main").show(egui_context.ctx_mut(), |ui| {
         ui.vertical_centered(|ui| {
