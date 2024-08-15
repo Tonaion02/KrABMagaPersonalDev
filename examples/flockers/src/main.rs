@@ -10,6 +10,8 @@ use std::path::Path;
 use std::fs::File;
 use std::io::prelude::*;
 
+use core::f32::consts::PI;
+
 use krabmaga::engine::Entity;
 use krabmaga::engine::Query;
 use krabmaga::engine::Res;
@@ -43,6 +45,7 @@ use krabmaga::visualization::AssetServer;
 use krabmaga::visualization::Transform;
 use krabmaga::visualization::SpriteBundle;
 use krabmaga::visualization::Vec3;
+use krabmaga::visualization::Quat;
 use krabmaga::visualization::Color;
 // T: For visualization
 
@@ -107,23 +110,16 @@ fn main() {
     
     save_elapsed_time(elapsed);    
 }
+// Main used when only the simulation should run, without any visualization.
 
 #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn main()
 {
     let mut simulation = build_simulation(Simulation::build());
 
-    // let mut visualization = Visualization::default();
-    // visualization.with_name("flockers_modified");
-    // visualization.with_window_dimensions(1000., 700.);
-    // //visualization.with_simulation_dimensions(*DIM_X, *DIM_Y);
-    // visualization.with_background_color(Color::rgb(0.5, 0.5, 0.5));
-    // visualization.setup(&mut simulation. graphic_initalizer, render_system);
-
     Visualization::default()
     .with_name("flockers_modified")
     .with_window_dimensions(1000., 700.)
-    //.with_simulation_dimensions(*DIM_X, *DIM_Y)
     .with_background_color(Color::rgb(0.5, 0.5, 0.5))
     .setup(&mut simulation, graphic_initializer, render_system);
 
@@ -318,15 +314,27 @@ fn graphic_initializer(
 
 //#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn render_system(
-    mut query_agents: Query<(&Bird, &DBWrite<Real2DTranslation>, &mut Transform)>,
+    mut query_agents: Query<(&Bird, &DBWrite<Real2DTranslation>, &DBWrite<LastReal2D>, &mut Transform)>,
     ) {
 
     // println!("render_system is running!");
 
-    for (bird_id, cur_pos, mut transform) in &mut query_agents {
+    for (bird_id, cur_pos, last_d, mut transform) in &mut query_agents {
 
         transform.translation.x = cur_pos.0.0.x;
         transform.translation.y = cur_pos.0.0.y;
+
+        // T: Compute rotation
+        // T: (the computation is taken from the files of the previuos version)
+        let mut rotation = if last_d.0.0.x == 0. || last_d.0.0.y == 0. {
+            0.
+        } else {
+            last_d.0.0.y.atan2(last_d.0.0.x)
+        };
+        rotation = rotation + PI;
+        // T: Compute rotation
+
+        transform.rotation = Quat::from_rotation_z(rotation);
     }
 }
 

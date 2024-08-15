@@ -28,7 +28,7 @@ impl Default for SimulationDescriptorT {
         SimulationDescriptorT {
             current_step: 0,
             simulation_dim: Real2D { x: 0., y: 0. },
-            paused: false,
+            paused: true,
             rand_seed: 0,
 
             steps: None,

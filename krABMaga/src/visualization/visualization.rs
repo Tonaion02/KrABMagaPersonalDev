@@ -45,6 +45,7 @@ use crate::engine::resources::simulation_descriptor::SimulationDescriptorT;
 use crate::engine::simulation::Simulation;
 
 use crate::visualization::simulation_descriptor::SimulationDescriptor;
+use crate::visualization::asset_handle_factory::AssetHandleFactory;
 
 use super::simulation_descriptor;
 use super::systems::camera_system::camera_system;
@@ -188,13 +189,13 @@ impl Visualization {
         let simulation_descriptor = app.world.get_resource::<SimulationDescriptorT>().unwrap();
         self.sim_width = simulation_descriptor.simulation_dim.x;
         self.sim_height = simulation_descriptor.simulation_dim.y;
-        println!("sim_width: {}", self.sim_width);
         //Get simulation's dim from SimulationDescriptor
 
         //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
         let mut window_constraints = WindowResizeConstraints::default();
         window_constraints.min_width = 600.;
         window_constraints.min_height = 300.;
+        //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
 
         // T: all plugins we need
         // T: base plugins
@@ -236,6 +237,9 @@ impl Visualization {
 
         //T: temp
         app.add_systems(FixedPostUpdate, renderer_system);
+
+        // T: actually not working
+        // app.insert_resource(AssetHandleFactory::new());
 
         app.insert_resource(Time::<Fixed>::default());
         app.insert_resource(ClearColor(self.background_color));

@@ -18,4 +18,6 @@ pub use bevy::prelude::AssetServer;
 pub use bevy::prelude::Transform;
 pub use bevy::sprite::SpriteBundle;
 pub use bevy::prelude::Vec3;
+pub use bevy::prelude::Vec2;
+pub use bevy::prelude::Quat;
 pub use bevy::render::color::Color as Color;
