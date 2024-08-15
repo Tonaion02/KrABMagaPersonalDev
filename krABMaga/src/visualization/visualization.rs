@@ -77,11 +77,11 @@ impl Visualization {
 
     // Specify width and height of the simulation. This should not be smaller than the window dimension,
     // or else the simulation won't be fully visible. Defaults to 500.300
-    pub fn with_simulation_dimensions(mut self, width: f32, height: f32) -> Visualization {
-        self.sim_width = width;
-        self.sim_height = height;
-        self
-    }
+    // pub fn with_simulation_dimensions(mut self, width: f32, height: f32) -> Visualization {
+    //     self.sim_width = width;
+    //     self.sim_height = height;
+    //     self
+    // }
 
     // Specify the name of the window. Defaults to the project name defined in the cargo manifest.
     pub fn with_name(mut self, name: &'static str) -> Visualization {
@@ -177,13 +177,19 @@ impl Visualization {
     // T: TODO try to create a way to pass the g_initializer throug a different function
     // T: and execute that after init_system
     pub fn setup<Params, Params2>(
-        &self, 
+        &mut self, 
         simulation: &mut Simulation,
         graphic_initializer_system: impl IntoSystemConfigs<Params>,
         renderer_system: impl IntoSystemConfigs<Params2>,
     ) {
         let mut app = &mut simulation.app;
-        //let simulation_descriptor = app.world.get_resource::<SimulationDescriptorT>().unwrap("");
+        
+        //Get simulation's dim from SimulationDescriptor
+        let simulation_descriptor = app.world.get_resource::<SimulationDescriptorT>().unwrap();
+        self.sim_width = simulation_descriptor.simulation_dim.x;
+        self.sim_height = simulation_descriptor.simulation_dim.y;
+        println!("sim_width: {}", self.sim_width);
+        //Get simulation's dim from SimulationDescriptor
 
         //Minimum constraints taking into account a 300 x 300 simulation window + a 300 width UI panel
         let mut window_constraints = WindowResizeConstraints::default();

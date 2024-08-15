@@ -113,10 +113,17 @@ fn main()
 {
     let mut simulation = build_simulation(Simulation::build());
 
+    // let mut visualization = Visualization::default();
+    // visualization.with_name("flockers_modified");
+    // visualization.with_window_dimensions(1000., 700.);
+    // //visualization.with_simulation_dimensions(*DIM_X, *DIM_Y);
+    // visualization.with_background_color(Color::rgb(0.5, 0.5, 0.5));
+    // visualization.setup(&mut simulation. graphic_initalizer, render_system);
+
     Visualization::default()
     .with_name("flockers_modified")
     .with_window_dimensions(1000., 700.)
-    .with_simulation_dimensions(*DIM_X, *DIM_Y)
+    //.with_simulation_dimensions(*DIM_X, *DIM_Y)
     .with_background_color(Color::rgb(0.5, 0.5, 0.5))
     .setup(&mut simulation, graphic_initializer, render_system);
 
@@ -135,7 +142,8 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
         .register_double_buffer::<Real2DTranslation>()
         .register_double_buffer::<LastReal2D>()
         .register_step_handler(step_system)
-        .with_num_threads(*NUM_THREADS);
+        .with_num_threads(*NUM_THREADS)
+        .with_simulation_dim(Real2D {x: *DIM_X, y: *DIM_Y});
         // .with_rng(SEED) // We cannot use this during parallel iteration due to mutable access being required for RNG.
         
         // T: commented for error

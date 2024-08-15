@@ -188,7 +188,7 @@ pub fn ui_system(
                 ui.centered_and_justified(|ui| {
                     let start_button =
                         egui::Button::new(egui::RichText::new("▶ Start").color(egui::Color32::GREEN));
-                    //T: substitute with engine config
+                    //T: substitute with simulation_descriptor
                     // if ui.add(start_button).clicked() {
                     //     sim_data.paused = false;
                     // }
@@ -197,7 +197,7 @@ pub fn ui_system(
                     }
 
                     let stop_button = egui::Button::new(egui::RichText::new("⏹ Stop").color(egui::Color32::RED));
-                    //T: substitute with engine config
+                    //T: substitute with simulation_descriptor
                     //T: find a way to reset the simulation
                     if ui.add(stop_button).clicked() {
                         // sim_data.paused = true;
@@ -236,7 +236,7 @@ pub fn ui_system(
                         // //(*active_state_wrapper).0 = new_state;
                     }
                     
-                    //T: substitute with engine config
+                    //T: substitute with simulation_descriptor
                     if ui.button("⏸ Pause").clicked() {
                         // sim_data.paused = true;
                         simulation_descriptor.paused = true;

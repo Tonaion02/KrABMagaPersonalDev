@@ -6,8 +6,9 @@ use bevy::core::TaskPoolThreadAssignmentPolicy;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
+use crate::engine::location::Real2D;
+
 use crate::engine::fields::field_2d::{update_field, Field2D};
-//use crate::engine::resources::engine_configuration::EngineConfiguration;
 use crate::engine::rng::RNG;
 use crate::engine::systems::double_buffer_sync::double_buffer_sync;
 use crate::engine::systems::simulation_descriptor_update::simulation_descriptor_update_system;
@@ -52,8 +53,8 @@ impl Simulation {
         //         ..default()
         //     },
         // }));
+        // T: OLD, it make working in the beginning
 
-        // T: trying to make working with less plugins possible
         #[cfg(any(feature = "trace_tracy", feature = "visualization"))]
         app.add_plugins(LogPlugin::default());
 
@@ -73,6 +74,7 @@ impl Simulation {
         //T: make SimulationDescriptor a Resource
         let simulation_descriptor = SimulationDescriptorT::default();
         app.insert_resource(simulation_descriptor);
+        //T: make SimulationDescriptor a Resource
 
         //T: In case feature visualization not is defined
         #[cfg(not(feature = "visualization"))]
@@ -94,6 +96,14 @@ impl Simulation {
         //T: In case feature visualization is defined
 
         Self { app, steps: None, num_threads: 1 }
+    }
+
+    pub fn with_simulation_dim(mut self, simulation_dim: Real2D) -> Self {
+
+        // T: can't panick, we inserted resource during build...
+        self.app.world.get_resource_mut::<SimulationDescriptorT>().unwrap().simulation_dim = simulation_dim;
+
+        self
     }
 
     pub fn with_num_threads(mut self, num_threads: usize) -> Self {
