@@ -33,19 +33,30 @@ use crate::model::bird::LastReal2D;
 mod model;
 
 // T: For visualization
+#[cfg(any(feature = "visualization"))]
 mod visualization;
 
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::visualization::Visualization;
 
+#[cfg(any(feature = "visualization"))]
 use krabmaga::engine::agent::Agent;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::engine::Commands;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::engine::With;
 
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::AssetServer;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::Transform;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::SpriteBundle;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::Vec3;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::Quat;
+#[cfg(any(feature = "visualization"))]
 use krabmaga::visualization::Color;
 // T: For visualization
 
@@ -287,7 +298,7 @@ fn step_system(mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBR
     //println!("Elapsed: {:?}", now.elapsed());
 }
 
-//#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
+#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn graphic_initializer(
     mut commands: Commands,
     query_agents: Query<(Entity, &DBWrite<Real2DTranslation>), (With<Bird>)>,
@@ -312,7 +323,7 @@ fn graphic_initializer(
     }
 }
 
-//#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
+#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
 fn render_system(
     mut query_agents: Query<(&Bird, &DBWrite<Real2DTranslation>, &DBWrite<LastReal2D>, &mut Transform)>,
     ) {
@@ -359,19 +370,3 @@ fn save_elapsed_time(elapsed_time: core::time::Duration) {
     }
     //Write on file the elapsed time
 }
-
-
-
-// Main used when a visualization feature is applied.
-// #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
-// fn main() {
-//     let dim = (200., 200.);
-//     let num_agents = 100;
-//     let state = Flocker::new(dim, num_agents);
-//     Visualization::default()
-//         .with_window_dimensions(1000., 700.)
-//         .with_simulation_dimensions(dim.0, dim.1)
-//         .with_background_color(Color::rgb(0., 0., 0.))
-//         .with_name("Flockers")
-//         .start::<VisState, Flocker>(VisState, state);
-// }
