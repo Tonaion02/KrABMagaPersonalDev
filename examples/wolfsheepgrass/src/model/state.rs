@@ -115,6 +115,9 @@ impl State for WsgState {
             );
         }
 
+        // T: Update all the fields, 
+        // T: TODO verify if it is necessary this particular order
+        // T: we can't parallelize that?
         self.grass_field.lazy_update();
         self.sheep_grid.lazy_update();
         self.wolves_grid.lazy_update();
@@ -139,11 +142,13 @@ impl State for WsgState {
     }
 
     fn before_step(&mut self, _schedule: &mut Schedule) {
+        // T: empty the buffers of new animals
         self.new_sheep.clear();
         self.new_wolves.clear();
     }
 
     fn after_step(&mut self, schedule: &mut Schedule) {
+        // T: adding to sheduler the new animals (START)
         for sheep in self.new_sheep.iter() {
             schedule.schedule_repeating(Box::new(*sheep), schedule.time + 1.0, 0);
         }
@@ -151,11 +156,14 @@ impl State for WsgState {
         for wolf in self.new_wolves.iter() {
             schedule.schedule_repeating(Box::new(*wolf), schedule.time + 1.0, 1);
         }
+        // T: adding to sheduler the new animals (END)
 
+        // T: remove the killed sheeps from sheduler
         for sheep in self.killed_sheep.iter() {
             schedule.dequeue(Box::new(*sheep), sheep.id);
         }
 
+        // T: get all agents to make the update
         let agents = schedule.get_all_events();
         let mut num_sheep: f32 = 0.;
         let mut num_wolves: f32 = 0.;
@@ -201,6 +209,7 @@ impl State for WsgState {
             self.new_sheep.len() as f64
         );
 
+        // T: Clear all the sheeps after removing that from the sheduler
         self.killed_sheep.clear();
     }
 }

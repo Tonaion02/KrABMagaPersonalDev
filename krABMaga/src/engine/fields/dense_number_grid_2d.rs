@@ -80,6 +80,8 @@ cfg_if! {
 
     } else {
 
+        //------NO VISUALIZATION----------
+
         /// Field with double buffering for dense matrix.
         /// You can insert/update values preserving a common state to read from in a step.
         /// As a values matrix, can contain one value per cell.
@@ -528,13 +530,11 @@ cfg_if! {
                 let index = ((loc.x * self.height) + loc.y) as usize;
                 locs[index] = None;
             }
-
-
         }
 
         impl<T: Copy + Clone + PartialEq> Field for DenseNumberGrid2D<T> {
             /// Swap read and write states of the field and clear write State
-            fn lazy_update(&mut self){
+            fn lazy_update(&mut self) {
 
                 std::mem::swap(&mut self.read, &mut self.write);
 

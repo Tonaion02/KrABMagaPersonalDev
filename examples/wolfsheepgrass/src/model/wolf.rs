@@ -9,6 +9,7 @@ use std::hash::{Hash, Hasher};
 use crate::model::state::{LifeState, WsgState};
 use crate::{ENERGY_CONSUME, GAIN_ENERGY_WOLF, MOMENTUM_PROBABILITY, WOLF_REPR};
 
+// T: probably it must became a Component
 #[derive(Copy, Clone)]
 pub struct Wolf {
     pub id: u32,
@@ -47,6 +48,8 @@ impl Agent for Wolf {
         let mut rng = rand::thread_rng();
 
         // CHECK IF I AM DEAD
+        // T: probably a trivial inefficiency, store the
+        // T: alive wolfs directly in a 'buffer'
         if self.animal_state == LifeState::Dead {
             return;
         }
@@ -82,7 +85,7 @@ impl Agent for Wolf {
 
         state.wolves_grid.set_object_location(*self, &self.loc);
 
-        //EAT
+        // T: Trying to eat sheeps (START)
         if let Some(sheep) = state.sheep_grid.get_objects(&self.loc) {
             for mut sheep in sheep {
                 if state.killed_sheep.get(&sheep).is_none()
@@ -90,12 +93,14 @@ impl Agent for Wolf {
                 {
                     sheep.animal_state = LifeState::Dead;
                     state.sheep_grid.remove_object_location(sheep, &sheep.loc);
+                    // T: gain_energy is it not a constant?
                     self.energy += self.gain_energy;
                     state.killed_sheep.insert(sheep);
                     break;
                 }
             }
         }
+        // T: Trying to eat sheeps (END)
 
         //UPDATE ENERGY
         self.energy -= ENERGY_CONSUME;

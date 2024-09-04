@@ -162,7 +162,8 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
     simulation
 }
 
-// TODO: remove this. The user should specify a bundle representing the agent (AgentBundle) with the component it requires.
+// TODO: remove this. The user should specify a bundle representing the agent (AgentBundle) with 
+// TODO: the component it requires.
 // TODO: there needs to be a way to specify initialization logic too though.
 // TODO: this bundle prototype must be passed to the simulation so that, along with NUM_AGENTS, the simulation
 // TODO: can be programmatically restarted.

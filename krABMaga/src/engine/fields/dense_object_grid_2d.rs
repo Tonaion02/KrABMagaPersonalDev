@@ -173,6 +173,8 @@ cfg_if! {
 
 
 }else{
+            // -------NO VISUALIZATION-------
+
             /// Matrix with double buffering.
             ///
             /// You can insert/update objects preserving a common state to read from in a step.
@@ -398,7 +400,6 @@ cfg_if! {
                     let mut rng = rand::thread_rng();
                     let index = rng.gen_range(0..empty_bags.len());
                     Some(empty_bags[index])
-
                 }
 
 
@@ -735,12 +736,11 @@ cfg_if! {
                     }
                 }
 
-
             }
 
             impl<O: Eq + Hash + Clone + Copy> Field for DenseGrid2D<O> {
                 /// Swap the state of the field and clear locs
-                fn lazy_update(&mut self){
+                fn lazy_update(&mut self) {
                     std::mem::swap(&mut self.read, &mut self.write);
 
                     let mut locs = self.locs[self.write].borrow_mut();
