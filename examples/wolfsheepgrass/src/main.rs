@@ -274,14 +274,14 @@ fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<Las
 }
 
 // T: TODO check if it is necessary to make double buffered the energy of a sheep
-fn sheeps_eat(mut query_sheeps: Query<(&Sheep, &mut Energy,&DBRead<Location>)>, 
+fn sheeps_eat(mut query_sheeps: Query<(&Sheep, &mut Energy, &DBRead<Location>)>, 
               mut query_grass_field: Query<(&DBClonableRead<DenseSingleValueGrid2D<u16>>, &mut DBClonableWrite<DenseSingleValueGrid2D<u16>>)>) {
 
     let mut grass_fields = query_grass_field.get_single_mut().expect("msg");
     let read_grass_field = grass_fields.0;
     let mut write_grass_field = grass_fields.1;
 
-    query_sheeps.iter_mut().for_each(|(mut sheep, loc)| {
+    query_sheeps.iter_mut().for_each(|(sheep, mut energy, loc)| {
         
         // T: TODO check if it is necessary to check that value is not written in these iteration or we
         // T: can work on the old iteration values
@@ -292,15 +292,20 @@ fn sheeps_eat(mut query_sheeps: Query<(&Sheep, &mut Energy,&DBRead<Location>)>,
             // T: Why >= and not = ???
             if grass_value >= FULL_GROWN {
                 write_grass_field.0.set_value_location(0, &loc.0.0);
-                 += GAIN_ENERGY_SHEEP;
+                energy.energy += GAIN_ENERGY_SHEEP;
             }
         }
     });
 }
 
-fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf)>, mut commands: Commands) {
+fn wolfs_eat(mut query_wolfs: Query<(&Wolf, &mut Energy, &DBRead<Location>)>, query_sheeps: Query<(&mut Sheep,)>, mut commands: Commands) {
 
+    let wolf_eat = |(wolf_id, mut energy, wolf_loc,)| {
 
+        
+
+    };
+    query_wolfs.iter_mut().for_each(wolf_eat);
 
 }
 

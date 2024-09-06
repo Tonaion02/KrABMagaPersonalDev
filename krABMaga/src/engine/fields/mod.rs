@@ -17,4 +17,4 @@ pub mod field;
 
 pub mod field_2d;
 pub mod dense_number_grid_2d_t;
-pub mod grid_option;
+pub mod dense_object_grid_2d_t;
