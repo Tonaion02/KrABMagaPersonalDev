@@ -20,7 +20,6 @@ use crate::model::animals::Sheep;
 use crate::model::animals::Wolf;
 use crate::model::animals::Location;
 use crate::model::animals::LastLocation;
-use crate::model::animals::Energy;
 
 use engine::agent;
 use engine::components::double_buffer::DBClonableRead;
@@ -36,43 +35,47 @@ use engine::location::Int2D;
 use krabmaga::engine::simulation::Simulation;
 use krabmaga::engine::agent::Agent;
 use krabmaga::engine::fields::dense_number_grid_2d_t::DenseSingleValueGrid2D;
+use krabmaga::engine::fields::dense_object_grid_2d_t::DenseBagGrid2D;
 
 // T: bevy's import
 // T: TODO find a way to remove the necessity to use this tools
 use krabmaga::engine::Commands;
 use krabmaga::engine::Query;
 use krabmaga::engine::Update;
-
+use krabmaga::engine::Entity;
 use krabmaga::engine::bevy_ecs as bevy_ecs;
 use krabmaga::engine::Component;
 use krabmaga::engine::bevy_ecs::prelude::EntityWorldMut;
-
+use krabmaga::engine::ParallelCommands;
+use krabmaga::engine::Without;
 
 // T: Constants(START)
 pub const ENERGY_CONSUME: f64 = 1.0;
 
 pub const FULL_GROWN: u16 = 20;
 
-pub const GAIN_ENERGY_SHEEP: f64 = 4.0;
-pub const GAIN_ENERGY_WOLF: f64 = 20.0;
+pub const GAIN_ENERGY_SHEEP: f32 = 4.0;
+pub const GAIN_ENERGY_WOLF: f32 = 20.0;
 
-pub const SHEEP_REPR: f64 = 0.2;
-pub const WOLF_REPR: f64 = 0.1;
+pub const SHEEP_REPR: f32 = 0.2;
+pub const WOLF_REPR: f32 = 0.1;
 
-pub const MOMENTUM_PROBABILITY: f64 = 0.8;
+pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-pub const STEPS: u32 = 1;
+pub const STEPS: u32 = 200;
 pub const NUM_THREADS: usize = 4;
 pub const DIM_X: f32 = 50.;
 pub const DIM_Y: f32 = DIM_X;
-pub const NUM_INITIAL_SHEEPS: u32 = (200. * 0.6) as u32;
-pub const NUM_INITIAL_WOLFS: u32 = (200. * 0.4) as u32;
+pub const NUM_AGENTS: f32 = 2000000.;
+pub const NUM_INITIAL_SHEEPS: u32 = (NUM_AGENTS * 0.6) as u32;
+pub const NUM_INITIAL_WOLFS: u32 = (NUM_AGENTS * 0.4) as u32;
 // T: new costants(END)
 // T: Constants(END)
 
 
 
-
+pub struct SheepField;
+pub struct WolfField;
 
 // 'No-visualization' specific imports
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
@@ -129,6 +132,8 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, sheeps_eat);
     app.add_systems(Update, wolfs_eat);
     app.add_systems(Update, grass_grow);
+    app.add_systems(Update, update_wolfs_field);
+    app.add_systems(Update, update_sheeps_field);
 
     simulation
 }
@@ -166,26 +171,27 @@ fn init_world(mut commands: Commands) {
         })
     });
 
-    commands.spawn((DoubleBufferedDataStructure::new(grass_field)));
+    commands.spawn((grass_field));
     // T: generate grass (END)
+
+    let mut rng = rand::thread_rng();
 
     // T: generate sheeps (START)
     println!("generate sheeps");
-    let mut rng = rand::thread_rng();
+
+    let mut sheeps_field = DenseBagGrid2D::<Entity, SheepField>::new(DIM_X as i32, DIM_Y as i32);
+
     for sheep_id in 0..NUM_INITIAL_SHEEPS {
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
         let initial_energy = rng.gen_range(0..(2 * GAIN_ENERGY_SHEEP as usize));
 
-        commands.spawn((
+        let entity_commands = commands.spawn((
 
             Sheep {
                 id: sheep_id + NUM_INITIAL_WOLFS,
+                energy: initial_energy as f32,
             }, 
-            
-            Energy {
-                energy: initial_energy as f64,
-            },
 
             DoubleBuffered::new(Location(loc)),
             DoubleBuffered::new(LastLocation(None)),
@@ -193,32 +199,40 @@ fn init_world(mut commands: Commands) {
             Agent,
 
         ));
+
+        sheeps_field.set_object_location(entity_commands.id(), &loc);
     }
+
+    commands.spawn((sheeps_field));
     // T: generate sheeps (END)
 
     // T: generate wolfs (START)
     println!("genereate wolfs");
+
+    let mut wolfs_field = DenseBagGrid2D::<Entity, WolfField>::new(DIM_X as i32, DIM_Y as i32);
+
     for wolf_id in 0..NUM_INITIAL_WOLFS {
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
         let initial_energy = rng.gen_range(0..(2 * GAIN_ENERGY_SHEEP as usize));
 
-        commands.spawn(
+        let entity_command = commands.spawn(
             
     (Wolf {
                 id: wolf_id,
+                energy: initial_energy as f32,
             }, 
-
-            Energy {
-                energy: initial_energy as f64,
-            },
 
             DoubleBuffered::new(Location(loc)),
             DoubleBuffered::new(LastLocation(None)),
 
             Agent,
         ));
+
+        wolfs_field.set_object_location(entity_command.id(), &loc);
     }
+
+    commands.spawn((wolfs_field));
     // T: generate wolfs (END)
 }
 
@@ -226,13 +240,13 @@ fn init_world(mut commands: Commands) {
 fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<LastLocation>)>) {
 
     query_agents.par_iter_mut().for_each(|(mut loc, mut last_loc)| {
-        
+
         let x = loc.0.0.x;
         let y = loc.0.0.y;
         let mut rng = rand::thread_rng();
 
         let mut moved = false;
-        if last_loc.0.0.is_some() && rng.gen_bool(MOMENTUM_PROBABILITY) {
+        if last_loc.0.0.is_some() && rng.gen_bool(MOMENTUM_PROBABILITY as f64) {
             if let Some(pos) = last_loc.0.0 {
                 let xm = x + (x - pos.x);
                 let ym = y + (y - pos.y);
@@ -271,56 +285,114 @@ fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<Las
         }
     });
 
+    // let mut count = 0u32;
+    // query_agents.iter().for_each(|(mut loc, mut last_loc)|{
+    //     count = count + 1;
+    // });
+    // println!("count: {}", count);
 }
 
 // T: TODO check if it is necessary to make double buffered the energy of a sheep
-fn sheeps_eat(mut query_sheeps: Query<(&Sheep, &mut Energy, &DBRead<Location>)>, 
-              mut query_grass_field: Query<(&DBClonableRead<DenseSingleValueGrid2D<u16>>, &mut DBClonableWrite<DenseSingleValueGrid2D<u16>>)>) {
+fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>, 
+              mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
 
-    let mut grass_fields = query_grass_field.get_single_mut().expect("msg");
-    let read_grass_field = grass_fields.0;
-    let mut write_grass_field = grass_fields.1;
+    let mut grass_field = query_grass_field.get_single_mut().expect("msg");
 
-    query_sheeps.iter_mut().for_each(|(sheep, mut energy, loc)| {
+    query_sheeps.iter_mut().for_each(|(mut sheep, loc)| {
         
         // T: TODO check if it is necessary to check that value is not written in these iteration or we
         // T: can work on the old iteration values
         // T: I don't know exactly what is the limit on working with the old iteration
         // T: to not create inconsistent situations
         // T: these is particular difficult to parallelize, for what we must use DoubleBuffering?
-        if let Some(grass_value) = read_grass_field.0.get_value(&loc.0.0) {
+        if let Some(grass_value) = grass_field.get_value(&loc.0.0) {
             // T: Why >= and not = ???
             if grass_value >= FULL_GROWN {
-                write_grass_field.0.set_value_location(0, &loc.0.0);
-                energy.energy += GAIN_ENERGY_SHEEP;
+                grass_field.set_value_location(0, &loc.0.0);
+                sheep.energy += GAIN_ENERGY_SHEEP;
             }
         }
     });
 }
 
-fn wolfs_eat(mut query_wolfs: Query<(&Wolf, &mut Energy, &DBRead<Location>)>, query_sheeps: Query<(&mut Sheep,)>, mut commands: Commands) {
+fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, 
+            mut query_sheeps: Query<(&mut Sheep)>, 
+            mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>, 
+            mut parallel_commands: ParallelCommands) {
 
-    let wolf_eat = |(wolf_id, mut energy, wolf_loc,)| {
-
+    // let mut cloned_bag = Vec::<Entity>::new();
+    let mut sheeps_field = query_sheeps_field.get_single_mut().expect("Error retrieving sheeps field");
+    
+    query_wolfs.iter_mut().for_each(|(mut wolf, wolf_loc) | {
         
+        let mut sheeps_near = sheeps_field.get_ref_mut_bag(&wolf_loc.0.0);
+        let mut index = 0usize;
+        let mut removed = false;
+        for sheep  in sheeps_near {
 
-    };
-    query_wolfs.iter_mut().for_each(wolf_eat);
+            index += 1usize;
 
+            let mut sheep_data = query_sheeps.get_mut(*sheep).expect("msg");
+            if sheep_data.energy > 0. {
+                //sheep_data.energy = 0.;
+                removed = true;
+                wolf.energy += GAIN_ENERGY_WOLF;
+                break;
+            }
+        }
+
+        sheeps_near = sheeps_field.get_ref_mut_bag(&wolf_loc.0.0);
+        if removed {
+            sheeps_near.swap_remove(index);
+        }
+    });
 }
 
-fn reproduce_sheeps(mut query_sheeps: Query<()>, mut commands: Commands) {
+fn reproduce_sheeps(mut query_sheeps: Query<(&mut Sheep)>, mut commands: Commands) {
+
+
 
 }
 
 fn reproduce_wolves() {
 
+
+
+}
+
+// T: In this case i am using DBWrite to run this system in parallel before
+// T: the syncing of the double buffering
+fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>,
+                        mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>) {
+
+    let mut sheeps_field = query_sheeps_field.single_mut();
+    sheeps_field.clear();
+
+    let process_sheep = |(entity, sheep_id, loc): (Entity, &Sheep, &DBWrite<Location>)| {
+        sheeps_field.set_object(entity, &loc.0.0);
+    };
+
+    query_sheeps.iter().for_each(process_sheep);
+}
+
+fn update_wolfs_field(query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>,
+                    mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>) {
+
+    let mut wolfs_field = query_wolfs_field.single_mut();
+    wolfs_field.clear();
+
+    let process_wolf = 
+    |(entity, wolf_id, loc): (Entity, &Wolf, &DBWrite<Location>)| {
+        wolfs_field.set_object(entity, &loc.0.0);
+    };
+
+    query_wolfs.iter().for_each(process_wolf);
 }
 
 // T: TODO check if we need double buffering for grass field
-fn grass_grow(mut query_grass_field: Query<(&mut DBClonableWrite<DenseSingleValueGrid2D<u16>>)>) {
+fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
 
-    let mut grass_field = &mut query_grass_field.single_mut().0;
+    let mut grass_field = &mut query_grass_field.single_mut();
 
     let closure = |grass_value: &u16| { 
         let growth = *grass_value;
@@ -336,6 +408,7 @@ fn grass_grow(mut query_grass_field: Query<(&mut DBClonableWrite<DenseSingleValu
 }
 
 // T: TODO add a function to sync the grass field
+// T: refactor, cause double buffering of this is not necessary
 fn sync_grass_field() {
 
 }

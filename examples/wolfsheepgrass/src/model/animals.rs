@@ -18,18 +18,13 @@ use krabmaga::engine::Component;
 #[derive(Component, Copy, Clone)]
 pub struct Wolf {
     pub id: u32,
+    pub energy: f32,
 }
 
 #[derive(Component, Copy, Clone)]
 pub struct Sheep {
     pub id: u32,
-}
-
-// T: this component is useed to save the energy that remains
-// T: to an animals.
-#[derive(Component, Copy, Clone)]
-pub struct Energy {
-    pub energy: f64,
+    pub energy: f32,
 }
 
 // T: this component is used to save the last location of the animals
@@ -39,7 +34,6 @@ pub struct LastLocation(pub Option<Int2D>);
 // T: this component contains the updated location of these agents
 #[derive(Component, Copy, Clone)]
 pub struct Location(pub Int2D);
-
 
 // T: this marker component is used to mark all the Agents beetween Entities
 // T: TODO verify if it is necessary and starting use it in the case

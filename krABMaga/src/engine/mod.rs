@@ -10,11 +10,13 @@ pub use bevy::prelude::Res;
 
 //T: added by me
 pub use bevy::prelude::With;
+pub use bevy::prelude::Without;
 pub use bevy::prelude::Commands;
 pub use bevy::prelude::ResMut;
 pub use bevy::prelude::Resource;
 pub use bevy::prelude::Update;
 pub use bevy::prelude::Startup;
+pub use bevy::ecs::system::ParallelCommands;
 
 /// Module to define Agent methods
 pub mod agent;
