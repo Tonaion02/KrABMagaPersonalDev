@@ -12,6 +12,8 @@
 // The comment's lines that end with '(END)' are the end of a block of code.
 //==============================================================================================================
 
+use std::time::Instant;
+
 //use crate::model::state::WsgState;
 mod model;
 use crate::model::animals::Sheep;
@@ -26,7 +28,7 @@ use engine::location::Real2D;
 use engine::location::Int2D;
 use krabmaga::engine::simulation::Simulation;
 use krabmaga::engine::agent::Agent;
-use krabmaga::engine::fields::dense_number_grid_2d_t::DenseNumberGrid2D;
+use krabmaga::engine::fields::dense_number_grid_2d_t::DenseSingleValueGrid2D;
 
 // T: bevy's import
 // T: TODO find a way to remove the necessity to use this tools
@@ -73,6 +75,9 @@ use krabmaga::*;
 
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
 fn main() {
+
+    let now = Instant::now();
+
     // T: why steps are not a constant?
     // T: probably they cannot be only a constant cause the fact
     // T: that we need to access to steps from other sources
@@ -89,6 +94,11 @@ fn main() {
     // let _ = simulate!(state, step, 10);
     let simulation = build_simulation();
     simulation.run();
+
+    let elapsed_time = now.elapsed();
+    println!("Elapsed: {:.2?}, steps per second: {}", elapsed_time, STEPS as f64 / elapsed_time.as_secs_f64());
+
+    save_elapsed_time(elapsed_time);
 }
 
 fn build_simulation() -> Simulation {
@@ -112,7 +122,7 @@ fn build_simulation() -> Simulation {
     let app = &mut simulation.app;
     app.add_systems(Update, move_agents);
     app.add_systems(Update, sheeps_eat);
-    app.add_systems(Update, wolf_step);
+    app.add_systems(Update, wolfs_eat);
     app.add_systems(Update, grass_grow);
 
     simulation
@@ -134,21 +144,25 @@ fn init_world(mut commands: Commands) {
     // T: generate grass (START)
     println!("generate grass");
 
-    let grass_field = 
+    let mut grass_field = DenseSingleValueGrid2D::<u16>::new(DIM_X as i32, DIM_Y as i32);
 
-    (0..DIM_X as i32).into_iter().for_each(|X| {
-        (0..DIM_Y as i32).into_iter().for_each(|Y| {
+    (0..DIM_X as i32).into_iter().for_each(|x| {
+        (0..DIM_Y as i32).into_iter().for_each(|y| {
             let mut rng = rand::thread_rng();
             let fully_growth = rng.gen_bool(0.5);
             if fully_growth {
 
                 // T: TODO add the missing code with DenseGrid for Grass
-
+                grass_field.set_value_location(FULL_GROWN, &Int2D { x, y });
             } else {
+                let grass_init_value = rng.gen_range(0..FULL_GROWN + 1);
 
+                grass_field.set_value_location(grass_init_value, &Int2D { x, y })
             }
         })
     });
+
+    commands.spawn((grass_field));
     // T: generate grass (END)
 
     // T: generate sheeps (START)
@@ -266,7 +280,7 @@ fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep)>) {
     
 }
 
-fn wolf_step(mut query_wolfs: Query<(&mut Wolf)>) {
+fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf)>) {
 
 }
 
@@ -308,4 +322,31 @@ fn main() {
         .setup::<VisState, WsgState>(VisState, state);
     app.add_system(DenseNumberGrid2D::batch_render);
     app.run()
+}
+
+// T: TODO check what macro make this work before ECS experiment
+fn save_elapsed_time(elapsed_time: core::time::Duration) {
+    
+    use std::path::Path;
+    use std::fs::File;
+    use std::io::prelude::*;
+    
+    //Write on file the elapsed time
+    let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");
+    let display = path.display();
+
+    // Open a file in write-only mode
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("couldn't create {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    let mut elapsed_time_s: String = String::from("elapsed_time=");
+    elapsed_time_s.push_str(&elapsed_time.as_nanos().to_string());
+
+    match file.write_all(elapsed_time_s.as_bytes()) {
+        Err(why) => panic!("couldn't write to {}: {}", display, why),
+        Ok(_) => println!("successfully wrote to {}", display),
+    }
+    //Write on file the elapsed time
 }
