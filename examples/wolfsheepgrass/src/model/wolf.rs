@@ -103,6 +103,9 @@ impl Agent for Wolf {
         // T: Trying to eat sheeps (END)
 
         //UPDATE ENERGY
+        // T: probably we can parallelize easily that, in fact we only need to
+        // T: cache in different vector that after that we can merge
+        // T: or we can direcly use the Parallel version of Commands from Bevy
         self.energy -= ENERGY_CONSUME;
         if self.energy <= 0.0 {
             self.animal_state = LifeState::Dead;

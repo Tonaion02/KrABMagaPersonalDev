@@ -12,5 +12,9 @@
 // #[cfg(feature = "distributed_mpi")]
 // pub mod kdtree_mpi;
 
-pub mod field_2d;
 // TODO reimplement each data structure one by one
+pub mod field;
+
+pub mod field_2d;
+pub mod dense_number_grid_2d_t;
+pub mod grid_option;

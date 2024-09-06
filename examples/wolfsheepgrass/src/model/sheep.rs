@@ -93,7 +93,8 @@ impl Agent for Sheep {
         state.sheep_grid.set_object_location(*self, &self.loc);
         //EAT
         // T: TODO Trying to understand why if only the value is not in the
-        // T: write buffer you go to eat the grass.
+        // T: write buffer you go to eat the grass. Is trying to check if it
+        // T: is modified?
         if state.grass_field.get_value_unbuffered(&self.loc).is_none() {
             if let Some(grass_val) = state.grass_field.get_value(&self.loc) {
                 if grass_val >= FULL_GROWN {

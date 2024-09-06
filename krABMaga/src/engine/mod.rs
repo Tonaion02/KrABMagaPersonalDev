@@ -1,15 +1,20 @@
 // Bevy reexports, so that we can prevent exposing bevy directly
 // TODO can we simplify those for the user without sacrificing flexibility?
+
+// T: commented because cause errors on Component
 pub use bevy::ecs as bevy_ecs;
 pub use bevy::prelude::Component;
 pub use bevy::prelude::Entity;
 pub use bevy::prelude::Query;
 pub use bevy::prelude::Res;
-pub use bevy::prelude::ResMut;
 
 //T: added by me
 pub use bevy::prelude::With;
 pub use bevy::prelude::Commands;
+pub use bevy::prelude::ResMut;
+pub use bevy::prelude::Resource;
+pub use bevy::prelude::Update;
+pub use bevy::prelude::Startup;
 
 /// Module to define Agent methods
 pub mod agent;

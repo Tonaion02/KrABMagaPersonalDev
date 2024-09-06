@@ -5,7 +5,7 @@ use rand::Rng;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-use crate::engine::bevy_ecs::prelude::Resource;
+use crate::engine::Resource;
 
 // TODO offer several constructors to allow the user to create scoped RNGs, such as an agent-based one, or a step-based one or both
 #[derive(Resource, Clone)]

@@ -355,4 +355,6 @@ pub mod engine;
 #[cfg(feature="visualization")]
 pub mod visualization;
 
+pub use rand as rand;
+
 // TODO refactor macros one by one

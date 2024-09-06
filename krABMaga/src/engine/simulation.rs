@@ -29,7 +29,9 @@ enum SimulationSet {
 }
 
 pub struct Simulation {
-    pub(crate) app: App,
+    // TEMP: temporary modified
+    //pub(crate) app: App,
+    pub app: App,
     steps: Option<u32>,
     num_threads: usize,
 }
@@ -141,6 +143,13 @@ impl Simulation {
         #[cfg(feature = "visualization")]
         self.app.add_systems(FixedPreUpdate, (step_handler,).in_set(SimulationSet::Step).run_if(Simulation::is_not_paused));
         
+        self
+    }
+
+    // T: Method to register a system for init of world
+    pub fn register_init_world<Params>(mut self, init_world: impl IntoSystemConfigs<Params>) -> Self {
+        self.app.add_systems(Startup, init_world);
+
         self
     }
 

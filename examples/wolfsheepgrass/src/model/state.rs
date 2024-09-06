@@ -163,7 +163,6 @@ impl State for WsgState {
             schedule.dequeue(Box::new(*sheep), sheep.id);
         }
 
-        // T: get all agents to make the update
         let agents = schedule.get_all_events();
         let mut num_sheep: f32 = 0.;
         let mut num_wolves: f32 = 0.;
