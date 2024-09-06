@@ -20,8 +20,15 @@ use crate::model::animals::Sheep;
 use crate::model::animals::Wolf;
 use crate::model::animals::Location;
 use crate::model::animals::LastLocation;
+use crate::model::animals::Energy;
 
 use engine::agent;
+use engine::components::double_buffer::DBClonableRead;
+use engine::components::double_buffer::DBClonableWrite;
+use engine::components::double_buffer::DoubleBufferedDataStructure;
+use krabmaga::engine::components::double_buffer::DoubleBuffered;
+use krabmaga::engine::components::double_buffer::DBRead;
+use krabmaga::engine::components::double_buffer::DBWrite;
 use krabmaga::rand::Rng;
 
 use engine::location::Real2D;
@@ -35,9 +42,7 @@ use krabmaga::engine::fields::dense_number_grid_2d_t::DenseSingleValueGrid2D;
 use krabmaga::engine::Commands;
 use krabmaga::engine::Query;
 use krabmaga::engine::Update;
-use krabmaga::engine::components::double_buffer::DoubleBuffered;
-use krabmaga::engine::components::double_buffer::DBRead;
-use krabmaga::engine::components::double_buffer::DBWrite;
+
 use krabmaga::engine::bevy_ecs as bevy_ecs;
 use krabmaga::engine::Component;
 use krabmaga::engine::bevy_ecs::prelude::EntityWorldMut;
@@ -97,7 +102,6 @@ fn main() {
 
     let elapsed_time = now.elapsed();
     println!("Elapsed: {:.2?}, steps per second: {}", elapsed_time, STEPS as f64 / elapsed_time.as_secs_f64());
-
     save_elapsed_time(elapsed_time);
 }
 
@@ -119,6 +123,7 @@ fn build_simulation() -> Simulation {
     // T: TEMP
     // T: TODO create some abstractions of Simulation that permits
     // T: to add to app many other systems
+    // T: TODO add the system necessary to double buffer grass_field
     let app = &mut simulation.app;
     app.add_systems(Update, move_agents);
     app.add_systems(Update, sheeps_eat);
@@ -136,7 +141,6 @@ pub fn insert_double_buffered<T: Component + Copy>(mut entity: EntityWorldMut, v
     entity.insert(DoubleBuffered::new(value));
 }
 
-// T: TODO rember to add to fields the generated entities
 fn init_world(mut commands: Commands) {
 
     println!("init_world!");
@@ -162,7 +166,7 @@ fn init_world(mut commands: Commands) {
         })
     });
 
-    commands.spawn((grass_field));
+    commands.spawn((DoubleBufferedDataStructure::new(grass_field)));
     // T: generate grass (END)
 
     // T: generate sheeps (START)
@@ -177,15 +181,12 @@ fn init_world(mut commands: Commands) {
 
             Sheep {
                 id: sheep_id + NUM_INITIAL_WOLFS,
-                loc: loc,
-                last: None,
-                energy: initial_energy as f64,
-                gain_energy: GAIN_ENERGY_SHEEP,
-                prod_reproduction: SHEEP_REPR,
             }, 
-        
-            // Location (loc),
-            // LastLocation (None),
+            
+            Energy {
+                energy: initial_energy as f64,
+            },
+
             DoubleBuffered::new(Location(loc)),
             DoubleBuffered::new(LastLocation(None)),
 
@@ -204,17 +205,13 @@ fn init_world(mut commands: Commands) {
 
         commands.spawn(
             
-    (Sheep {
+    (Wolf {
                 id: wolf_id,
-                loc: loc,
-                last: None,
-                energy: initial_energy as f64,
-                gain_energy: GAIN_ENERGY_WOLF,
-                prod_reproduction: WOLF_REPR,
             }, 
-    
-            // Location (loc),
-            // LastLocation (None),
+
+            Energy {
+                energy: initial_energy as f64,
+            },
 
             DoubleBuffered::new(Location(loc)),
             DoubleBuffered::new(LastLocation(None)),
@@ -276,23 +273,65 @@ fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<Las
 
 }
 
-fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep)>) {
-    
+// T: TODO check if it is necessary to make double buffered the energy of a sheep
+fn sheeps_eat(mut query_sheeps: Query<(&Sheep, &mut Energy,&DBRead<Location>)>, 
+              mut query_grass_field: Query<(&DBClonableRead<DenseSingleValueGrid2D<u16>>, &mut DBClonableWrite<DenseSingleValueGrid2D<u16>>)>) {
+
+    let mut grass_fields = query_grass_field.get_single_mut().expect("msg");
+    let read_grass_field = grass_fields.0;
+    let mut write_grass_field = grass_fields.1;
+
+    query_sheeps.iter_mut().for_each(|(mut sheep, loc)| {
+        
+        // T: TODO check if it is necessary to check that value is not written in these iteration or we
+        // T: can work on the old iteration values
+        // T: I don't know exactly what is the limit on working with the old iteration
+        // T: to not create inconsistent situations
+        // T: these is particular difficult to parallelize, for what we must use DoubleBuffering?
+        if let Some(grass_value) = read_grass_field.0.get_value(&loc.0.0) {
+            // T: Why >= and not = ???
+            if grass_value >= FULL_GROWN {
+                write_grass_field.0.set_value_location(0, &loc.0.0);
+                 += GAIN_ENERGY_SHEEP;
+            }
+        }
+    });
 }
 
-fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf)>) {
+fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf)>, mut commands: Commands) {
+
+
 
 }
 
-fn grass_grow() {
-
-}
-
-fn reproduce_sheeps(mut query_sheeps: Query<()>) {
+fn reproduce_sheeps(mut query_sheeps: Query<()>, mut commands: Commands) {
 
 }
 
 fn reproduce_wolves() {
+
+}
+
+// T: TODO check if we need double buffering for grass field
+fn grass_grow(mut query_grass_field: Query<(&mut DBClonableWrite<DenseSingleValueGrid2D<u16>>)>) {
+
+    let mut grass_field = &mut query_grass_field.single_mut().0;
+
+    let closure = |grass_value: &u16| { 
+        let growth = *grass_value;
+        if growth < FULL_GROWN {
+            growth + 1
+        }
+        else {
+            growth
+        }
+    };
+
+    grass_field.apply_to_all_values(closure);
+}
+
+// T: TODO add a function to sync the grass field
+fn sync_grass_field() {
 
 }
 

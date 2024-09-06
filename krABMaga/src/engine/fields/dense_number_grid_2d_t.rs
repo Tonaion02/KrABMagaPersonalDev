@@ -1,19 +1,19 @@
 use std::cell::RefCell;
 use std::sync::RwLock;
+use std::collections::HashMap;
+use std::hash::Hash;
 
-use crate::engine::fields::grid_option::GridOption;
 use crate::engine::location::Int2D;
 use crate::engine::fields::field::Field;
 use rand::Rng;
 use bevy::prelude::Component;
-use tui::widgets;
 
 
 
 
 
 // T: TODO add a marker to this structure
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct DenseSingleValueGrid2D<T: Copy + Clone + PartialEq> {
     pub values: Vec<Option<T>>,
     pub width: i32,
@@ -32,7 +32,7 @@ impl<T: Copy + Clone + PartialEq> DenseSingleValueGrid2D<T> {
 
 
 
-    pub fn apply_to_all_values<F>(&mut self, closure: F, option: GridOption)
+    pub fn apply_to_all_values<F>(&mut self, closure: F)
     where
         F: Fn(&T) -> T,
     {
@@ -45,8 +45,6 @@ impl<T: Copy + Clone + PartialEq> DenseSingleValueGrid2D<T> {
             *elem = Some(closure(&elem.unwrap()));
         }
     }
-
-
 
     pub fn set_value_location(&mut self, value: T, loc: &Int2D) {
         let index = self.compute_index(loc);

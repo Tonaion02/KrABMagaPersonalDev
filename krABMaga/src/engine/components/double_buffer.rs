@@ -24,3 +24,30 @@ pub struct DBRead<T: Component + Copy + Send>(pub T);
 
 #[derive(Component)]
 pub struct DBWrite<T: Component + Copy + Send>(pub T);
+
+
+
+
+
+#[derive(Bundle)]
+pub struct DoubleBufferedDataStructure<T: Component + Clone> {
+    pub read: DBClonableRead<T>,
+    pub write: DBClonableWrite<T>,
+}
+
+// T: TODO verify is is more conveniente to use the value
+// T: probably is moved anyway.
+impl<T: Component + Clone> DoubleBufferedDataStructure<T> {
+    pub fn new(component: T) -> DoubleBufferedDataStructure<T> {
+        DoubleBufferedDataStructure {
+            read: DBClonableRead(component.clone()),
+            write: DBClonableWrite(component.clone()),
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct DBClonableRead<T: Component + Clone>(pub T);
+
+#[derive(Component)]
+pub struct DBClonableWrite<T: Component + Clone>(pub T);
