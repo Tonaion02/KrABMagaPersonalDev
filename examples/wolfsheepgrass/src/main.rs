@@ -138,7 +138,9 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, grass_grow);
     app.add_systems(Update, reproduce_sheeps);
     app.add_systems(Update, reproduce_wolves);
-    app.add_systems(Update, count_agents);
+    // T: TEMP
+    // T: only for debug purpose
+    //app.add_systems(Update, count_agents);
 
     simulation
 }
@@ -301,12 +303,6 @@ fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<Las
             last_loc.0 = LastLocation(Some(Int2D { x, y }));
         }
     });
-
-    // let mut count = 0u32;
-    // query_agents.iter().for_each(|(mut loc, mut last_loc)|{
-    //     count = count + 1;
-    // });
-    // println!("count: {}", count);
 }
 
 fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>, 
@@ -322,7 +318,7 @@ fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>,
         // T: to not create inconsistent situations
         // T: these is particular difficult to parallelize, for what we must use DoubleBuffering?
         if let Some(grass_value) = grass_field.get_value(&loc.0.0) {
-            // T: Why >= and not = ???
+            // T: Why >= and not = ??? from the old simulation
             if grass_value >= FULL_GROWN {
                 grass_field.set_value_location(0, &loc.0.0);
                 sheep.energy += GAIN_ENERGY_SHEEP;
@@ -334,12 +330,12 @@ fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>,
 fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, 
             mut query_sheeps: Query<(&mut Sheep)>, 
             mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>, 
-            mut parallel_commands: ParallelCommands) {
+            mut commands: Commands) {
 
     let mut sheeps_field = query_sheeps_field.get_single_mut().expect("Error retrieving sheeps field");
     
     query_wolfs.iter_mut().for_each(|(mut wolf, wolf_loc) | {
-        
+
         let mut sheeps_near = sheeps_field.get_ref_mut_bag(&wolf_loc.0.0);
         let mut index = 0u32;
         let mut removed = false;
@@ -349,14 +345,14 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
             if sheep_data.energy > 0. {
                 // T: TEMP
                 //To don't give oscillation of population for now
-                //sheep_data.energy = 0.;
+                // T: TODO check if it is useless, probably not
+                sheep_data.energy = 0.;
                 removed = true;
                 wolf.energy += GAIN_ENERGY_WOLF;
 
                 // T: remove with parallel commands the sheeps
-                parallel_commands.command_scope(|mut commands| {
-                    commands.entity(*sheep).despawn();
-                });
+                commands.entity(*sheep).despawn();
+
 
                 // T: exit when we found an alive sheep
                 break;
