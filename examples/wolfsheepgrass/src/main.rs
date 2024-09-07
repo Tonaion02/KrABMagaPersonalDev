@@ -184,7 +184,8 @@ fn init_world(mut commands: Commands) {
     for sheep_id in 0..NUM_INITIAL_SHEEPS {
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
-        let initial_energy = rng.gen_range(0..(2 * GAIN_ENERGY_SHEEP as usize));
+        let initial_energy = rng.gen_range(0.1 ..(2. * GAIN_ENERGY_SHEEP as f32));
+        //println!("{}", initial_energy);
 
         let entity_commands = commands.spawn((
 
@@ -214,7 +215,7 @@ fn init_world(mut commands: Commands) {
     for wolf_id in 0..NUM_INITIAL_WOLFS {
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
-        let initial_energy = rng.gen_range(0..(2 * GAIN_ENERGY_SHEEP as usize));
+        let initial_energy = rng.gen_range(0.1 ..(2. * GAIN_ENERGY_SHEEP as f32));
 
         let entity_command = commands.spawn(
             
@@ -326,24 +327,27 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
     query_wolfs.iter_mut().for_each(|(mut wolf, wolf_loc) | {
         
         let mut sheeps_near = sheeps_field.get_ref_mut_bag(&wolf_loc.0.0);
-        let mut index = 0usize;
+        let mut index = 0u32;
         let mut removed = false;
         for sheep  in sheeps_near {
 
-            index += 1usize;
-
             let mut sheep_data = query_sheeps.get_mut(*sheep).expect("msg");
             if sheep_data.energy > 0. {
+                // T: TEMP
+                //To don't give oscillation of population for now
                 //sheep_data.energy = 0.;
                 removed = true;
                 wolf.energy += GAIN_ENERGY_WOLF;
                 break;
             }
+
+            index += 1u32;
         }
 
         sheeps_near = sheeps_field.get_ref_mut_bag(&wolf_loc.0.0);
         if removed {
-            sheeps_near.swap_remove(index);
+            //println!("{}", index);
+            sheeps_near.swap_remove(index as usize);
         }
     });
 }
