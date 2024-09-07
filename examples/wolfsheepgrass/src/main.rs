@@ -48,6 +48,7 @@ use krabmaga::engine::Component;
 use krabmaga::engine::bevy_ecs::prelude::EntityWorldMut;
 use krabmaga::engine::ParallelCommands;
 use krabmaga::engine::Without;
+use krabmaga::engine::bevy_prelude::*;
 
 // T: Constants(START)
 pub const ENERGY_CONSUME: f64 = 1.0;
@@ -74,6 +75,7 @@ pub const NUM_INITIAL_WOLFS: u32 = (NUM_AGENTS * 0.4) as u32;
 
 
 
+// T: markers for fields
 pub struct SheepField;
 pub struct WolfField;
 
@@ -128,12 +130,15 @@ fn build_simulation() -> Simulation {
     // T: to add to app many other systems
     // T: TODO add the system necessary to double buffer grass_field
     let app = &mut simulation.app;
-    app.add_systems(Update, move_agents);
-    app.add_systems(Update, sheeps_eat);
-    app.add_systems(Update, wolfs_eat);
-    app.add_systems(Update, grass_grow);
     app.add_systems(Update, update_wolfs_field);
     app.add_systems(Update, update_sheeps_field);
+    app.add_systems(Update, move_agents.before(update_wolfs_field).before(update_sheeps_field));
+    app.add_systems(Update, sheeps_eat.after(update_sheeps_field).after(update_wolfs_field));
+    app.add_systems(Update, wolfs_eat.after(update_sheeps_field).after(update_wolfs_field));
+    app.add_systems(Update, grass_grow);
+    app.add_systems(Update, reproduce_sheeps);
+    app.add_systems(Update, reproduce_wolves);
+
 
     simulation
 }
@@ -293,7 +298,6 @@ fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<Las
     // println!("count: {}", count);
 }
 
-// T: TODO check if it is necessary to make double buffered the energy of a sheep
 fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>, 
               mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
 
@@ -321,7 +325,6 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
             mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>, 
             mut parallel_commands: ParallelCommands) {
 
-    // let mut cloned_bag = Vec::<Entity>::new();
     let mut sheeps_field = query_sheeps_field.get_single_mut().expect("Error retrieving sheeps field");
     
     query_wolfs.iter_mut().for_each(|(mut wolf, wolf_loc) | {
@@ -338,6 +341,13 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
                 //sheep_data.energy = 0.;
                 removed = true;
                 wolf.energy += GAIN_ENERGY_WOLF;
+
+                // T: remove with parallel commands the sheeps
+                parallel_commands.command_scope(|mut commands| {
+                    commands.entity(*sheep).despawn();
+                });
+
+                // T: exit when we found an alive sheep
                 break;
             }
 
@@ -346,26 +356,87 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
 
         sheeps_near = sheeps_field.get_ref_mut_bag(&wolf_loc.0.0);
         if removed {
-            //println!("{}", index);
             sheeps_near.swap_remove(index as usize);
         }
     });
 }
 
-fn reproduce_sheeps(mut query_sheeps: Query<(&mut Sheep)>, mut commands: Commands) {
+fn reproduce_sheeps(mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Location>)>, mut parallel_commands: ParallelCommands) {
 
 
+    query_sheeps.par_iter_mut().for_each(
+  |(entity, mut sheep_data, loc)| {
 
-}
-
-fn reproduce_wolves() {
+            let mut rng = rand::thread_rng(); 
 
 
+            parallel_commands.command_scope(|mut commands| {
 
+                sheep_data.energy -= GAIN_ENERGY_SHEEP;
+            
+                if sheep_data.energy > 0. && rng.gen_bool(SHEEP_REPR as f64) {
+                    sheep_data.energy /= 2.0;
+                    commands.spawn((
+                    Sheep {
+                        id: 0,
+                        energy: GAIN_ENERGY_SHEEP,
+                    }, 
+        
+                    DoubleBuffered::new(Location(loc.0.0)),
+                    DoubleBuffered::new(LastLocation(None)),
+        
+                    Agent,)
+                    );
+                }
+                if sheep_data.energy == 0. {
+                    commands.entity(entity).despawn();
+                }
+                
+            });
+            
+        }
+    );
+
+}   
+
+fn reproduce_wolves(mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>)>, mut parallel_commands: ParallelCommands) {
+    
+    query_wolfs.par_iter_mut().for_each(
+        |(entity, mut wolf_data, loc)| {
+      
+                  let mut rng = rand::thread_rng(); 
+      
+      
+                  parallel_commands.command_scope(|mut commands| {
+      
+                    wolf_data.energy -= GAIN_ENERGY_WOLF;
+                  
+                      if wolf_data.energy > 0. && rng.gen_bool(WOLF_REPR as f64) {
+                          wolf_data.energy /= 2.0;
+                          commands.spawn((
+                          Sheep {
+                              id: 0 ,
+                              energy: GAIN_ENERGY_WOLF,
+                          }, 
+              
+                          DoubleBuffered::new(Location(loc.0.0)),
+                          DoubleBuffered::new(LastLocation(None)),
+              
+                          Agent,)
+                          );
+                      }
+                      if wolf_data.energy == 0. {
+                          commands.entity(entity).despawn();
+                      }
+                      
+                  });
+                  
+              }
+          );
 }
 
 // T: In this case i am using DBWrite to run this system in parallel before
-// T: the syncing of the double buffering
+// T: the syncing of the double buffering about locations
 fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>,
                         mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>) {
 
@@ -379,14 +450,16 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
     query_sheeps.iter().for_each(process_sheep);
 }
 
-fn update_wolfs_field(query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>,
+// T: In this case i am using DBWrite to run this system in parallel before
+// T: the syncing of the double buffering about locations
+fn update_wolfs_field(query_wolfs: Query<(Entity, &Wolf, &DBRead<Location>)>,
                     mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>) {
 
     let mut wolfs_field = query_wolfs_field.single_mut();
     wolfs_field.clear();
 
     let process_wolf = 
-    |(entity, wolf_id, loc): (Entity, &Wolf, &DBWrite<Location>)| {
+    |(entity, wolf_id, loc): (Entity, &Wolf, &DBRead<Location>)| {
         wolfs_field.set_object(entity, &loc.0.0);
     };
 
@@ -409,12 +482,6 @@ fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) 
     };
 
     grass_field.apply_to_all_values(closure);
-}
-
-// T: TODO add a function to sync the grass field
-// T: refactor, cause double buffering of this is not necessary
-fn sync_grass_field() {
-
 }
 
 #[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
