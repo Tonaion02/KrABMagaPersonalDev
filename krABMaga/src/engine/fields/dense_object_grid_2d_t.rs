@@ -75,6 +75,9 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
         }
     }
 
+    // T: This method is useful when you want to put 
+    // T: the contents of a bag in an already allocated
+    // T: buffer.
     pub fn get_object_already_allocation(&self, loc: &Int2D, mut buffer: &mut Vec::<O>) {
 
         let index = self.compute_index(loc);
@@ -88,7 +91,7 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
     }
 
     // T: This function is written to evitate to allocate each time 
-    // T: to recopy a bag when you need to modify it
+    // T: to recopy a bag when you need to modify it.
     pub fn get_ref_mut_bag(&mut self, loc: &Int2D) -> &mut Vec<O> {
         let index = self.compute_index(loc);
         return &mut self.bags[index];

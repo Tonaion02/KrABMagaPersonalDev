@@ -141,6 +141,8 @@ fn build_simulation() -> Simulation {
     // T: TEMP
     // T: only for debug purpose
     //app.add_systems(Update, count_agents);
+    app.add_systems(Update, count_sheeps);
+    app.add_systems(Update, count_wolfs);
 
     simulation
 }
@@ -153,6 +155,8 @@ pub fn insert_double_buffered<T: Component + Copy>(mut entity: EntityWorldMut, v
     entity.insert(DoubleBuffered::new(value));
 }
 
+// T: TEMP
+// T: For debug purpose
 pub fn count_agents(query_agents: Query<(&Agent)>) {
 
     let mut count = 0u32;
@@ -162,6 +166,32 @@ pub fn count_agents(query_agents: Query<(&Agent)>) {
     });
 
     println!("{}", count);
+}
+
+// T: TEMP
+// T: For debug purpose
+pub fn count_wolfs(query_wolfs: Query<(&Wolf)>) {
+
+    let mut count = 0u32;
+
+    query_wolfs.for_each(|(sheep)|{
+        count = count + 1;
+    });
+
+    println!("Sheeps: {}", count);
+}
+
+// T: TEMP
+// T: For debug purpose
+pub fn count_sheeps(query_sheeps: Query<(&Sheep)>) {
+
+    let mut count = 0u32;
+
+    query_sheeps.for_each(|(wolf)| {
+        count = count + 1;
+    });
+
+    println!("Wolfs: {}", count);
 }
 
 fn init_world(mut commands: Commands) {
@@ -343,18 +373,18 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
 
             let mut sheep_data = query_sheeps.get_mut(*sheep).expect("msg");
             if sheep_data.energy > 0. {
-                // T: TEMP
-                //To don't give oscillation of population for now
+                
+                println!("wolf eating {}\n", sheep.index());
+
                 // T: TODO check if it is useless, probably not
                 sheep_data.energy = 0.;
                 removed = true;
                 wolf.energy += GAIN_ENERGY_WOLF;
 
-                // T: remove with parallel commands the sheeps
                 commands.entity(*sheep).despawn();
 
-
-                // T: exit when we found an alive sheep
+                // T: exit when we found an alive sheep, each wolf
+                // T: eat only a prey(taken from the old simulation)
                 break;
             }
 
@@ -370,7 +400,6 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
 
 fn reproduce_sheeps(mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Location>)>, mut parallel_commands: ParallelCommands) {
 
-
     query_sheeps.par_iter_mut().for_each(
   |(entity, mut sheep_data, loc)| {
 
@@ -379,7 +408,7 @@ fn reproduce_sheeps(mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Locatio
 
             parallel_commands.command_scope(|mut commands| {
 
-                sheep_data.energy -= GAIN_ENERGY_SHEEP;
+                sheep_data.energy -= ENERGY_CONSUME;
             
                 if sheep_data.energy > 0. && rng.gen_bool(SHEEP_REPR as f64) {
                     sheep_data.energy /= 2.0;
@@ -412,11 +441,11 @@ fn reproduce_wolves(mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>
         |(entity, mut wolf_data, loc)| {
       
                   let mut rng = rand::thread_rng(); 
-      
-      
+                  
+                  wolf_data.energy -= ENERGY_CONSUME;
+
                   parallel_commands.command_scope(|mut commands| {
       
-                    wolf_data.energy -= GAIN_ENERGY_WOLF;
                   
                       if wolf_data.energy > 0. && rng.gen_bool(WOLF_REPR as f64) {
                           wolf_data.energy /= 2.0;
