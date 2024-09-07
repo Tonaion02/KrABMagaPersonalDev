@@ -65,7 +65,7 @@ pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
 pub const STEPS: u32 = 200;
 pub const NUM_THREADS: usize = 4;
-pub const DIM_X: f32 = 50.;
+pub const DIM_X: f32 = 5000.;
 pub const DIM_Y: f32 = DIM_X;
 pub const NUM_AGENTS: f32 = 2000000.;
 pub const NUM_INITIAL_SHEEPS: u32 = (NUM_AGENTS * 0.6) as u32;
@@ -138,7 +138,7 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, grass_grow);
     app.add_systems(Update, reproduce_sheeps);
     app.add_systems(Update, reproduce_wolves);
-
+    app.add_systems(Update, count_agents);
 
     simulation
 }
@@ -149,6 +149,17 @@ fn build_simulation() -> Simulation {
 // T: idea.
 pub fn insert_double_buffered<T: Component + Copy>(mut entity: EntityWorldMut, value: T) {
     entity.insert(DoubleBuffered::new(value));
+}
+
+pub fn count_agents(query_agents: Query<(&Agent)>) {
+
+    let mut count = 0u32;
+
+    query_agents.for_each(|(agent)| {
+        count = count + 1;
+    });
+
+    println!("{}", count);
 }
 
 fn init_world(mut commands: Commands) {
@@ -425,7 +436,7 @@ fn reproduce_wolves(mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>
                           Agent,)
                           );
                       }
-                      if wolf_data.energy == 0. {
+                      if wolf_data.energy <= 0. {
                           commands.entity(entity).despawn();
                       }
                       
