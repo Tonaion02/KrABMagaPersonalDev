@@ -51,7 +51,7 @@ use krabmaga::engine::Without;
 use krabmaga::engine::bevy_prelude::*;
 
 // T: Constants(START)
-pub const ENERGY_CONSUME: f64 = 1.0;
+pub const ENERGY_CONSUME: f32 = 1.0;
 
 pub const FULL_GROWN: u16 = 20;
 
@@ -138,9 +138,11 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, grass_grow);
     app.add_systems(Update, reproduce_sheeps);
     app.add_systems(Update, reproduce_wolves);
+
     // T: TEMP
     // T: only for debug purpose
     //app.add_systems(Update, count_agents);
+    
     app.add_systems(Update, count_sheeps);
     app.add_systems(Update, count_wolfs);
 
@@ -374,7 +376,7 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
             let mut sheep_data = query_sheeps.get_mut(*sheep).expect("msg");
             if sheep_data.energy > 0. {
                 
-                println!("wolf eating {}\n", sheep.index());
+                //println!("wolf eating {}\n", sheep.index());
 
                 // T: TODO check if it is useless, probably not
                 sheep_data.energy = 0.;
@@ -424,7 +426,7 @@ fn reproduce_sheeps(mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Locatio
                     Agent,)
                     );
                 }
-                if sheep_data.energy == 0. {
+                if sheep_data.energy <= 0. {
                     commands.entity(entity).despawn();
                 }
                 
@@ -479,8 +481,10 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
     let mut sheeps_field = query_sheeps_field.single_mut();
     sheeps_field.clear();
 
-    let process_sheep = |(entity, sheep_id, loc): (Entity, &Sheep, &DBWrite<Location>)| {
-        sheeps_field.set_object(entity, &loc.0.0);
+    let process_sheep = |(entity, sheep, loc): (Entity, &Sheep, &DBWrite<Location>)| {
+        if sheep.energy > 0. {
+            sheeps_field.set_object(entity, &loc.0.0);
+        }
     };
 
     query_sheeps.iter().for_each(process_sheep);
@@ -495,8 +499,10 @@ fn update_wolfs_field(query_wolfs: Query<(Entity, &Wolf, &DBRead<Location>)>,
     wolfs_field.clear();
 
     let process_wolf = 
-    |(entity, wolf_id, loc): (Entity, &Wolf, &DBRead<Location>)| {
-        wolfs_field.set_object(entity, &loc.0.0);
+    |(entity, wolf, loc): (Entity, &Wolf, &DBRead<Location>)| {
+        if wolf.energy > 0. {
+            wolfs_field.set_object(entity, &loc.0.0);
+        }
     };
 
     query_wolfs.iter().for_each(process_wolf);
