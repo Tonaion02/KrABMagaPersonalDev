@@ -46,10 +46,11 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
         self.bags[index].push(object);
     }
 
-    // T: TODO Refactor the name with a more indicative way
-    // T: this particular method permits to insert in a bag
-    // T: one object without the overhead of the retain operation
-    pub fn set_object(&mut self, object: O, loc: &Int2D) {
+    // T: This method permits to push an object in the bag with
+    // T: cost O(1).
+    // T: WARNING this method doesn't eliminate the object if
+    // T: it is already inserted.
+    pub fn push_object_location(&mut self, object: O, loc: &Int2D) {
         let index = self.compute_index(loc);
         self.bags[index].push(object);
     }
@@ -78,6 +79,9 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
     // T: This method is useful when you want to put 
     // T: the contents of a bag in an already allocated
     // T: buffer.
+    // T: WARNING the method doesn't clean the buffer,
+    // T: the cleaning of the buffer is leaved to the user
+    // T: for performance reason.
     pub fn get_object_already_allocation(&self, loc: &Int2D, mut buffer: &mut Vec::<O>) {
 
         let index = self.compute_index(loc);
@@ -104,6 +108,9 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
         return & self.bags[index];
     }
 
+    // T: This method remove an object from his bag.
+    // T: The complexity of this method is O(n), for a more
+    // T: efficient option with cost O(1) see remove_object_with_index
     pub fn remove_object_location(&mut self, object: O, loc: &Int2D) {
 
         let index = self.compute_index(loc);
@@ -114,10 +121,19 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
 
     }
 
+    // T: This method remove an object from his bag directly
+    // T: with his index.
+    // T: The complexity of this method is O(1), so is faster
+    // T: than a normal remove of the object.
     pub fn remove_object_with_index(&mut self, loc: &Int2D, index: usize) {
         let index_bag = self.compute_index(loc);
         if ! self.bags[index_bag].is_empty() {
-            self.bags[index_bag].remove(index);
+            // T: used swap remove cause we aren't intereseted in
+            // T: preserving the internal ordering of a bag and
+            // T: a normal remove has the cost of the shift of the
+            // T: elements to preserve the ordering of elements.
+            // T: ref: https://doc.rust-lang.org/std/vec/struct.Vec.html#method.swap_remove
+            self.bags[index_bag].swap_remove(index);
         }
     }
 

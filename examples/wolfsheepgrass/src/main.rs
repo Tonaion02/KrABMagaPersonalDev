@@ -6,13 +6,16 @@
 // The comment's lines that start with 'T:' are left by Tonaion02.
 // The comment's lines where there is 'TODO' is a reminder for something that we must
 // to do.
-// The comment's lines where there is 'NOTE' represent some information that you
-// have to know.
+// The comment's lines where there is 'WARNING' represent some information that you
+// have to consider to use the code in proper way.
 // The comment's lines that end with '(START)' are the begin of a block of code.
 // The comment's lines that end with '(END)' are the end of a block of code.
 //==============================================================================================================
 
 use std::time::Instant;
+
+use std::sync::Arc;
+use std::sync::Mutex;
 
 //use crate::model::state::WsgState;
 mod model;
@@ -134,7 +137,7 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, update_sheeps_field);
     app.add_systems(Update, move_agents.before(update_wolfs_field).before(update_sheeps_field));
     app.add_systems(Update, sheeps_eat.after(update_sheeps_field).after(update_wolfs_field));
-    app.add_systems(Update, wolfs_eat.after(update_sheeps_field).after(update_wolfs_field));
+    app.add_systems(Update, wolfs_eat.after(update_sheeps_field).after(update_wolfs_field).after(reproduce_sheeps));
     app.add_systems(Update, grass_grow);
     app.add_systems(Update, reproduce_sheeps);
     app.add_systems(Update, reproduce_wolves);
@@ -180,7 +183,7 @@ pub fn count_wolfs(query_wolfs: Query<(&Wolf)>) {
         count = count + 1;
     });
 
-    println!("Sheeps: {}", count);
+    println!("Wolfs: {}", count);
 }
 
 // T: TEMP
@@ -193,7 +196,7 @@ pub fn count_sheeps(query_sheeps: Query<(&Sheep)>) {
         count = count + 1;
     });
 
-    println!("Wolfs: {}", count);
+    println!("Sheeps: {}", count);
 }
 
 fn init_world(mut commands: Commands) {
@@ -251,8 +254,15 @@ fn init_world(mut commands: Commands) {
 
         ));
 
-        sheeps_field.set_object_location(entity_commands.id(), &loc);
+        sheeps_field.push_object_location(entity_commands.id(), &loc);
     }
+
+    println!("size sheeps field: {}", sheeps_field.bags.len());
+    let mut count = 0usize;
+    for i in &mut sheeps_field.bags {
+        count = count + i.len();
+    }
+    println!("size sheeps field total: {}", count);
 
     commands.spawn((sheeps_field));
     // T: generate sheeps (END)
@@ -280,7 +290,7 @@ fn init_world(mut commands: Commands) {
             Agent,
         ));
 
-        wolfs_field.set_object_location(entity_command.id(), &loc);
+        wolfs_field.push_object_location(entity_command.id(), &loc);
     }
 
     commands.spawn((wolfs_field));
@@ -359,6 +369,9 @@ fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>,
     });
 }
 
+// T: version that use multithreading
+
+// T: version that doesn't use multithreading
 fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, 
             mut query_sheeps: Query<(&mut Sheep)>, 
             mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>, 
@@ -373,7 +386,18 @@ fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
         let mut removed = false;
         for sheep  in sheeps_near {
 
-            let mut sheep_data = query_sheeps.get_mut(*sheep).expect("msg");
+            let mut result = query_sheeps.get_mut(*sheep);
+            let mut sheep_data;
+
+            match result {
+                Ok(data) => {
+                    sheep_data = data;
+                }
+                Err(_) => {
+                    continue;
+                }
+            }
+
             if sheep_data.energy > 0. {
                 
                 //println!("wolf eating {}\n", sheep.index());
@@ -439,6 +463,9 @@ fn reproduce_sheeps(mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Locatio
 
 fn reproduce_wolves(mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>)>, mut parallel_commands: ParallelCommands) {
     
+    // T: TEMP for debug purpose
+    let mutex_counter = Arc::new(Mutex::new(0u32)); 
+
     query_wolfs.par_iter_mut().for_each(
         |(entity, mut wolf_data, loc)| {
       
@@ -448,11 +475,10 @@ fn reproduce_wolves(mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>
 
                   parallel_commands.command_scope(|mut commands| {
       
-                  
                       if wolf_data.energy > 0. && rng.gen_bool(WOLF_REPR as f64) {
                           wolf_data.energy /= 2.0;
                           commands.spawn((
-                          Sheep {
+                          Wolf {
                               id: 0 ,
                               energy: GAIN_ENERGY_WOLF,
                           }, 
@@ -465,6 +491,7 @@ fn reproduce_wolves(mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>
                       }
                       if wolf_data.energy <= 0. {
                           commands.entity(entity).despawn();
+                          //println!("killing wolf");
                       }
                       
                   });
@@ -483,7 +510,7 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
 
     let process_sheep = |(entity, sheep, loc): (Entity, &Sheep, &DBWrite<Location>)| {
         if sheep.energy > 0. {
-            sheeps_field.set_object(entity, &loc.0.0);
+            sheeps_field.push_object_location(entity, &loc.0.0);
         }
     };
 
@@ -492,16 +519,16 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
 
 // T: In this case i am using DBWrite to run this system in parallel before
 // T: the syncing of the double buffering about locations
-fn update_wolfs_field(query_wolfs: Query<(Entity, &Wolf, &DBRead<Location>)>,
+fn update_wolfs_field(query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>,
                     mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>) {
 
     let mut wolfs_field = query_wolfs_field.single_mut();
     wolfs_field.clear();
 
     let process_wolf = 
-    |(entity, wolf, loc): (Entity, &Wolf, &DBRead<Location>)| {
+    |(entity, wolf, loc): (Entity, &Wolf, &DBWrite<Location>)| {
         if wolf.energy > 0. {
-            wolfs_field.set_object(entity, &loc.0.0);
+            wolfs_field.push_object_location(entity, &loc.0.0);
         }
     };
 
