@@ -18,3 +18,4 @@ pub mod field;
 pub mod field_2d;
 pub mod dense_number_grid_2d_t;
 pub mod dense_object_grid_2d_t;
+pub mod atomic_grid;
