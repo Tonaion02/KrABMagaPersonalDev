@@ -21,8 +21,10 @@ use super::resources::simulation_descriptor;
 
 
 
+// TEMP
+// T: made public for wolfsheepgrass(temporary)
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-enum SimulationSet {
+pub enum SimulationSet {
     BeforeStep,
     Step,
     AfterStep,
@@ -157,7 +159,7 @@ impl Simulation {
     pub fn register_double_buffer<T: Component + Copy + Send>(mut self) -> Self {
         self.app.add_systems(
             Update,
-            (double_buffer_sync::<T>,).in_set(SimulationSet::BeforeStep),
+            (double_buffer_sync::<T>,).in_set(SimulationSet::AfterStep),
         );
         
         self
