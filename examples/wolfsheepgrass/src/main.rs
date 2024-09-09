@@ -18,6 +18,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 //use crate::model::state::WsgState;
+// T: model's import
 mod model;
 use crate::model::animals::Sheep;
 use crate::model::animals::Wolf;
@@ -52,6 +53,11 @@ use krabmaga::engine::bevy_ecs::prelude::EntityWorldMut;
 use krabmaga::engine::ParallelCommands;
 use krabmaga::engine::Without;
 use krabmaga::engine::bevy_prelude::*;
+
+// T: debug's import
+use model::debug::count_agents;
+use model::debug::count_sheeps;
+use model::debug::count_wolfs;
 
 // T: Constants(START)
 pub const ENERGY_CONSUME: f32 = 1.0;
@@ -133,14 +139,15 @@ fn build_simulation() -> Simulation {
     // T: to add to app many other systems
     // T: TODO add the system necessary to double buffer grass_field
     let app = &mut simulation.app;
-    app.add_systems(Update, update_wolfs_field);
-    app.add_systems(Update, update_sheeps_field);
-    app.add_systems(Update, move_agents.before(update_wolfs_field).before(update_sheeps_field));
-    app.add_systems(Update, sheeps_eat.after(update_sheeps_field).after(update_wolfs_field));
-    app.add_systems(Update, wolfs_eat.after(update_sheeps_field).after(update_wolfs_field).after(reproduce_sheeps));
-    app.add_systems(Update, grass_grow);
-    app.add_systems(Update, reproduce_sheeps);
-    app.add_systems(Update, reproduce_wolves);
+    // app.add_systems(Update, update_wolfs_field);
+    // app.add_systems(Update, update_sheeps_field);
+    // app.add_systems(Update, move_agents.before(update_wolfs_field).before(update_sheeps_field));
+    // app.add_systems(Update, sheeps_eat.after(update_sheeps_field).after(update_wolfs_field));
+    // app.add_systems(Update, wolfs_eat.after(update_sheeps_field).after(update_wolfs_field).after(reproduce_sheeps));
+    // app.add_systems(Update, grass_grow);
+    // app.add_systems(Update, reproduce_sheeps);
+    // app.add_systems(Update, reproduce_wolves);
+    // app.add_systems(Update, wolfs_eat);
 
     // T: TEMP
     // T: only for debug purpose
@@ -150,53 +157,6 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, count_wolfs);
 
     simulation
-}
-
-
-// T: TEMP
-// T: TODO trying to use the fucking AgentFactory that probably is the best
-// T: idea.
-pub fn insert_double_buffered<T: Component + Copy>(mut entity: EntityWorldMut, value: T) {
-    entity.insert(DoubleBuffered::new(value));
-}
-
-// T: TEMP
-// T: For debug purpose
-pub fn count_agents(query_agents: Query<(&Agent)>) {
-
-    let mut count = 0u32;
-
-    query_agents.for_each(|(agent)| {
-        count = count + 1;
-    });
-
-    println!("{}", count);
-}
-
-// T: TEMP
-// T: For debug purpose
-pub fn count_wolfs(query_wolfs: Query<(&Wolf)>) {
-
-    let mut count = 0u32;
-
-    query_wolfs.for_each(|(sheep)|{
-        count = count + 1;
-    });
-
-    println!("Wolfs: {}", count);
-}
-
-// T: TEMP
-// T: For debug purpose
-pub fn count_sheeps(query_sheeps: Query<(&Sheep)>) {
-
-    let mut count = 0u32;
-
-    query_sheeps.for_each(|(wolf)| {
-        count = count + 1;
-    });
-
-    println!("Sheeps: {}", count);
 }
 
 fn init_world(mut commands: Commands) {
@@ -369,7 +329,31 @@ fn sheeps_eat(mut query_sheeps: Query<(&mut Sheep, &DBRead<Location>)>,
     });
 }
 
-// T: version that use multithreading
+// // T: version that use multithreading
+// fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>,
+//             mut query_sheeps: Query<(&mut Sheep)>,
+//             mut query_sheeps_field: Query<(&DenseBagGrid2D<Entity, SheepField>)>) {
+
+//     let sheeps_field = query_sheeps_field.get_single().expect("not found SheepField!");
+//     query_wolfs.par_iter_mut().for_each(|(mut wolf, wolf_loc)| {
+
+//         let mut sheeps_near = sheeps_field.get_ref_bag(&wolf_loc.0.0);
+
+//         for sheep in sheeps_near {
+
+//             let mut sheep_data = query_sheeps.get(*sheep).expect("not found Sheep");
+
+//             if sheep_data.energy > 0. {
+
+//             }
+
+//         }   
+
+//     });
+
+// }
+
+
 
 // T: version that doesn't use multithreading
 fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, 
