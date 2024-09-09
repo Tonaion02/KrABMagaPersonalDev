@@ -12,10 +12,14 @@
 // The comment's lines that end with '(END)' are the end of a block of code.
 //==============================================================================================================
 
+extern crate rayon;
+use crate::rayon::iter::IntoParallelRefIterator;
+
 use std::time::Instant;
 
 use std::sync::Arc;
 use std::sync::Mutex;
+
 
 //use crate::model::state::WsgState;
 // T: model's import
@@ -58,6 +62,7 @@ use krabmaga::engine::bevy_prelude::*;
 use model::debug::count_agents;
 use model::debug::count_sheeps;
 use model::debug::count_wolfs;
+use rayon::iter::ParallelIterator;
 
 // T: Constants(START)
 pub const ENERGY_CONSUME: f32 = 1.0;
@@ -143,7 +148,8 @@ fn build_simulation() -> Simulation {
     // T: to add to app many systems
     // T: TODO add the system necessary to double buffer grass_field
     let app = &mut simulation.app;
-
+    app.add_systems(Update, count_wolfs_for_location);
+    app.add_systems(Update, move_agents);
 
     // T: TEMP
     // T: only for debug purpose
@@ -160,59 +166,200 @@ fn build_simulation() -> Simulation {
 
 // Doens't work because the number of sheep that must die must be less of this number, but not has to
 // to be this number.......
-fn compute_sheeps_for_loc(query_sheeps: Query<(Entity, &Sheep, &DBRead<Location>)>, 
-                        mut query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>,
-                        mut parallel_commands: ParallelCommands) {
+// fn compute_sheeps_for_loc(query_sheeps: Query<(Entity, &Sheep, &DBRead<Location>)>, 
+//                         mut query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>,
+//                         mut parallel_commands: ParallelCommands) {
 
-    //println!("compute_sheeps_for_loc!");
+//     //println!("compute_sheeps_for_loc!");
+
+//     let grid = query_count_grid.single();
+
+//     // T: count sheeps that must die
+//     // T: TODO verify if i need to check if the sheep is already died
+//     query_sheeps.par_iter().for_each(|(entity, sheep_data, sheep_loc)|{
+//         grid.get_ref_counter(&sheep_loc.0.0).fetch_add(1u32, std::sync::atomic::Ordering::AcqRel);
+
+//         parallel_commands.command_scope(|mut commands| {
+//             commands.entity(entity).despawn();
+//         });
+//     });
+
+//     // T: TEMP debug purpose
+//     let mut count = 0;
+//     for element in & grid.values {
+//         if element.load(std::sync::atomic::Ordering::Acquire) > 0 {
+//             count += 1;
+//         }
+//     }
+
+//     println!("count non zero cells: {}", count);
+// }
+
+// fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, mut query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>) {
+
+//     //println!("wolfs_eat!");
+
+//     let grid = query_count_grid.single();
+
+//     // T: Update the energies of a numbers of wolf equals to the number of sheeps that died
+//     query_wolfs.par_iter_mut().for_each(|(mut wolf_data, wolf_loc)|{
+
+//         // Decrease the value in the count-sheeps-to-kill-grid
+//         if grid.get_ref_counter(&wolf_loc.0.0).load(std::sync::atomic::Ordering::Acquire) > 0 {
+//             grid.get_ref_counter(&wolf_loc.0.0).fetch_add(0u32, std::sync::atomic::Ordering::AcqRel);
+//         }
+
+//         // Update the energy's value of each wolf
+//         wolf_data.energy += GAIN_ENERGY_WOLF;
+//     });
+
+//     // T: TEMP debug purpose
+//     for element in & grid.values {
+//         if element.load(std::sync::atomic::Ordering::Acquire) < 0 {
+//             println!("Error, atomics doesn't work, an atomic has zero value");
+//         }
+//     }
+// }
+
+
+// 0 Wolf
+// 1 Sheep
+fn count_wolfs_for_location(query_wolfs: Query<(&Wolf, &DBRead<Location>)>, mut query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>) {
+
+    let mut grid = query_count_grid.single_mut();
+
+    query_wolfs.par_iter().for_each(|(wolf_data, wolf_loc)| {
+        let binding = grid.get_atomic_counter(&wolf_loc.0.0);
+        let mut counter = binding.lock().unwrap();
+        counter.0 += 1;
+    });
+
+    // TEMP for debug purpose
+    // let mut verify_counter = 0;
+    // for element in & grid.values {
+    //     verify_counter += element.lock().unwrap().0;
+    // }
+    // println!("total wolf in the grid: {}", verify_counter);
+}
+
+fn count_sheeps_for_location(query_sheeps: Query<(&Sheep, &DBRead<Location>)>, mut query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>) {
+
+    let mut grid = query_count_grid.single_mut();
+
+    query_sheeps.par_iter().for_each(|(sheep_data, sheep_loc)| {
+        let binding = grid.get_atomic_counter(&sheep_loc.0.0);
+        let mut counter = binding.lock().unwrap();
+        counter.1 += 1;
+    });
+
+    // TEMP for debug purpose
+    // let mut verify_counter = 0;
+    // for element in & grid.values {
+    //     verify_counter += element.lock().unwrap().1;
+    // }
+    // println!("total sheeps in the grid: {}", verify_counter);
+}
+
+use std::cmp::min;
+
+fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>) {
 
     let grid = query_count_grid.single();
 
-    // T: count sheeps that must die
-    // T: TODO verify if i need to check if the sheep is already died
-    query_sheeps.par_iter().for_each(|(entity, sheep_data, sheep_loc)|{
-        grid.get_ref_counter(&sheep_loc.0.0).fetch_add(1u32, std::sync::atomic::Ordering::AcqRel);
+    query_wolfs.par_iter_mut().for_each(|(mut wolf_data, wolf_loc)| {
 
-        parallel_commands.command_scope(|mut commands| {
-            commands.entity(entity).despawn();
+        let binding = grid.get_atomic_counter(&wolf_loc.0.0);
+        let mut counter = binding.lock().unwrap();
+        let min = std::cmp::min(counter.0, counter.1);
+        if min <= 0 {
+            if counter.0 < counter.1 {
+                counter.0 -= 1;
+            } else {
+                counter.1 -= 1;
+                
+            }
+        }
+
+    });
+}
+
+fn sheeps_die(query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>, mut parallel_commands: ParallelCommands) {
+
+    let mut grid = query_count_grid.single();
+
+    grid.values.par_iter().for_each(|(counter)|{
+        parallel_commands.command_scope(|(mut commands)| {
+            
         });
     });
 
-    // T: TEMP debug purpose
-    let mut count = 0;
-    for element in & grid.values {
-        if element.load(std::sync::atomic::Ordering::Acquire) > 0 {
-            count += 1;
-        }
-    }
+    //let binding = grid.get_atomic_counter();
+    //let mut counter = binding.lock().unwrap();
+    
 
-    println!("count non zero cells: {}", count);
 }
 
-fn wolfs_eat(mut query_wolfs: Query<(&mut Wolf, &DBRead<Location>)>, mut query_count_grid: Query<(&AtomicGrid2D<CountSheeps>)>) {
+fn sheeps_eat() {
 
-    //println!("wolfs_eat!");
+}
 
-    let grid = query_count_grid.single();
+fn reproduce_wolfs() {
 
-    // T: Update the energies of a numbers of wolf equals to the number of sheeps that died
-    query_wolfs.par_iter_mut().for_each(|(mut wolf_data, wolf_loc)|{
 
-        // Decrease the value in the count-sheeps-to-kill-grid
-        if grid.get_ref_counter(&wolf_loc.0.0).load(std::sync::atomic::Ordering::Acquire) > 0 {
-            grid.get_ref_counter(&wolf_loc.0.0).fetch_add(0u32, std::sync::atomic::Ordering::AcqRel);
+
+}
+
+fn reproduce_sheeps() {
+
+}
+
+fn move_agents(mut query_agents: Query<(&mut DBWrite<Location>, &mut DBWrite<LastLocation>)>) {
+
+    query_agents.par_iter_mut().for_each(|(mut loc, mut last_loc)| {
+
+        let x = loc.0.0.x;
+        let y = loc.0.0.y;
+        let mut rng = rand::thread_rng();
+
+        let mut moved = false;
+        if last_loc.0.0.is_some() && rng.gen_bool(MOMENTUM_PROBABILITY as f64) {
+            if let Some(pos) = last_loc.0.0 {
+                let xm = x + (x - pos.x);
+                let ym = y + (y - pos.y);
+                let new_loc = Int2D { x: xm, y: ym };
+                // TRY TO MOVE WITH MOMENTUM_PROBABILITY
+                if xm >= 0 && xm < DIM_X as i32 && ym >= 0 && ym < DIM_Y as i32 {
+                    loc.0 = Location(new_loc);
+                    last_loc.0 = LastLocation(Some(Int2D { x, y }));
+                    moved = true;
+                }
+            }
         }
 
-        // Update the energy's value of each wolf
-        wolf_data.energy += GAIN_ENERGY_WOLF;
+
+
+        if !moved {
+            let xmin = if x > 0 { -1 } else { 0 };
+            let xmax = i32::from(x < DIM_X as i32 - 1);
+            let ymin = if y > 0 { -1 } else { 0 };
+            let ymax = i32::from(y < DIM_Y as i32 - 1);
+
+            // let nx = if rng.gen_bool(0.5) { xmin } else { xmax };
+            // let ny = if rng.gen_bool(0.5) { ymin } else { ymax };
+            let nx = rng.gen_range(xmin..=xmax);
+            let ny = rng.gen_range(ymin..=ymax);
+
+            // T: OLD
+            // self.loc = Int2D {
+            //     x: x + nx,
+            //     y: y + ny,
+            // };
+            // self.last = Some(Int2D { x, y });
+
+            loc.0 = Location(Int2D { x: x + nx, y: y + ny, });
+            last_loc.0 = LastLocation(Some(Int2D { x, y }));
+        }
     });
-
-    // T: TEMP debug purpose
-    for element in & grid.values {
-        if element.load(std::sync::atomic::Ordering::Acquire) < 0 {
-            println!("Error, atomics doesn't work, an atomic has zero value");
-        }
-    }
 }
 
 
@@ -279,7 +426,7 @@ fn init_world(mut commands: Commands) {
         ));
     }
 
-    let mut counters_field = AtomicGrid2D::<CountSheeps>::new(0u32, DIM_X as i32, DIM_Y as i32);
+    let mut counters_field = AtomicGrid2D::<CountSheeps>::new((0u32, 0u32), DIM_X as i32, DIM_Y as i32);
 
     // let mut index = 0;
     // for counter in &mut counters_field.values {
