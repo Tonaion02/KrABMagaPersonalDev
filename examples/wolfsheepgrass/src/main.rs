@@ -185,9 +185,9 @@ fn build_simulation() -> Simulation {
     // T: only for debug purpose
     //app.add_systems(Update, count_agents);
     
-    //app.add_systems(Update, count_sheeps);
-    //app.add_systems(Update, count_wolfs);
-    app.add_systems(Update, print_step.in_set(BeforeStep));
+    // app.add_systems(Update, count_sheeps);
+    // app.add_systems(Update, count_wolfs);
+    // app.add_systems(Update, print_step.in_set(BeforeStep));
 
     simulation
 }
@@ -213,18 +213,24 @@ fn step (
 
 
 
-    // T: Move agents
-    move_agents(&mut query_agents);
+    
 
     let span = info_span!("sheeps_eat");
     let span = span.enter();
     // T: Sheeps eat (START)
+    let mut pecore_mangiato = 0;
+    
     query_sheeps.iter_mut().for_each(|(entity, mut sheep_data, sheep_loc)| {
         if grass_field.get_value(&sheep_loc.0.0).expect("empty cell of the grass field") == FULL_GROWN {
             grass_field.set_value_location(0, &sheep_loc.0.0);
             sheep_data.energy += GAIN_ENERGY_SHEEP;
+            pecore_mangiato += 1;
         }
     });
+
+    println!("grass eaten: {}", pecore_mangiato);
+    println!("grass remained {}", count_grass(&grass_field));
+
     std::mem::drop(span);
     // T: Sheeps eat (END)
 
@@ -303,10 +309,13 @@ fn step (
             counter.0 = sheeps_for_bag as u32;
         }
         counter.0 -= 1;
-        std::mem::drop(counter);
 
-        wolf_data.energy += GAIN_ENERGY_WOLF;
+        if counter.0 > 0 {
+            wolf_data.energy += GAIN_ENERGY_WOLF;
+        }
+        std::mem::drop(counter);
     });
+
     //Wolfs eat (END)
     std::mem::drop(span);
 
@@ -347,6 +356,11 @@ fn step (
           );
     //Wolfs reproduce (END)
     std::mem::drop(span);
+
+
+
+    // T: Move agents
+    move_agents(&mut query_agents);
 }
 
 
@@ -587,6 +601,23 @@ fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) 
     });
 }
 
+fn count_grass(grass_field: &DenseSingleValueGrid2D<u16>) -> i32 {
+    let mut grass_growed = 0;
+    grass_field.values.iter().for_each(|grass_value| {
+        match(*grass_value) {
+            Some(grass) => {
+                if grass == FULL_GROWN {
+                    grass_growed += 1;
+                }
+            }
+            None => {
+
+            }
+        }
+    });
+
+    grass_growed
+}
 
 
 
@@ -608,10 +639,10 @@ fn init_world(mut commands: Commands) {
 
     (0..DIM_X as i32).into_iter().for_each(|x| {
         (0..DIM_Y as i32).into_iter().for_each(|y| {
-            let mut rng = rand::thread_rng();
+            
             let fully_growth = rng.gen_bool(0.5);
             if fully_growth {
-
+                let mut rng = rand::thread_rng();
                 // T: TODO add the missing code with DenseGrid for Grass
                 grass_field.set_value_location(FULL_GROWN, &Int2D { x, y });
             } else {
@@ -621,6 +652,30 @@ fn init_world(mut commands: Commands) {
             }
         })
     });
+
+    // TEMP for debug
+    let mut count = 0;
+    (0..DIM_X as i32).into_iter().for_each(|x| {
+        (0..DIM_Y as i32).into_iter().for_each(|y| {
+
+            //if state.grass_field.get_value(&Int2D {x, y}) == FULL_GROWN {
+            //    count += 1;
+            //}
+            match grass_field.get_value(&Int2D {x, y}) {
+                Some(grass) => {
+                    if grass == FULL_GROWN {
+                        count += 1;
+                    }
+                }
+                None => {
+
+                }
+            }
+        })
+    });
+
+    println!("count: {}",count);
+    // TEMP for debug
 
     commands.spawn((grass_field));
     // T: generate the grass (END)
