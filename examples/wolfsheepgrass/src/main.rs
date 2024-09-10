@@ -192,12 +192,33 @@ fn build_simulation() -> Simulation {
 
 // Unique step function
 fn step ( 
-    mut query_grass_field: Query<&DenseSingleValueGrid2D<u16>>,
+    mut query_grass_field: Query<&mut DenseSingleValueGrid2D<u16>>,
+    mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Location>)>
 )
 {
     let mut grass_field = query_grass_field.single_mut();
 
-    println!("grass full grown: {}", count_grass(grass_field));
+
+
+
+
+    // T: values of the grass before sheeps eat from that
+    println!("grass full grown before sheeps: {}", count_grass(&grass_field));
+    
+    let mut sheeps_that_eaten = 0u32;
+    // T: Sheeps eat (START)
+    query_sheeps.iter_mut().for_each(|(entity, mut sheep_data, sheep_loc)|{
+        if grass_field.get_value(&sheep_loc.0.0).expect("empty cell(not possible!)") == FULL_GROWN {
+            grass_field.set_value_location(0, &sheep_loc.0.0);
+            sheeps_that_eaten += 1;
+            sheep_data.energy += GAIN_ENERGY_SHEEP;
+        }
+    });
+    // T: Sheeps eat (END) 
+    println!("sheeps that has eaten: {}", sheeps_that_eaten);
+
+    // T: values of the grass after sheeps eat from that
+    println!("grass full grown after sheeps: {}", count_grass(&grass_field));
 }
 
 
@@ -438,9 +459,6 @@ fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) 
             }
         }
     });
-
-
-
 }
 
 fn count_grass(grass_field: &DenseSingleValueGrid2D<u16>) -> i32 {
