@@ -74,6 +74,7 @@ use krabmaga::engine::bevy_prelude::*;
 use model::debug::count_agents;
 use model::debug::count_sheeps;
 use model::debug::count_wolfs;
+use model::debug::print_step;
 
 // T: Constants(START)
 pub const ENERGY_CONSUME: f32 = 1.0;
@@ -183,6 +184,7 @@ fn build_simulation() -> Simulation {
     
     //app.add_systems(Update, count_sheeps);
     //app.add_systems(Update, count_wolfs);
+    app.add_systems(Update, print_step.in_set(BeforeStep));
 
     simulation
 }

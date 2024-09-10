@@ -4,6 +4,8 @@ use krabmaga::engine::components::double_buffer::DBWrite;
 
 use krabmaga::engine::agent::Agent;
 
+use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
+
 use crate::model::animals::Sheep;
 use crate::model::animals::Wolf;
 use crate::model::animals::Location;
@@ -70,4 +72,10 @@ pub fn count_sheeps(query_sheeps: Query<(&Sheep)>) {
     });
 
     println!("Sheeps: {}", count);
+}
+
+// T: TEMP
+// T: For debug purpose
+pub fn print_step(simulation_descriptor: Res<SimulationDescriptorT>) {
+    println!("---------------------STEP---------------->: {}", simulation_descriptor.current_step);
 }

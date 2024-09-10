@@ -25,6 +25,7 @@ use super::resources::simulation_descriptor;
 // T: made public for wolfsheepgrass(temporary)
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum SimulationSet {
+    InitFrame,
     BeforeStep,
     Step,
     AfterStep,
@@ -68,6 +69,7 @@ impl Simulation {
         app.configure_sets(
             Update,
             (
+                SimulationSet::InitFrame,
                 SimulationSet::BeforeStep,
                 SimulationSet::Step,
                 SimulationSet::AfterStep,
@@ -84,7 +86,7 @@ impl Simulation {
         #[cfg(not(feature = "visualization"))]
         app.add_systems(
                 Update,
-                (simulation_descriptor_update_system,).in_set(SimulationSet::BeforeStep),
+                (simulation_descriptor_update_system,).in_set(SimulationSet::InitFrame),
         );
         //T: In case feature visualization not is defined
 
@@ -95,7 +97,7 @@ impl Simulation {
         #[cfg(feature = "visualization")]
         app.add_systems(
             FixedPreUpdate,
-            (simulation_descriptor_update_system).in_set(SimulationSet::BeforeStep).run_if(Simulation::is_not_paused),
+            (simulation_descriptor_update_system).in_set(SimulationSet::InitFrame).run_if(Simulation::is_not_paused),
         );
         //T: In case feature visualization is defined
 
