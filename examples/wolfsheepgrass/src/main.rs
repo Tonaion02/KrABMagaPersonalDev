@@ -169,10 +169,10 @@ fn build_simulation() -> Simulation {
     //app.add_systems(Update, count_wolfs_for_location);
     app.add_systems(Update, move_agents.in_set(Step));
     app.add_systems(Update, sheeps_eat.in_set(Step).after(move_agents));
-    app.add_systems(Update, sheeps_die.in_set(Step).after(sheeps_eat));
+    app.add_systems(Update, reproduce_sheeps.in_set(Step).after(sheeps_eat));
+    app.add_systems(Update, sheeps_die.in_set(Step).after(reproduce_sheeps));
     app.add_systems(Update, wolfs_eat.in_set(Step).after(sheeps_die));
     app.add_systems(Update, reproduce_wolves.in_set(Step).after(wolfs_eat));
-    app.add_systems(Update, reproduce_sheeps.in_set(Step).after(reproduce_wolves));
     // Must run after the despawning of entities
     app.add_systems(Update, count_wolfs_for_location.in_set(BeforeStep));
     app.add_systems(Update, update_sheeps_field.in_set(BeforeStep));
