@@ -12,7 +12,7 @@ use crate::engine::Component;
 #[derive(Component)]
 pub struct AtomicGrid2D<M:Sized> {
 
-    pub values: Vec<Arc<Mutex<(u32, u32)>>>,
+    pub values: Vec<Arc<Mutex<u32>>>,
     pub width: i32,
     pub height: i32,
 
@@ -21,9 +21,9 @@ pub struct AtomicGrid2D<M:Sized> {
 
 impl<M:Sized> AtomicGrid2D<M> {
     
-    pub fn new(default_value: (u32, u32), width: i32, height: i32) -> AtomicGrid2D<M> {
+    pub fn new(default_value: u32, width: i32, height: i32) -> AtomicGrid2D<M> {
         let mut grid = AtomicGrid2D {
-            values: Vec::<Arc<Mutex<(u32, u32)>>>::new(),
+            values: Vec::<Arc<Mutex<u32>>>::new(),
             width: width,
             height: height,
 
@@ -41,8 +41,8 @@ impl<M:Sized> AtomicGrid2D<M> {
     //     return &self.values[self.compute_index(loc)];
     // }
 
-    pub fn get_atomic_counter(&self, loc: &Int2D) -> Arc<Mutex<(u32, u32)>> {
-        return self.values[self.compute_index(loc)].clone();
+    pub fn get_atomic_counter(&self, loc: &Int2D) -> Arc<Mutex<u32>> {
+        return Arc::clone(&self.values[self.compute_index(loc)])
     }
 
     // T: TODO substitute with a macro

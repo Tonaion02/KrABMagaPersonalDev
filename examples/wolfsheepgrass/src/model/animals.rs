@@ -18,13 +18,13 @@ use krabmaga::engine::Component;
 #[derive(Component, Copy, Clone)]
 pub struct Wolf {
     pub id: u32,
-    pub energy: f32,
+    pub energy: f64,
 }
 
 #[derive(Component, Copy, Clone)]
 pub struct Sheep {
     pub id: u32,
-    pub energy: f32,
+    pub energy: f64,
 }
 
 // T: this component is used to save the last location of the animals
