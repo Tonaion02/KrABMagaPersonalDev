@@ -172,7 +172,7 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, step.in_set(Step));
 
     // Must run after the despawning of entities
-    // app.add_systems(Update, count_wolfs_for_location.in_set(BeforeStep));
+    app.add_systems(Update, count_wolfs_for_location.in_set(BeforeStep));
     app.add_systems(Update, update_sheeps_field.in_set(BeforeStep));
     app.add_systems(Update, grass_grow.in_set(BeforeStep));
 
@@ -320,7 +320,7 @@ fn step (
                 commands.spawn((
                     Sheep {
                         id: 0,
-                        energy: GAIN_ENERGY_SHEEP,
+                        energy: sheep_data.energy,
                     },
 
                     DoubleBuffered::new(Location(loc.0.0)),
@@ -347,6 +347,7 @@ fn step (
     // T: Sheeps reproduce (END)
 
 
+
     // T: Wolfs eat (START)
 
     // T: TEST if at least a counter is modified
@@ -362,6 +363,16 @@ fn step (
     let sheeps_field = query_sheeps_field.single();
     let non_mut_query_sheeps = query_sheeps;
 
+    // T: TEMP debug purpose
+    let mut counter_non_zero_counters = 0u32;
+    for counter in & grid.values {
+        if *counter.lock().unwrap() > 0 {
+            counter_non_zero_counters += 1;
+        }
+    }
+    println!("counter_non_zero_counters: {}", counter_non_zero_counters);
+    // T: TEMP debug purpose
+
     let grid_par_iterator = grid.values.par_iter();
     sheeps_field.bags.par_iter().zip(grid_par_iterator).for_each(|(bag, binding)|{
         let mut counter = binding.lock().unwrap();
@@ -370,7 +381,6 @@ fn step (
 
         let mut effectively_alive_sheeps = 0;
         parallel_commands.command_scope(|mut commands: Commands| {
-            
             for i in 0..min {
                 if non_mut_query_sheeps.get(bag[i]).expect("not found entity during sheeps die").1.energy > 0. {
                     commands.entity(bag[i]).despawn();
@@ -387,11 +397,9 @@ fn step (
 
     let mut counter_non_zero_counters = 0u32;
     for counter in & grid.values {
-
         if *counter.lock().unwrap() > 0 {
             counter_non_zero_counters += 1;
         }
-
     }
     println!("counter_non_zero_counters(before): {}", counter_non_zero_counters);
 
@@ -413,24 +421,27 @@ fn step (
 
     let mut counter_non_zero_counters = 0u32;
     for counter in & grid.values {
-
         if *counter.lock().unwrap() > 0 {
             counter_non_zero_counters += 1;
         }
-
     }
     println!("counter_non_zero_counters(after): {}", counter_non_zero_counters);
 
     std::mem::drop(span_internal);
 
     std::mem::drop(span);
-
     // T: Wolfs eat (END)
 
 
 
     // T: Reproduce wolfs (START)
-    query_wolfs.par_iter_mut().for_each(
+
+    let mut count_dead_wolfs = 0u32;
+
+    let span = info_span!("reproducing wolfs");
+    let span = span.enter();
+
+    query_wolfs.iter_mut().for_each(
         |(entity, mut wolf_data, loc)| {
       
                   let mut rng = rand::thread_rng(); 
@@ -444,7 +455,7 @@ fn step (
                           commands.spawn((
                           Wolf {
                               id: 0 ,
-                              energy: GAIN_ENERGY_WOLF,
+                              energy: wolf_data.energy,
                           }, 
               
                           DoubleBuffered::new(Location(loc.0.0)),
@@ -455,11 +466,17 @@ fn step (
                       }
                       if wolf_data.energy <= 0. {
                           commands.entity(entity).despawn();
+                          count_dead_wolfs += 1;
                       }
                       
                   });
               }
           );
+    
+    println!("dead wolfs: {}", count_dead_wolfs);
+        
+
+    std::mem::drop(span);
     // T: Reproduce wolfs (END)
 }
 
@@ -478,11 +495,12 @@ fn count_wolfs_for_location(query_wolfs: Query<(&Wolf, &DBWrite<Location>)>, mut
     });
 
     // TEMP for debug purpose
-    // let mut verify_counter = 0;
-    // for element in & grid.values {
-    //     verify_counter += element.lock().unwrap().0;
-    // }
-    // println!("total wolf in the grid: {}", verify_counter);
+    let mut verify_counter = 0;
+    for element in & grid.values {
+        verify_counter += *element.lock().unwrap();
+    }
+    println!("total wolf in the grid: {}", verify_counter);
+    // TEMP for debug purpose
 }
 
 fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>,
@@ -498,6 +516,18 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
     };
 
     query_sheeps.iter().for_each(process_sheep);
+
+    // TEMP for debug purpose
+    let mut non_empty_bags_counter = 0u32;
+
+    for bag in & sheeps_field.bags {
+        if ! bag.is_empty() {
+            non_empty_bags_counter += 1;
+        }
+    }
+
+    println!("non empty bags: {}", non_empty_bags_counter);
+    // TEMP for debug purpose
 }
 
 fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
