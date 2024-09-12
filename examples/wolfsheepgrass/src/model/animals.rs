@@ -38,4 +38,6 @@ pub struct Location(pub Int2D);
 // T: this marker component is used to mark all the Agents beetween Entities
 // T: TODO verify if it is necessary and starting use it in the case
 #[derive(Component, Copy, Clone)]
-pub struct Agent;
+pub struct Agent {
+    pub id: u64,
+}

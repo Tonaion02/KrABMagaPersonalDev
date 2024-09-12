@@ -49,9 +49,12 @@ use engine::components::double_buffer::DBClonableRead;
 use engine::components::double_buffer::DBClonableWrite;
 use engine::components::double_buffer::DoubleBufferedDataStructure;
 use engine::resources::simulation_descriptor;
+use engine::simulation;
 use krabmaga::engine::components::double_buffer::DoubleBuffered;
 use krabmaga::engine::components::double_buffer::DBRead;
 use krabmaga::engine::components::double_buffer::DBWrite;
+
+#[cfg(not(any(feature="fixed_random")))]
 use krabmaga::rand::Rng;
 
 use engine::location::Real2D;
@@ -67,6 +70,7 @@ use krabmaga::engine::simulation::SimulationSet::Step;
 use krabmaga::engine::simulation::SimulationSet::AfterStep;
 use krabmaga::engine::simulation::SimulationSet::BeforeStep;
 
+// T: TODO verify if it is useless
 use krabmaga::engine::rng::RNG;
 use krabmaga::engine::SampleRange;
 
@@ -106,9 +110,9 @@ pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
 pub const STEPS: u32 = 200;
 pub const NUM_THREADS: usize = 4;
-pub const DIM_X: f32 = 5000.;
+pub const DIM_X: f32 = 50.;
 pub const DIM_Y: f32 = DIM_X;
-pub const NUM_AGENTS: f32 = 2000000.;
+pub const NUM_AGENTS: f32 = 200.;
 pub const PERC_SHEEPS: f32 = 0.6;
 pub const PERC_WOLFS: f32 = 0.4;
 pub const NUM_INITIAL_SHEEPS: u32 = (NUM_AGENTS * PERC_SHEEPS) as u32;
@@ -247,19 +251,14 @@ fn step (
 
         let x = loc.0.0.x;
         let y = loc.0.0.y;
-        
 
         let mut moved = false;
 
         #[cfg(any(feature="fixed_random"))]
-        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.step);
-
+        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
         #[cfg(not(any(feature="fixed_random")))]
         let mut rng = rand::thread_rng();
-        #[cfg(not(any(feature="fixed_random")))]
-        let gen_bool = rng.gen_bool(MOMENTUM_PROBABILITY as f64);
         
-        #[cfg(any(feature="fixed_random"))]
         let gen_bool = rng.gen_bool(MOMENTUM_PROBABILITY as f64);
 
         if last_loc.0.0.is_some() && gen_bool {
@@ -351,7 +350,10 @@ fn step (
 
     query_sheeps.par_iter_mut().for_each(|(entity, mut sheep_data, loc)| {
 
+        #[cfg(not(any(feature="fixed_random")))]
         let mut rng = rand::thread_rng();
+        #[cfg(any(feature="fixed_random"))]
+        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
 
         sheep_data.energy -= ENERGY_CONSUME;
 
@@ -505,14 +507,22 @@ fn step (
 
     query_wolfs.par_iter_mut().for_each(
         |(entity, mut wolf_data, loc)| {
-      
-                  let mut rng = rand::thread_rng(); 
-                  
                   wolf_data.energy -= ENERGY_CONSUME;
 
                   parallel_commands.command_scope(|mut commands| {
       
-                      if wolf_data.energy > 0. && rng.gen_bool(WOLF_REPR as f64) {
+
+                #[cfg(not(any(feature="fixed_random")))]
+                let mut rng_div = rand::thread_rng(); 
+                #[cfg(any(feature="fixed_random"))]
+                let mut rng_div = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
+                
+                let gen_bool = rng_div.gen_bool(WOLF_REPR as f64);
+
+                      if wolf_data.energy > 0. &&  gen_bool {
+
+
+
                           wolf_data.energy /= 2.0;
                           commands.spawn((
                           Wolf {
@@ -647,12 +657,15 @@ fn count_grass(grass_field: &DenseSingleValueGrid2D<u16>) -> i32 {
 
 
 
-fn init_world(mut commands: Commands) {
+fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: Commands) {
 
     #[cfg(any(feature = "debug_support"))]
     println!("init_world!");
 
+    #[cfg(not(any(feature = "fixed_random")))]
     let mut rng = rand::thread_rng();
+    #[cfg(any(feature="fixed_random"))]
+    let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
 
     // T: generate the grass (START)
     #[cfg(any(feature = "debug_support"))]
@@ -665,7 +678,12 @@ fn init_world(mut commands: Commands) {
             
             let fully_growth = rng.gen_bool(0.5);
             if fully_growth {
+                #[cfg(not(any(feature = "fixed_random")))]
                 let mut rng = rand::thread_rng();
+                #[cfg(any(feature="fixed_random"))]
+                let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
+
+
                 // T: TODO add the missing code with DenseGrid for Grass
                 grass_field.set_value_location(FULL_GROWN, &Int2D { x, y });
             } else {
@@ -675,6 +693,8 @@ fn init_world(mut commands: Commands) {
             }
         })
     });
+
+
 
     // TEMP for debug
     #[cfg(any(feature = "debug_support"))]
@@ -714,6 +734,11 @@ fn init_world(mut commands: Commands) {
 
     for sheep_id in 0..NUM_INITIAL_SHEEPS {
 
+        #[cfg(not(any(feature = "fixed_random")))]
+        let mut rng = rand::thread_rng();
+        #[cfg(any(feature="fixed_random"))]
+        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
+
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
         let initial_energy = rng.gen_range(0.1 ..(2. * GAIN_ENERGY_SHEEP));
         //println!("{}", initial_energy);
@@ -740,6 +765,11 @@ fn init_world(mut commands: Commands) {
     println!("genereate wolfs");
 
     for wolf_id in 0..NUM_INITIAL_WOLFS {
+
+        #[cfg(not(any(feature = "fixed_random")))]
+        let mut rng = rand::thread_rng();
+        #[cfg(any(feature="fixed_random"))]
+        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
         let initial_energy = rng.gen_range(0.1 ..(2. * GAIN_ENERGY_SHEEP));
