@@ -17,13 +17,13 @@ use krabmaga::engine::Component;
 // T: from the multithreading point of view......
 #[derive(Component, Copy, Clone)]
 pub struct Wolf {
-    pub id: u32,
+    pub id: u64,
     pub energy: f64,
 }
 
 #[derive(Component, Copy, Clone)]
 pub struct Sheep {
-    pub id: u32,
+    pub id: u64,
     pub energy: f64,
 }
 

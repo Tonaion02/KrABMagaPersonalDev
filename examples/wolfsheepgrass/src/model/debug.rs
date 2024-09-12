@@ -2,14 +2,13 @@ use krabmaga::engine::components::double_buffer::DoubleBuffered;
 use krabmaga::engine::components::double_buffer::DBRead;
 use krabmaga::engine::components::double_buffer::DBWrite;
 
-use krabmaga::engine::agent::Agent;
-
 use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
 
 use crate::model::animals::Sheep;
 use crate::model::animals::Wolf;
 use crate::model::animals::Location;
 use crate::model::animals::LastLocation;
+use crate::model::animals::Agent;
 
 // T: bevy's import
 // T: TODO find a way to remove the necessity to use this tools
