@@ -25,3 +25,5 @@ rayon = "1.10.0"
 [features]
 visualization = ["krabmaga/visualization"]
 visualization_wasm = ["krabmaga/visualization_wasm"]
+# Added by me to handle the debug print supports
+debug_support = [] 

@@ -45,7 +45,7 @@ pub fn count_agents(query_agents: Query<(&Agent)>) {
         count = count + 1;
     });
 
-    println!("{}", count);
+    println!("Agents: {}", count);
 }
 
 // T: TEMP
