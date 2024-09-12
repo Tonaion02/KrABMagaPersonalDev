@@ -12,7 +12,7 @@ use crate::engine::location::Real2D;
 #[derive(Resource)]
 pub struct SimulationDescriptorT {
 
-    pub current_step: u32,
+    pub current_step: u64,
     pub simulation_dim: Real2D,
     pub paused: bool,
     pub rand_seed: u64,
@@ -20,6 +20,8 @@ pub struct SimulationDescriptorT {
     pub steps: Option<u32>,
     pub num_threads: usize,
 
+    // T: added to support fixed random(to put in RNG)
+    pub seed: u64,
 }
 
 impl Default for SimulationDescriptorT {
@@ -33,6 +35,8 @@ impl Default for SimulationDescriptorT {
 
             steps: None,
             num_threads: 1,
+
+            seed: 0,
         }
     }
 

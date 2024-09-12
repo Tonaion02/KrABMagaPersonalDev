@@ -26,4 +26,6 @@ rayon = "1.10.0"
 visualization = ["krabmaga/visualization"]
 visualization_wasm = ["krabmaga/visualization_wasm"]
 # Added by me to handle the debug print supports
-debug_support = [] 
+debug_support = []
+# Added by me to perform fixed
+fixed_random = [] 

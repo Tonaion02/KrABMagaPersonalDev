@@ -36,6 +36,8 @@ pub struct Simulation {
     //pub(crate) app: App,
     pub app: App,
     steps: Option<u32>,
+
+    // T: TODO verify if it is necessary
     num_threads: usize,
 }
 
@@ -108,7 +110,7 @@ impl Simulation {
 
         // T: can't panick, we inserted resource during build...
         self.app.world.get_resource_mut::<SimulationDescriptorT>().unwrap().simulation_dim = simulation_dim;
-
+        
         self
     }
 
@@ -185,6 +187,14 @@ impl Simulation {
     //     self
     // }
 
+    // T: Added by me
+    pub fn with_seed(mut self, seed: u64) -> Self {
+        self.app.world.get_resource_mut::<SimulationDescriptorT>().unwrap().rand_seed = seed;
+        self
+
+    }
+    
+    // T: TODO verify if it is needed
     pub fn with_rng(mut self, seed: u64) -> Self {
         let rng = RNG::new(seed, 0);
         self.app.insert_resource(rng);

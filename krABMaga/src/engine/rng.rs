@@ -20,7 +20,7 @@ impl RNG {
         chacha.set_stream(stream);
         RNG {
             inner: chacha,
-            float_range: Uniform::new(0.0f32, 1.0),
+            float_range: Uniform::new(0.0f32, 2.0),
         }
     }
 
@@ -28,6 +28,7 @@ impl RNG {
         self.inner.set_stream(stream);
     }
 
+    // T: TODO verify if it is useless
     pub fn gen(&mut self) -> f32 {
         self.float_range.sample(&mut self.inner)
     }

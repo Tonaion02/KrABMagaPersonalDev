@@ -3,6 +3,10 @@
 //--------------------------------------------------------------------------------------------------------------
 // WOLF-SHEEP-GRASS SIMULATION
 //--------------------------------------------------------------------------------------------------------------
+// STEPS NUM_AGENTS NUM_THREADS PERC_WOLF PERC_SHEEPS
+// 
+//
+//--------------------------------------------------------------------------------------------------------------
 // The comment's lines that start with 'T:' are left by Tonaion02.
 // The comment's lines where there is 'TODO' is a reminder for something that we must
 // to do.
@@ -10,6 +14,7 @@
 // have to consider to use the code in proper way.
 // The comment's lines that end with '(START)' are the begin of a block of code.
 // The comment's lines that end with '(END)' are the end of a block of code.
+//--------------------------------------------------------------------------------------------------------------
 //==============================================================================================================
 
 // T: importing rayon (START)
@@ -43,6 +48,7 @@ use engine::bevy_ecs::query;
 use engine::components::double_buffer::DBClonableRead;
 use engine::components::double_buffer::DBClonableWrite;
 use engine::components::double_buffer::DoubleBufferedDataStructure;
+use engine::resources::simulation_descriptor;
 use krabmaga::engine::components::double_buffer::DoubleBuffered;
 use krabmaga::engine::components::double_buffer::DBRead;
 use krabmaga::engine::components::double_buffer::DBWrite;
@@ -55,11 +61,16 @@ use krabmaga::engine::agent::Agent;
 use krabmaga::engine::fields::dense_number_grid_2d_t::DenseSingleValueGrid2D;
 use krabmaga::engine::fields::dense_object_grid_2d_t::DenseBagGrid2D;
 
+use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
+
 use krabmaga::engine::simulation::SimulationSet::Step;
 use krabmaga::engine::simulation::SimulationSet::AfterStep;
 use krabmaga::engine::simulation::SimulationSet::BeforeStep;
 
-// T: bevy's import
+use krabmaga::engine::rng::RNG;
+use krabmaga::engine::SampleRange;
+
+// T: bevy's import (START)
 // T: TODO find a way to remove the necessity to use this tools
 use krabmaga::engine::Commands;
 use krabmaga::engine::Query;
@@ -71,12 +82,14 @@ use krabmaga::engine::bevy_ecs::prelude::EntityWorldMut;
 use krabmaga::engine::ParallelCommands;
 use krabmaga::engine::Without;
 use krabmaga::engine::bevy_prelude::*;
+// T: bevy's import (START)
 
-// T: debug's import
+// T: debug's import (START)
 use model::debug::count_agents;
 use model::debug::count_sheeps;
 use model::debug::count_wolfs;
 use model::debug::print_step;
+// T: debug's import (END)
 
 // T: Constants(START)
 pub const ENERGY_CONSUME: f64 = 1.0;
@@ -96,8 +109,11 @@ pub const NUM_THREADS: usize = 4;
 pub const DIM_X: f32 = 5000.;
 pub const DIM_Y: f32 = DIM_X;
 pub const NUM_AGENTS: f32 = 2000000.;
-pub const NUM_INITIAL_SHEEPS: u32 = (NUM_AGENTS * 0.6) as u32;
-pub const NUM_INITIAL_WOLFS: u32 = (NUM_AGENTS * 0.4) as u32;
+pub const PERC_SHEEPS: f32 = 0.6;
+pub const PERC_WOLFS: f32 = 0.4;
+pub const NUM_INITIAL_SHEEPS: u32 = (NUM_AGENTS * PERC_SHEEPS) as u32;
+pub const NUM_INITIAL_WOLFS: u32 = (NUM_AGENTS * PERC_WOLFS) as u32;
+pub const SEED: u64 = 1337;
 // T: new costants(END)
 // T: Constants(END)
 
@@ -154,7 +170,8 @@ fn build_simulation() -> Simulation {
     simulation = simulation
     .with_steps(STEPS)
     .with_num_threads(NUM_THREADS)
-    .with_simulation_dim(Real2D {x: DIM_X, y: DIM_Y});
+    .with_simulation_dim(Real2D {x: DIM_X, y: DIM_Y})
+    .with_rng(SEED);
 
     //Add the components that must be double buffered
     simulation = simulation
@@ -201,9 +218,24 @@ fn step (
     mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>)>,
 
     mut parallel_commands: ParallelCommands,
+
+    simulation_descriptor: Res<SimulationDescriptorT>,
 )
 {
     let mut grass_field = query_grass_field.single_mut();
+
+
+
+    // T: TEST for rng
+    let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
+    let gen_float = rng.gen();
+    let gen_bool = rng.gen_bool(0.2);
+    let gen_float_in_range = rng.gen_range(0f32 .. 1f32);//rng.gen_range::<f32>(SampleRange::<f32>::new(0. .. 1.));
+
+    println!("generated float: {}", gen_float);
+    println!("generated bool: {}", gen_bool);
+    println!("generated float in range: {}", gen_float_in_range);
+    // T: TEST for rng
 
 
 
@@ -215,10 +247,22 @@ fn step (
 
         let x = loc.0.0.x;
         let y = loc.0.0.y;
-        let mut rng = rand::thread_rng();
+        
 
         let mut moved = false;
-        if last_loc.0.0.is_some() && rng.gen_bool(MOMENTUM_PROBABILITY as f64) {
+
+        #[cfg(any(feature="fixed_random"))]
+        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.step);
+
+        #[cfg(not(any(feature="fixed_random")))]
+        let mut rng = rand::thread_rng();
+        #[cfg(not(any(feature="fixed_random")))]
+        let gen_bool = rng.gen_bool(MOMENTUM_PROBABILITY as f64);
+        
+        #[cfg(any(feature="fixed_random"))]
+        let gen_bool = rng.gen_bool(MOMENTUM_PROBABILITY as f64);
+
+        if last_loc.0.0.is_some() && gen_bool {
             if let Some(pos) = last_loc.0.0 {
                 let xm = x + (x - pos.x);
                 let ym = y + (y - pos.y);
@@ -358,7 +402,7 @@ fn step (
 
 
 
-    // T: Wolfs eat (START)
+    // T: Wolves eat (START)
 
     // T: TEST if at least a counter is modified
 
@@ -447,11 +491,11 @@ fn step (
     std::mem::drop(span_internal);
 
     std::mem::drop(span);
-    // T: Wolfs eat (END)
+    // T: Wolves eat (END)
 
 
 
-    // T: Reproduce wolfs (START)
+    // T: Reproduce wolves (START)
 
     #[cfg(any(feature = "debug_support"))]
     let mut count_dead_wolfs = 0u32;
@@ -498,7 +542,7 @@ fn step (
         
 
     std::mem::drop(span);
-    // T: Reproduce wolfs (END)
+    // T: Reproduce wolves (END)
 }
 
 
