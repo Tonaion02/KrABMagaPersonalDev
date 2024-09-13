@@ -109,11 +109,11 @@ pub const WOLF_REPR: f64 = 0.1;
 
 pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-pub const STEPS: u32 = 500;
+pub const STEPS: u32 = 100;
 pub const NUM_THREADS: usize = 4;
 pub const DIM_X: f64 = 50.;
 pub const DIM_Y: f64 = DIM_X;
-pub const NUM_AGENTS: f64 = 200.;
+pub const NUM_AGENTS: f64 = 20.;
 pub const PERC_SHEEPS: f64 = 0.6;
 pub const PERC_WOLFS: f64 = 0.4;
 pub const NUM_INITIAL_SHEEPS: u64 = (NUM_AGENTS * PERC_SHEEPS) as u64;
@@ -204,8 +204,8 @@ fn build_simulation() -> Simulation {
     // app.add_systems(Update, count_agents.in_set(BeforeStep));
     // app.add_systems(Update, count_sheeps.in_set(BeforeStep));
     // app.add_systems(Update, count_wolfs.in_set(BeforeStep));
-    app.add_systems(Update, population_debug_info.in_set(BeforeStep));
-    app.add_systems(Update, print_step.in_set(BeforeStep).before(population_debug_info));
+    app.add_systems(Update, population_debug_info.in_set(BeforeStep).before(count_wolfs_for_location).before(update_sheeps_field).before(grass_grow));
+    app.add_systems(Update, print_step.in_set(BeforeStep).before(population_debug_info).before(count_wolfs_for_location).before(update_sheeps_field).before(grass_grow));
 
     simulation
 }
@@ -235,24 +235,17 @@ fn step (
 
 
 
-    // T: TEST for rng
-    // let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
-    // let gen_float = rng.gen();
-    // let gen_bool = rng.gen_bool(0.2);
-    // let gen_float_in_range = rng.gen_range(0f32 .. 1f32);
-
-    // println!("generated float: {}", gen_float);
-    // println!("generated bool: {}", gen_bool);
-    // println!("generated float in range: {}", gen_float_in_range);
-    // T: TEST for rng
-
-
-
     // T: move agents (START)
     let span = info_span!("move agents");
     let span = span.enter();
 
+    #[cfg(any(feature="debug_support"))]
+    let mut count_moved_agents = 0u64;
+
     query_agents.par_iter_mut().for_each(|(agent, mut loc, mut last_loc)|{
+
+        // #[cfg(any(feature="debug_support"))]
+        // { count_moved_agents = count_moved_agents + 1; }
 
         let x = loc.0.0.x;
         let y = loc.0.0.y;
@@ -304,6 +297,9 @@ fn step (
     });
 
     std::mem::drop(span);
+
+    #[cfg(any(feature="debug_support"))]
+    println!("moved_agents: {}", count_moved_agents);
     // T: move agents (END)
 
 
@@ -320,7 +316,7 @@ fn step (
     let span = span.enter();
 
     query_sheeps.iter_mut().for_each(|(entity, mut sheep_data, sheep_loc)|{
-        if grass_field.get_value(&sheep_loc.0.0).expect("empty cell(not possible!)") == FULL_GROWN {
+        if grass_field.get_value(&sheep_loc.0.0).expect("empty cell(not possible!)") >= FULL_GROWN {
             grass_field.set_value_location(0, &sheep_loc.0.0);
             
             sheep_data.energy += GAIN_ENERGY_SHEEP;
@@ -344,7 +340,6 @@ fn step (
 
 
     // T: Sheeps reproduce (START)
-
     #[cfg(any(feature = "debug_support"))]
     let mut counter_for_coin_flip = Arc::new(Mutex::new(0u64));
     #[cfg(any(feature = "debug_support"))]
@@ -410,7 +405,7 @@ fn step (
     #[cfg(any(feature = "debug_support"))]
     let binding = counter_for_coin_flip.lock().unwrap();
     #[cfg(any(feature = "debug_support"))]
-    println!("results coin_flip: {}", *binding);
+    println!("borned sheeps: {}", *binding);
     #[cfg(any(feature = "debug_support"))]
     let binding = counter_dead_for_out_energy_sheeps.lock().unwrap();
     #[cfg(any(feature = "debug_support"))]
@@ -494,16 +489,7 @@ fn step (
     std::mem::drop(span_internal);
     // T: sheeps die from wolfs (END)
 
-    #[cfg(any(feature = "debug_support"))]
-    let mut counter_non_zero_counters = 0u32;
-    #[cfg(any(feature = "debug_support"))]
-    for counter in & grid.values {
-        if *counter.lock().unwrap() > 0 {
-            counter_non_zero_counters += 1;
-        }
-    }
-    #[cfg(any(feature = "debug_support"))]
-    println!("counter_non_zero_counters(before): {}", counter_non_zero_counters);
+
 
     let span_internal = info_span!("wolfs effectively eating");
     let span_internal = span_internal.enter();
@@ -518,17 +504,6 @@ fn step (
         }
     });
 
-    #[cfg(any(feature = "debug_support"))]
-    let mut counter_non_zero_counters = 0u32;
-    #[cfg(any(feature = "debug_support"))]
-    for counter in & grid.values {
-        if *counter.lock().unwrap() > 0 {
-            counter_non_zero_counters += 1;
-        }
-    }
-    #[cfg(any(feature = "debug_support"))]
-    println!("counter_non_zero_counters(after): {}", counter_non_zero_counters);
-
     std::mem::drop(span_internal);
 
     std::mem::drop(span);
@@ -536,10 +511,31 @@ fn step (
 
 
 
+
+
+    // // T: Wolves eat (START)
+    
+    // let span = info_span!("wolfs eat");
+    // let span = span.enter();
+
+
+    
+    // std::mem::drop(span);
+
+
+    // // T: Wolves eat (END)
+
+
+
+
+
     // T: Reproduce wolves (START)
 
     #[cfg(any(feature = "debug_support"))]
     let mut count_dead_wolfs = Arc::new(Mutex::new(0u64));
+
+    #[cfg(any(feature = "debug_support"))]
+    let mut count_borned_wolfs = Arc::new(Mutex::new(0u64));
 
     let span = info_span!("reproducing wolfs");
     let span = span.enter();
@@ -556,9 +552,17 @@ fn step (
                 #[cfg(any(feature="fixed_random"))]
                 let mut rng_div = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
                 
+                
+
                 let gen_bool = rng_div.gen_bool(WOLF_REPR as f64);
 
-                      if wolf_data.energy > 0. &&  gen_bool {
+                    #[cfg(any(feature = "debug_support"))]
+                    if wolf_data.energy > 0. && gen_bool {
+                        let mut binding = count_borned_wolfs.lock().unwrap();
+                        *binding += 1;
+                    }
+
+                      if wolf_data.energy > 0. && gen_bool {
 
                           wolf_data.energy /= 2.0;
                           commands.spawn((
@@ -586,7 +590,11 @@ fn step (
                   });
               }
           );
-    
+
+    #[cfg(any(feature = "debug_support"))]
+    let binding = count_borned_wolfs.lock().unwrap();
+    #[cfg(any(feature = "debug_support"))]
+    println!("borned wolfs: {}", *binding);      
     #[cfg(any(feature = "debug_support"))]
     let binding = count_dead_wolfs.lock().unwrap();
     #[cfg(any(feature = "debug_support"))]
@@ -611,20 +619,56 @@ fn count_wolfs_for_location(query_wolfs: Query<(&Wolf, &DBWrite<Location>)>, mut
         *counter += 1;
     });
 
-    // TEMP for debug purpose
-    #[cfg(any(feature = "debug_support"))]
-    let mut verify_counter = 0;
-    #[cfg(any(feature = "debug_support"))]
-    for element in & grid.values {
-        verify_counter += *element.lock().unwrap();
+    // // TEMP for debug purpose
+    // #[cfg(any(feature = "debug_support"))]
+    // let mut verify_counter = 0;
+    // #[cfg(any(feature = "debug_support"))]
+    // for element in & grid.values {
+    //     verify_counter += *element.lock().unwrap();
+    // }
+    // #[cfg(any(feature = "debug_support"))]
+    // println!("total wolf in the grid: {}", verify_counter);
+    // // TEMP for debug purpose
+
+    // // TEMP for debug purpose
+    // #[cfg(any(feature="debug_support"))]
+    // let mut counter_of_location = 0;
+    // #[cfg(any(feature="debug_support"))]
+    // let location = Int2D {x: 49, y: 49};
+    // #[cfg(any(feature="debug_support"))]
+    // query_wolfs.iter().for_each(|(wolf_data, wolf_loc)| {
+    //     if wolf_loc.0.0 == location {
+    //         counter_of_location += 1;
+    //     }
+    // });
+    
+    // #[cfg(any(feature="debug_support"))]
+    // println!("counter_of_location: {}", counter_of_location);    
+
+    // #[cfg(any(feature="debug_support"))]
+    // assert!(counter_of_location == *grid.get_atomic_counter(&location).lock().unwrap(), "not the same");
+
+    let mut index = 0;
+    let mut buffer = String::from("counters of wolfs\n");
+    for counter in &grid.values {
+        let binding = counter.lock().unwrap();
+
+        //print!("{:.2} ", *binding);
+        let s = format!("{} ", *binding);
+        buffer.push_str(&s);
+
+        index = index + 1;
+        if index == (DIM_X as i32 ) {
+            buffer.push_str("\n");
+            index = 0;
+        }
     }
-    #[cfg(any(feature = "debug_support"))]
-    println!("total wolf in the grid: {}", verify_counter);
+    println!("{}", buffer);
+
     // TEMP for debug purpose
 }
 
-fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>,
-                        mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>) {
+fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>, mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>) {
 
     let mut sheeps_field = query_sheeps_field.single_mut();
     sheeps_field.clear();
@@ -637,25 +681,37 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
 
     query_sheeps.iter().for_each(process_sheep);
 
-    // TEMP for debug purpose
-    #[cfg(any(feature = "debug_support"))]
-    let mut non_empty_bags_counter = 0u32;
+    // // TEMP for debug purpose
+    // #[cfg(any(feature = "debug_support"))]
+    // let mut non_empty_bags_counter = 0u32;
 
-    #[cfg(any(feature = "debug_support"))]
-    for bag in & sheeps_field.bags {
-        if ! bag.is_empty() {
-            non_empty_bags_counter += 1;
+    // #[cfg(any(feature = "debug_support"))]
+    // for bag in & sheeps_field.bags {
+    //     if ! bag.is_empty() {
+    //         non_empty_bags_counter += 1;
+    //     }
+    // }
+
+    // #[cfg(any(feature = "debug_support"))]
+    // println!("non empty bags: {}", non_empty_bags_counter);
+    // // TEMP for debug purpose
+
+    let mut index = 0;
+    let mut buffer = String::from("counters of sheeps\n");
+    for bag in &sheeps_field.bags {
+        let s = format!("{} ", bag.len());
+        buffer.push_str(&s);
+
+        index = index + 1;
+        if index == (DIM_X as i32 ) {
+            buffer.push_str("\n");
+            index = 0;
         }
     }
-
-    #[cfg(any(feature = "debug_support"))]
-    println!("non empty bags: {}", non_empty_bags_counter);
-    // TEMP for debug purpose
+    println!("{}", buffer);
 }
 
 fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
-    // Parallel update of the grass
-    // At least this shit(but uses rayon)
     // TODO Test if is good or not
     // TODO insert here some spans
     let mut grass_field = &mut query_grass_field.single_mut();
@@ -692,8 +748,6 @@ fn count_grass(grass_field: &DenseSingleValueGrid2D<u16>) -> i32 {
 
     grass_growed
 }
-
-
 
 
 

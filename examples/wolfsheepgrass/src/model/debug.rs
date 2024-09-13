@@ -91,14 +91,15 @@ pub fn population_debug_info(query_agents: Query<&Agent>, query_sheeps: Query<&S
 
     print!("Wolfs: {} ", count);
     
-    
     let mut count = 0u32;
 
     query_sheeps.for_each(|(wolf)| {
         count = count + 1;
     });
 
-    println!("Sheeps: {} ", count);
+    print!("Sheeps: {} ", count);
+
+    println!("");
 }
 
 // T: TEMP
