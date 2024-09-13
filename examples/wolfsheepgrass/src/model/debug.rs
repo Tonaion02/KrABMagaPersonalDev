@@ -44,7 +44,7 @@ pub fn count_agents(query_agents: Query<(&Agent)>) {
         count = count + 1;
     });
 
-    println!("Agents: {}", count);
+    println!("Agents: {} ", count);
 }
 
 // T: TEMP
@@ -71,6 +71,34 @@ pub fn count_sheeps(query_sheeps: Query<(&Sheep)>) {
     });
 
     println!("Sheeps: {}", count);
+}
+
+pub fn population_debug_info(query_agents: Query<&Agent>, query_sheeps: Query<&Sheep>, query_wolfs: Query<&Wolf>) {
+    
+    let mut count = 0u32;
+
+    query_agents.for_each(|(agent)| {
+        count = count + 1;
+    });
+
+    print!("Agents: {} ", count);
+
+    let mut count = 0u32;
+
+    query_wolfs.for_each(|(sheep)|{
+        count = count + 1;
+    });
+
+    print!("Wolfs: {} ", count);
+    
+    
+    let mut count = 0u32;
+
+    query_sheeps.for_each(|(wolf)| {
+        count = count + 1;
+    });
+
+    println!("Sheeps: {} ", count);
 }
 
 // T: TEMP

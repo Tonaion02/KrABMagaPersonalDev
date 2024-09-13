@@ -92,6 +92,7 @@ use krabmaga::engine::bevy_prelude::*;
 use model::debug::count_agents;
 use model::debug::count_sheeps;
 use model::debug::count_wolfs;
+use model::debug::population_debug_info;
 use model::debug::print_step;
 // T: debug's import (END)
 
@@ -108,7 +109,7 @@ pub const WOLF_REPR: f64 = 0.1;
 
 pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-pub const STEPS: u32 = 200;
+pub const STEPS: u32 = 500;
 pub const NUM_THREADS: usize = 4;
 pub const DIM_X: f64 = 50.;
 pub const DIM_Y: f64 = DIM_X;
@@ -135,6 +136,9 @@ pub struct CountWolfs;
 #[derive(Component)]
 #[component(storage="SparseSet")]
 pub struct Death;
+
+
+
 
 
 // 'No-visualization' specific imports
@@ -197,10 +201,11 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, update_sheeps_field.in_set(BeforeStep));
     app.add_systems(Update, grass_grow.in_set(BeforeStep));
     
-    app.add_systems(Update, count_agents.in_set(BeforeStep));
-    app.add_systems(Update, count_sheeps.in_set(BeforeStep));
-    app.add_systems(Update, count_wolfs.in_set(BeforeStep));
-    app.add_systems(Update, print_step.in_set(BeforeStep).before(count_wolfs).before(count_sheeps).before(count_agents));
+    // app.add_systems(Update, count_agents.in_set(BeforeStep));
+    // app.add_systems(Update, count_sheeps.in_set(BeforeStep));
+    // app.add_systems(Update, count_wolfs.in_set(BeforeStep));
+    app.add_systems(Update, population_debug_info.in_set(BeforeStep));
+    app.add_systems(Update, print_step.in_set(BeforeStep).before(population_debug_info));
 
     simulation
 }
@@ -231,14 +236,14 @@ fn step (
 
 
     // T: TEST for rng
-    let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
-    let gen_float = rng.gen();
-    let gen_bool = rng.gen_bool(0.2);
-    let gen_float_in_range = rng.gen_range(0f32 .. 1f32);//rng.gen_range::<f32>(SampleRange::<f32>::new(0. .. 1.));
+    // let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
+    // let gen_float = rng.gen();
+    // let gen_bool = rng.gen_bool(0.2);
+    // let gen_float_in_range = rng.gen_range(0f32 .. 1f32);
 
-    println!("generated float: {}", gen_float);
-    println!("generated bool: {}", gen_bool);
-    println!("generated float in range: {}", gen_float_in_range);
+    // println!("generated float: {}", gen_float);
+    // println!("generated bool: {}", gen_bool);
+    // println!("generated float in range: {}", gen_float_in_range);
     // T: TEST for rng
 
 
@@ -309,6 +314,7 @@ fn step (
     
     #[cfg(any(feature = "debug_support"))]
     let mut sheeps_that_eaten = 0u32;
+
     // T: Sheeps eat (START)
     let span = info_span!("sheeps eats");
     let span = span.enter();
@@ -338,12 +344,11 @@ fn step (
 
 
     // T: Sheeps reproduce (START)
-    // T: TEST for now is not parallel for debugging
 
     #[cfg(any(feature = "debug_support"))]
-    let mut counter_for_coin_flip = 0u32;
+    let mut counter_for_coin_flip = Arc::new(Mutex::new(0u64));
     #[cfg(any(feature = "debug_support"))]
-    let mut counter_dead_for_out_energy_sheeps = 0u32;
+    let mut counter_dead_for_out_energy_sheeps = Arc::new(Mutex::new(0u64));;
 
     let span = info_span!("sheeps reproduce");
     let span = span.enter();
@@ -363,7 +368,10 @@ fn step (
 
             #[cfg(any(feature = "debug_support"))]
             if coin_flip && sheep_data.energy > 0. {
-                counter_for_coin_flip += 1;
+                // counter_for_coin_flip += 1;
+
+                let mut binding = counter_for_coin_flip.lock().unwrap();
+                *binding += 1;
             }
 
             if sheep_data.energy > 0. && coin_flip {
@@ -387,7 +395,10 @@ fn step (
                 commands.entity(entity).despawn();
 
                 #[cfg(any(feature = "debug_support"))]
-                { counter_dead_for_out_energy_sheeps += 1; }
+                {   
+                    let mut binding = counter_dead_for_out_energy_sheeps.lock().unwrap();
+                    *binding += 1;
+                }
             }
 
         });
@@ -397,9 +408,13 @@ fn step (
     std::mem::drop(span);
 
     #[cfg(any(feature = "debug_support"))]
-    println!("results coin_flip: {}", counter_for_coin_flip);
+    let binding = counter_for_coin_flip.lock().unwrap();
     #[cfg(any(feature = "debug_support"))]
-    println!("dead sheeps for out of energy {}", counter_dead_for_out_energy_sheeps);
+    println!("results coin_flip: {}", *binding);
+    #[cfg(any(feature = "debug_support"))]
+    let binding = counter_dead_for_out_energy_sheeps.lock().unwrap();
+    #[cfg(any(feature = "debug_support"))]
+    println!("dead sheeps for out of energy {}", *binding);
     // T: Sheeps reproduce (END)
 
 
@@ -440,11 +455,35 @@ fn step (
 
         let mut effectively_alive_sheeps = 0;
         parallel_commands.command_scope(|mut commands: Commands| {
-            for i in 0..min {
-                if non_mut_query_sheeps.get(bag[i]).expect("not found entity during sheeps die").1.energy > 0. {
-                    commands.entity(bag[i]).despawn();
+            // for i in 0..min {
+            //     if non_mut_query_sheeps.get(bag[i]).expect("not found entity during sheeps die").1.energy > 0. {
+            //         commands.entity(bag[i]).despawn();
 
-                    effectively_alive_sheeps += 1; 
+            //         effectively_alive_sheeps += 1; 
+            //     }
+            // }
+
+            // for i in 0..bag.len() {
+            //     if non_mut_query_sheeps.get(bag[i]).expect("error not found entity").1.energy > 0. {
+            //         commands.entity(bag[i]).despawn();
+
+            //         effectively_alive_sheeps += 1;
+            //     }
+
+            //     if effectively_alive_sheeps == min as u32 {
+            //         break;
+            //     }
+            // }
+
+            for element in bag {
+                if non_mut_query_sheeps.get(*element).expect("not fodun entity during sheeps die").1.energy > 0. {
+                    if effectively_alive_sheeps == min as u32 {
+                        break;
+                    }
+
+                    commands.entity(*element).despawn();
+
+                    effectively_alive_sheeps += 1;
                 }
             }
         });
@@ -500,7 +539,7 @@ fn step (
     // T: Reproduce wolves (START)
 
     #[cfg(any(feature = "debug_support"))]
-    let mut count_dead_wolfs = 0u32;
+    let mut count_dead_wolfs = Arc::new(Mutex::new(0u64));
 
     let span = info_span!("reproducing wolfs");
     let span = span.enter();
@@ -511,7 +550,7 @@ fn step (
 
                   parallel_commands.command_scope(|mut commands| {
       
-
+                
                 #[cfg(not(any(feature="fixed_random")))]
                 let mut rng_div = rand::thread_rng(); 
                 #[cfg(any(feature="fixed_random"))]
@@ -520,8 +559,6 @@ fn step (
                 let gen_bool = rng_div.gen_bool(WOLF_REPR as f64);
 
                       if wolf_data.energy > 0. &&  gen_bool {
-
-
 
                           wolf_data.energy /= 2.0;
                           commands.spawn((
@@ -540,7 +577,10 @@ fn step (
                           commands.entity(entity).despawn();
 
                           #[cfg(any(feature = "debug_support"))]
-                          { count_dead_wolfs += 1; }
+                          {
+                            let mut binding = count_dead_wolfs.lock().unwrap(); 
+                            *binding += 1; 
+                          }
                       }
                       
                   });
@@ -548,7 +588,9 @@ fn step (
           );
     
     #[cfg(any(feature = "debug_support"))]
-    println!("dead wolfs: {}", count_dead_wolfs);
+    let binding = count_dead_wolfs.lock().unwrap();
+    #[cfg(any(feature = "debug_support"))]
+    println!("dead wolfs: {}", *binding);
         
 
     std::mem::drop(span);
@@ -673,7 +715,7 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
 
             #[cfg(not(any(feature = "fixed_random")))]
             let mut rng = rand::thread_rng();
-            //#[cfg(any(feature="fixed_random"))]
+            #[cfg(any(feature="fixed_random"))]
             let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step + (y * DIM_X as i64 + x) as u64 );
 
 
@@ -738,7 +780,7 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step + id_to_assign);
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
-        let initial_energy = rng.gen_range(0.1 ..(2. * GAIN_ENERGY_SHEEP));
+        let initial_energy = rng.gen_range(0. ..(2. * GAIN_ENERGY_SHEEP));
         //println!("{}", initial_energy);
 
         let entity_commands = commands.spawn((
@@ -750,7 +792,7 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
             DoubleBuffered::new(Location(loc)),
             DoubleBuffered::new(LastLocation(None)),
 
-            Agent { id: sheep_id + NUM_INITIAL_WOLFS },
+            Agent { id: id_to_assign + NUM_INITIAL_WOLFS },
         ));
     }
 
@@ -770,7 +812,7 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step + wolf_id);
 
         let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
-        let initial_energy = rng.gen_range(0.1 ..(2. * GAIN_ENERGY_WOLF));
+        let initial_energy = rng.gen_range(0. ..(2. * GAIN_ENERGY_WOLF));
 
         let entity_command = commands.spawn(
             
