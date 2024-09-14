@@ -113,7 +113,7 @@ pub const STEPS: u32 = 100;
 pub const NUM_THREADS: usize = 4;
 pub const DIM_X: f64 = 50.;
 pub const DIM_Y: f64 = DIM_X;
-pub const NUM_AGENTS: f64 = 20.;
+pub const NUM_AGENTS: f64 = 200.;
 pub const PERC_SHEEPS: f64 = 0.6;
 pub const PERC_WOLFS: f64 = 0.4;
 pub const NUM_INITIAL_SHEEPS: u64 = (NUM_AGENTS * PERC_SHEEPS) as u64;
@@ -197,7 +197,8 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, step.in_set(Step));
 
     // Must run after the despawning of entities
-    app.add_systems(Update, count_wolfs_for_location.in_set(BeforeStep));
+    // app.add_systems(Update, count_wolfs_for_location.in_set(BeforeStep));
+    app.add_systems(Update, update_wolves_field.in_set(BeforeStep));
     app.add_systems(Update, update_sheeps_field.in_set(BeforeStep));
     app.add_systems(Update, grass_grow.in_set(BeforeStep));
     
@@ -221,10 +222,10 @@ fn step (
 
     mut query_agents: Query<(&Agent, &mut DBWrite<Location>, &mut DBWrite<LastLocation>)>,
     
-    mut query_count_grid: Query<(&AtomicGrid2D<CountWolfs>)>,
+    query_wolfs_field: Query<(&DenseBagGrid2D<Entity, WolfField>)>,
     query_sheeps_field: Query<(&DenseBagGrid2D<Entity, SheepField>)>,
 
-    mut query_wolfs: Query<(Entity, &mut Wolf, &DBRead<Location>)>,
+    query_wolfs: Query<(Entity, &Wolf, &DBRead<Location>)>,
 
     mut parallel_commands: ParallelCommands,
 
@@ -239,13 +240,9 @@ fn step (
     let span = info_span!("move agents");
     let span = span.enter();
 
-    #[cfg(any(feature="debug_support"))]
-    let mut count_moved_agents = 0u64;
+
 
     query_agents.par_iter_mut().for_each(|(agent, mut loc, mut last_loc)|{
-
-        // #[cfg(any(feature="debug_support"))]
-        // { count_moved_agents = count_moved_agents + 1; }
 
         let x = loc.0.0.x;
         let y = loc.0.0.y;
@@ -256,10 +253,8 @@ fn step (
         let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
         #[cfg(not(any(feature="fixed_random")))]
         let mut rng = rand::thread_rng();
-        
-        let gen_bool = rng.gen_bool(MOMENTUM_PROBABILITY as f64);
 
-        if last_loc.0.0.is_some() && gen_bool {
+        if last_loc.0.0.is_some() && rng.gen_bool(MOMENTUM_PROBABILITY as f64) {
             if let Some(pos) = last_loc.0.0 {
                 let xm = x + (x - pos.x);
                 let ym = y + (y - pos.y);
@@ -283,13 +278,6 @@ fn step (
             // let ny = if rng.gen_bool(0.5) { ymin } else { ymax };
             let nx = rng.gen_range(xmin..=xmax);
             let ny = rng.gen_range(ymin..=ymax);
-
-            // T: OLD
-            // self.loc = Int2D {
-            //     x: x + nx,
-            //     y: y + ny,
-            // };
-            // self.last = Some(Int2D { x, y });
 
             loc.0 = Location(Int2D { x: x + nx, y: y + ny, });
             last_loc.0 = LastLocation(Some(Int2D { x, y }));
@@ -359,17 +347,14 @@ fn step (
             #[cfg(any(feature="fixed_random"))]
             let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
 
-            let coin_flip = rng.gen_bool(SHEEP_REPR as f64);
+            if sheep_data.energy > 0. && rng.gen_bool(SHEEP_REPR as f64) {
 
-            #[cfg(any(feature = "debug_support"))]
-            if coin_flip && sheep_data.energy > 0. {
-                // counter_for_coin_flip += 1;
-
-                let mut binding = counter_for_coin_flip.lock().unwrap();
-                *binding += 1;
-            }
-
-            if sheep_data.energy > 0. && coin_flip {
+                #[cfg(any(feature = "debug_support"))]
+                {    
+                    let mut binding = counter_for_coin_flip.lock().unwrap();
+                    *binding += 1;
+                }
+    
 
                 sheep_data.energy /= 2.0;
 
@@ -414,116 +399,139 @@ fn step (
 
 
 
-    // T: Wolves eat (START)
-
-    // T: TEST if at least a counter is modified
-
-    let span = info_span!("wolfs eat");
-    let span = span.enter();
-
-    // T: sheeps die from wolfs (START)
-    let span_internal = info_span!("sheeps die from wolfs");
-    let span_internal = span_internal.enter();
-
-    let mut grid = query_count_grid.single_mut();
-    let sheeps_field = query_sheeps_field.single();
-    let non_mut_query_sheeps = query_sheeps;
-
-    // T: TEMP debug purpose
-    #[cfg(any(feature = "debug_support"))]
-    let mut counter_non_zero_counters = 0u32;
-    #[cfg(any(feature = "debug_support"))]
-    for counter in & grid.values {
-        if *counter.lock().unwrap() > 0 {
-            counter_non_zero_counters += 1;
-        }
-    }
-    #[cfg(any(feature = "debug_support"))]
-    println!("counter_non_zero_counters: {}", counter_non_zero_counters);
-    // T: TEMP debug purpose
-
-    let grid_par_iterator = grid.values.par_iter();
-    sheeps_field.bags.par_iter().zip(grid_par_iterator).for_each(|(bag, binding)|{
-        let mut counter = binding.lock().unwrap();
-        let min = std::cmp::min(*counter as usize, bag.len());
-        *counter = min as u32;
-
-        let mut effectively_alive_sheeps = 0;
-        parallel_commands.command_scope(|mut commands: Commands| {
-            // for i in 0..min {
-            //     if non_mut_query_sheeps.get(bag[i]).expect("not found entity during sheeps die").1.energy > 0. {
-            //         commands.entity(bag[i]).despawn();
-
-            //         effectively_alive_sheeps += 1; 
-            //     }
-            // }
-
-            // for i in 0..bag.len() {
-            //     if non_mut_query_sheeps.get(bag[i]).expect("error not found entity").1.energy > 0. {
-            //         commands.entity(bag[i]).despawn();
-
-            //         effectively_alive_sheeps += 1;
-            //     }
-
-            //     if effectively_alive_sheeps == min as u32 {
-            //         break;
-            //     }
-            // }
-
-            for element in bag {
-                if non_mut_query_sheeps.get(*element).expect("not fodun entity during sheeps die").1.energy > 0. {
-                    if effectively_alive_sheeps == min as u32 {
-                        break;
-                    }
-
-                    commands.entity(*element).despawn();
-
-                    effectively_alive_sheeps += 1;
-                }
-            }
-        });
-
-        *counter = effectively_alive_sheeps;
-    });
-
-    std::mem::drop(span_internal);
-    // T: sheeps die from wolfs (END)
-
-
-
-    let span_internal = info_span!("wolfs effectively eating");
-    let span_internal = span_internal.enter();
-
-    query_wolfs.par_iter_mut().for_each(|(entity, mut wolf_data, wolf_loc)| {
-        let binding = grid.get_atomic_counter(&wolf_loc.0.0);
-        let mut counter = binding.lock().unwrap();
-        let sheeps_for_bag = sheeps_field.get_ref_bag(&wolf_loc.0.0).len();
-        if *counter > 0 {
-            wolf_data.energy += GAIN_ENERGY_WOLF;
-            *counter -= 1;
-        }
-    });
-
-    std::mem::drop(span_internal);
-
-    std::mem::drop(span);
-    // T: Wolves eat (END)
-
-
-
-
-
     // // T: Wolves eat (START)
-    
+
+    // // T: TEST if at least a counter is modified
+
     // let span = info_span!("wolfs eat");
     // let span = span.enter();
 
+    // // T: sheeps die from wolfs (START)
+    // let span_internal = info_span!("sheeps die from wolfs");
+    // let span_internal = span_internal.enter();
 
-    
+    // let mut grid = query_count_grid.single_mut();
+    // let sheeps_field = query_sheeps_field.single();
+    // let non_mut_query_sheeps = query_sheeps;
+
+    // // T: TEMP debug purpose
+    // #[cfg(any(feature = "debug_support"))]
+    // let mut counter_non_zero_counters = 0u32;
+    // #[cfg(any(feature = "debug_support"))]
+    // for counter in & grid.values {
+    //     if *counter.lock().unwrap() > 0 {
+    //         counter_non_zero_counters += 1;
+    //     }
+    // }
+    // #[cfg(any(feature = "debug_support"))]
+    // println!("counter_non_zero_counters: {}", counter_non_zero_counters);
+    // // T: TEMP debug purpose
+
+
+    // // T: Sequential version
+    // // let grid_par_iterator = grid.values.iter();
+    // // sheeps_field.bags.iter().zip(grid_par_iterator).for_each(|(bag, binding)|{
+    // // T: Parallel version
+    // let grid_par_iterator = grid.values.par_iter();
+    // sheeps_field.bags.par_iter().zip(grid_par_iterator).for_each(|(bag, binding)|{
+    // let mut counter = binding.lock().unwrap();
+    //     let min = std::cmp::min(*counter as usize, bag.len());
+    //     *counter = min as u32;
+
+    //     let mut effectively_alive_sheeps = 0;
+    //     parallel_commands.command_scope(|mut commands: Commands| {
+    //         for element in bag {
+    //             if non_mut_query_sheeps.get(*element).expect("not fodun entity during sheeps die").1.energy > 0. {
+    //                 if effectively_alive_sheeps == min as u32 {
+    //                     break;
+    //                 }
+
+    //                 commands.entity(*element).despawn();
+
+    //                 effectively_alive_sheeps += 1;
+    //             }
+    //         }
+    //     });
+
+    //     *counter = effectively_alive_sheeps;
+    // });
+
+    // std::mem::drop(span_internal);
+    // // T: sheeps die from wolfs (END)
+
+
+
+    // let span_internal = info_span!("wolfs effectively eating");
+    // let span_internal = span_internal.enter();
+
+    // query_wolfs.par_iter_mut().for_each(|(entity, mut wolf_data, wolf_loc)| {
+    //     let binding = grid.get_atomic_counter(&wolf_loc.0.0);
+    //     let mut counter = binding.lock().unwrap();
+    //     let sheeps_for_bag = sheeps_field.get_ref_bag(&wolf_loc.0.0).len();
+    //     if *counter > 0 {
+    //         wolf_data.energy += GAIN_ENERGY_WOLF;
+    //         *counter -= 1;
+    //     }
+    // });
+
+    // std::mem::drop(span_internal);
+
     // std::mem::drop(span);
-
-
     // // T: Wolves eat (END)
+
+
+
+
+
+    // T: Wolves eat (START)
+    let span = info_span!("wolfs eat");
+    let span = span.enter();
+
+    let sheep_field = query_sheeps_field.single();
+    let wolfs_field = query_wolfs_field.single();
+    
+    let sheep_field_iter = sheep_field.bags.par_iter();
+    wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag, sheep_bag)|{
+        
+        let mut dead_sheep_index = 0usize;
+        // T: for all the wolves in the bag (START)
+        for wolf_entity in wolf_bag {
+            
+            // T: 
+            if dead_sheep_index == sheep_bag.len() {
+                break;
+            }
+
+            // T: Search an alive sheeps in the bag of the same location of wolfs (START)
+            for next_sheep in dead_sheep_index..sheep_bag.len() {
+
+                let sheep_entity = sheep_bag[next_sheep];
+                let sheep_data = query_sheeps.get(sheep_entity).unwrap().1;
+
+                // T: In case the sheep is alive(or energy > 0) wolf eat the sheep
+                if sheep_data.energy > 0. {
+
+                    parallel_commands.command_scope(|mut commands| {
+                        commands.entity(sheep_entity).despawn();
+                    });
+
+                    let mut wolf_data = query_wolfs.get(*wolf_entity).unwrap().1;
+                    let mut wolf_energy = wolf_data.energy.lock().unwrap();
+                    *wolf_energy += GAIN_ENERGY_WOLF;
+
+                    // T: increase the index of the dead sheeps, because now we killed a sheep
+                    dead_sheep_index += 1;
+
+                    break;
+                }
+            }
+            // T: Search an alive sheeps in the bag of the same location of wolfs (END)
+        }
+        // T: for all the wolves in the bag (END)
+    });
+
+    std::mem::drop(span);
+    // T: Wolves eat (END)
 
 
 
@@ -540,9 +548,18 @@ fn step (
     let span = info_span!("reproducing wolfs");
     let span = span.enter();
 
-    query_wolfs.par_iter_mut().for_each(
-        |(entity, mut wolf_data, loc)| {
-                  wolf_data.energy -= ENERGY_CONSUME;
+
+    // #[cfg(not(any(feature="fixed_random")))]
+    // let mut rng_div = rand::thread_rng(); 
+
+    // T: Sequential version
+    // query_wolfs.iter_mut().for_each(
+    // T: Parallel version
+    query_wolfs.par_iter().for_each(
+        |(entity, wolf_data, loc)| {
+
+            let mut energy_wolf = wolf_data.energy.lock().unwrap();
+                  *energy_wolf -= ENERGY_CONSUME;
 
                   parallel_commands.command_scope(|mut commands| {
       
@@ -552,23 +569,20 @@ fn step (
                 #[cfg(any(feature="fixed_random"))]
                 let mut rng_div = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
                 
-                
+            
 
-                let gen_bool = rng_div.gen_bool(WOLF_REPR as f64);
+                      if *energy_wolf > 0. && rng_div.gen_bool(WOLF_REPR as f64) {
 
-                    #[cfg(any(feature = "debug_support"))]
-                    if wolf_data.energy > 0. && gen_bool {
+                        #[cfg(any(feature = "debug_support"))] {
                         let mut binding = count_borned_wolfs.lock().unwrap();
                         *binding += 1;
-                    }
+                        }
 
-                      if wolf_data.energy > 0. && gen_bool {
-
-                          wolf_data.energy /= 2.0;
+                        *energy_wolf /= 2.0;
                           commands.spawn((
                           Wolf {
                               id: 0,
-                              energy: wolf_data.energy,
+                              energy: Mutex::new(*energy_wolf),
                           }, 
               
                           DoubleBuffered::new(Location(loc.0.0)),
@@ -577,7 +591,7 @@ fn step (
                           Agent {id: 0,},)
                           );
                       }
-                      if wolf_data.energy <= 0. {
+                      if *energy_wolf <= 0. {
                           commands.entity(entity).despawn();
 
                           #[cfg(any(feature = "debug_support"))]
@@ -648,8 +662,11 @@ fn count_wolfs_for_location(query_wolfs: Query<(&Wolf, &DBWrite<Location>)>, mut
     // #[cfg(any(feature="debug_support"))]
     // assert!(counter_of_location == *grid.get_atomic_counter(&location).lock().unwrap(), "not the same");
 
+    #[cfg(any(feature="debug_support"))]    
     let mut index = 0;
+    #[cfg(any(feature="debug_support"))]
     let mut buffer = String::from("counters of wolfs\n");
+    #[cfg(any(feature="debug_support"))]
     for counter in &grid.values {
         let binding = counter.lock().unwrap();
 
@@ -663,9 +680,27 @@ fn count_wolfs_for_location(query_wolfs: Query<(&Wolf, &DBWrite<Location>)>, mut
             index = 0;
         }
     }
+    #[cfg(any(feature="debug_support"))]
     println!("{}", buffer);
 
     // TEMP for debug purpose
+}
+
+fn update_wolves_field(query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>, mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>) {
+
+    let mut wolfs_field = query_wolfs_field.single_mut();
+    wolfs_field.clear();
+
+    let process_wolf = |(entity, wolf, loc) : (Entity, &Wolf, &DBWrite<Location>)| {
+
+        let energy = wolf.energy.lock().unwrap();
+        if *energy > 0. {
+            wolfs_field.push_object_location(entity, &loc.0.0);
+        }
+
+    };
+
+    query_wolfs.iter().for_each(process_wolf);
 }
 
 fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>, mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>) {
@@ -696,8 +731,11 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
     // println!("non empty bags: {}", non_empty_bags_counter);
     // // TEMP for debug purpose
 
+    #[cfg(any(feature="debug_support"))]
     let mut index = 0;
+    #[cfg(any(feature="debug_support"))]
     let mut buffer = String::from("counters of sheeps\n");
+    #[cfg(any(feature="debug_support"))]
     for bag in &sheeps_field.bags {
         let s = format!("{} ", bag.len());
         buffer.push_str(&s);
@@ -708,6 +746,7 @@ fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>
             index = 0;
         }
     }
+    #[cfg(any(feature="debug_support"))]
     println!("{}", buffer);
 }
 
@@ -779,9 +818,11 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
                 // T: TODO add the missing code with DenseGrid for Grass
                 grass_field.set_value_location(FULL_GROWN, &Int2D { x: x.try_into().unwrap(), y: y.try_into().unwrap() });
             } else {
-                let grass_init_value = rng.gen_range(0..FULL_GROWN + 1);
+                // T: original version that doesn't fit really well with the example
+                // let grass_init_value = rng.gen_range(0..FULL_GROWN + 1);
+                // grass_field.set_value_location(grass_init_value, &Int2D { x: x.try_into().unwrap(), y: y.try_into().unwrap() });
 
-                grass_field.set_value_location(grass_init_value, &Int2D { x: x.try_into().unwrap(), y: y.try_into().unwrap() });
+                grass_field.set_value_location(0, &Int2D { x: x.try_into().unwrap(), y: y.try_into().unwrap() });
             }
         })
     });
@@ -872,7 +913,7 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
             
     (Wolf {
                 id: wolf_id,
-                energy: initial_energy,
+                energy: Mutex::new(initial_energy),
             }, 
 
             DoubleBuffered::new(Location(loc)),
@@ -882,15 +923,8 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         ));
     }
 
-    commands.spawn((AtomicGrid2D::<CountWolfs>::new(0u32, DIM_X as i32, DIM_Y as i32)));
-
-    // let mut index = 0;
-    // for counter in &mut counters_field.values {
-    //     print!("({},{}): {}", index%counters_field.height, index/counters_field.height, counter.load(std::sync::atomic::Ordering::Acquire));
-
-    //     index += 1;
-    // }
-
+    //commands.spawn((AtomicGrid2D::<CountWolfs>::new(0u32, DIM_X as i32, DIM_Y as i32)));
+    commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(DIM_X as i32, DIM_Y as i32)));
 }
 
 

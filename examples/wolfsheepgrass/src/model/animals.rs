@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use krabmaga::engine::location::Int2D;
 use krabmaga::engine::location::Real2D;
 // T: TODO check if we can solve this strange error with import
@@ -15,10 +17,10 @@ use krabmaga::engine::Component;
 // T: TODO check if it is the best way to store data about agents.
 // T: probably we can find a more conveniente way to partitionate 
 // T: from the multithreading point of view......
-#[derive(Component, Copy, Clone)]
+#[derive(Component)]
 pub struct Wolf {
     pub id: u64,
-    pub energy: f64,
+    pub energy: Mutex<f64>,
 }
 
 #[derive(Component, Copy, Clone)]
@@ -26,6 +28,10 @@ pub struct Sheep {
     pub id: u64,
     pub energy: f64,
 }
+
+// T: To use to create a new version of this simulation
+#[derive(Component)]
+pub struct AtomicComponent<T: Component> (pub Mutex<T>);
 
 // T: this component is used to save the last location of the animals
 #[derive(Component, Copy, Clone)]
