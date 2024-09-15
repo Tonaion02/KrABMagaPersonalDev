@@ -56,7 +56,9 @@ impl<O: Eq + Hash + Clone + Copy, M: Sized> DenseBagGrid2D<O, M> {
     }
 
     pub fn clear(&mut self) {
-        self.bags.iter_mut().for_each(|mut vec|{ vec.clear(); })
+        self.bags.iter_mut().for_each(|mut vec|{ 
+            vec.clear(); 
+        });
     }
 
     pub fn get_objects(&self, loc: &Int2D) -> Option<Vec<O>> {

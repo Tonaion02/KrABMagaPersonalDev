@@ -109,7 +109,7 @@ pub const WOLF_REPR: f64 = 0.1;
 
 pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-pub const STEPS: u32 = 100;
+pub const STEPS: u32 = 200;
 pub const NUM_THREADS: usize = 4;
 pub const DIM_X: f64 = 50.;
 pub const DIM_Y: f64 = DIM_X;
@@ -336,6 +336,9 @@ fn step (
     let span = info_span!("sheeps reproduce");
     let span = span.enter();
 
+
+
+    //query_sheeps.iter_mut().for_each(|(entity, mut sheep_data, loc)| {
     query_sheeps.par_iter_mut().for_each(|(entity, mut sheep_data, loc)| {
 
         sheep_data.energy -= ENERGY_CONSUME;
@@ -355,7 +358,6 @@ fn step (
                     *binding += 1;
                 }
     
-
                 sheep_data.energy /= 2.0;
 
                 commands.spawn((
@@ -369,7 +371,6 @@ fn step (
 
                     Agent {id: 0},
                 ));
-
             }
             if sheep_data.energy <= 0. {
                 commands.entity(entity).despawn();
@@ -380,9 +381,7 @@ fn step (
                     *binding += 1;
                 }
             }
-
         });
-
     });
 
     std::mem::drop(span);
@@ -490,31 +489,38 @@ fn step (
     let sheep_field = query_sheeps_field.single();
     let wolfs_field = query_wolfs_field.single();
     
-    let sheep_field_iter = sheep_field.bags.par_iter();
-    wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag, sheep_bag)|{
-        
+    let sheep_field_iter = sheep_field.bags.iter();
+    wolfs_field.bags.iter().zip(sheep_field_iter).for_each(|(wolf_bag, sheep_bag)|{
+
         let mut dead_sheep_index = 0usize;
         // T: for all the wolves in the bag (START)
         for wolf_entity in wolf_bag {
-            
-            // T: 
-            if dead_sheep_index == sheep_bag.len() {
-                break;
-            }
+
+            // // T: if the number of sheeps that has dead is equally to
+            // // T: the number of sheeps in the bag, wolf can't eat anymore
+            // // T: so stop the loop and pass to the next bag 
+            // if dead_sheep_index == sheep_bag.len() {
+            //     break;
+            // }
 
             // T: Search an alive sheeps in the bag of the same location of wolfs (START)
             for next_sheep in dead_sheep_index..sheep_bag.len() {
 
                 let sheep_entity = sheep_bag[next_sheep];
-                let sheep_data = query_sheeps.get(sheep_entity).unwrap().1;
+                let sheep_data = query_sheeps.get(sheep_entity).expect("error").1;
 
                 // T: In case the sheep is alive(or energy > 0) wolf eat the sheep
                 if sheep_data.energy > 0. {
+
+                    // T: TEMP debug purpose
+                    // let mut iter = sheep_list.iter();
+                    // let s = iter.find(|&&e|{e == sheep_entity}).unwrap();
 
                     parallel_commands.command_scope(|mut commands| {
                         commands.entity(sheep_entity).despawn();
                     });
 
+                    // T: retrieve wolf_data and bind the Mutex for energy
                     let mut wolf_data = query_wolfs.get(*wolf_entity).unwrap().1;
                     let mut wolf_energy = wolf_data.energy.lock().unwrap();
                     *wolf_energy += GAIN_ENERGY_WOLF;
@@ -529,6 +535,8 @@ fn step (
         }
         // T: for all the wolves in the bag (END)
     });
+
+    
 
     std::mem::drop(span);
     // T: Wolves eat (END)
@@ -559,7 +567,7 @@ fn step (
         |(entity, wolf_data, loc)| {
 
             let mut energy_wolf = wolf_data.energy.lock().unwrap();
-                  *energy_wolf -= ENERGY_CONSUME;
+            *energy_wolf -= ENERGY_CONSUME;
 
                   parallel_commands.command_scope(|mut commands| {
       
@@ -569,8 +577,6 @@ fn step (
                 #[cfg(any(feature="fixed_random"))]
                 let mut rng_div = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
                 
-            
-
                       if *energy_wolf > 0. && rng_div.gen_bool(WOLF_REPR as f64) {
 
                         #[cfg(any(feature = "debug_support"))] {
@@ -618,6 +624,8 @@ fn step (
     std::mem::drop(span);
     // T: Reproduce wolves (END)
 }
+
+
 
 
 
