@@ -28,6 +28,10 @@ impl RNG {
         self.inner.set_stream(stream);
     }
 
+    pub fn gen_u64(&mut self) -> u64 {
+        self.inner.gen()
+    }
+
     // T: TODO verify if it is useless
     pub fn gen(&mut self) -> f32 {
         self.float_range.sample(&mut self.inner)
