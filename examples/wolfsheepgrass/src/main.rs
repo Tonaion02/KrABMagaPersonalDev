@@ -38,13 +38,14 @@ use std::sync::Mutex;
 
 
 
-// T: model's import
+// T: model's import (START)
 mod model;
 use crate::model::animals::Sheep;
 use crate::model::animals::Wolf;
 use crate::model::animals::Location;
 use crate::model::animals::LastLocation;
 use crate::model::animals::Agent;
+// T: model's import (END)
 
 use engine::agent;
 use engine::bevy_ecs::query;
@@ -169,13 +170,6 @@ lazy_static! {
 pub struct SheepField;
 pub struct WolfField;
 
-use crate::engine::fields::atomic_grid::AtomicGrid2D;
-pub struct CountWolfs;
-
-#[derive(Component)]
-#[component(storage="SparseSet")]
-pub struct Death;
-
 
 
 
@@ -186,8 +180,6 @@ use krabmaga::*;
 
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
 fn main() {
-
-    println!("{}", *NUM_INITIAL_SHEEPS);
 
     let now = Instant::now();
 
@@ -237,8 +229,7 @@ fn build_simulation() -> Simulation {
     
     app.add_systems(Update, step.in_set(Step));
 
-    // Must run after the despawning of entities
-    // app.add_systems(Update, count_wolfs_for_location.in_set(BeforeStep));
+    // T: Must run after the despawning of entities
     app.add_systems(Update, update_wolves_field.in_set(BeforeStep));
     app.add_systems(Update, update_sheeps_field.in_set(BeforeStep));
     app.add_systems(Update, grass_grow.in_set(BeforeStep));
@@ -246,8 +237,11 @@ fn build_simulation() -> Simulation {
     // app.add_systems(Update, count_agents.in_set(BeforeStep));
     // app.add_systems(Update, count_sheeps.in_set(BeforeStep));
     // app.add_systems(Update, count_wolfs.in_set(BeforeStep));
-    app.add_systems(Update, population_debug_info.in_set(BeforeStep).before(count_wolfs_for_location).before(update_sheeps_field).before(grass_grow));
-    app.add_systems(Update, print_step.in_set(BeforeStep).before(population_debug_info).before(count_wolfs_for_location).before(update_sheeps_field).before(grass_grow));
+
+    #[cfg(any(feature = "debug_support"))]
+    app.add_systems(Update, population_debug_info.in_set(BeforeStep).before(update_wolves_field).before(update_sheeps_field).before(grass_grow));
+    #[cfg(any(feature = "debug_support"))]
+    app.add_systems(Update, print_step.in_set(BeforeStep).before(population_debug_info).before(update_wolves_field).before(update_sheeps_field).before(grass_grow));
 
     simulation
 }
@@ -351,8 +345,6 @@ fn step (
     let span = info_span!("sheeps reproduce");
     let span = span.enter();
 
-
-
     // T: sequential version
     //query_sheeps.iter_mut().for_each(|(entity, mut sheep_data, loc)| {
     // T: parallel version
@@ -391,8 +383,6 @@ fn step (
 
     std::mem::drop(span);
     // T: Sheeps reproduce (END)
-
-
 
 
 
@@ -441,26 +431,16 @@ fn step (
         // T: for all the wolves in the bag (END)
     });
 
-    
-
     std::mem::drop(span);
     // T: Wolves eat (END)
 
 
 
     // T: Reproduce wolves (START)
-    #[cfg(any(feature = "debug_support"))]
-    let mut count_dead_wolfs = Arc::new(Mutex::new(0u64));
-
-    #[cfg(any(feature = "debug_support"))]
-    let mut count_borned_wolfs = Arc::new(Mutex::new(0u64));
-
-    let span = info_span!("reproducing wolfs");
+    let span = info_span!("reproducing wolves");
     let span = span.enter();
 
 
-    // #[cfg(not(any(feature="fixed_random")))]
-    // let mut rng_div = rand::thread_rng(); 
 
     // T: Sequential version
     // query_wolfs.iter_mut().for_each(
@@ -508,19 +488,7 @@ fn step (
 
 
 
-// Run before step
-// Run at the start, like an update of the fields.......(hoping that can work)
-fn count_wolfs_for_location(query_wolfs: Query<(&Wolf, &DBWrite<Location>)>, mut query_count_grid: Query<(&AtomicGrid2D<CountWolfs>)>) {
-
-    let mut grid = query_count_grid.single_mut();
-
-    query_wolfs.par_iter().for_each(|(wolf_data, wolf_loc)| {
-        let binding = grid.get_atomic_counter(&wolf_loc.0.0);
-        let mut counter = binding.lock().unwrap();
-        *counter += 1;
-    });
-}
-
+// T: Run before step
 fn update_wolves_field(query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>, mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>) {
 
     let mut wolfs_field = query_wolfs_field.single_mut();
@@ -629,41 +597,12 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         })
     });
 
-
-
-    // TEMP for debug
-    #[cfg(any(feature = "debug_support"))]
-    let mut count = 0;
-
-    #[cfg(any(feature = "debug_support"))]
-    (0..DIM_X as i32).into_iter().for_each(|x| {
-        (0..DIM_Y as i32).into_iter().for_each(|y| {
-
-            //if state.grass_field.get_value(&Int2D {x, y}) == FULL_GROWN {
-            //    count += 1;
-            //}
-            match grass_field.get_value(&Int2D {x, y}) {
-                Some(grass) => {
-                    if grass == FULL_GROWN {
-                        count += 1;
-                    }
-                }
-                None => {
-
-                }
-            }
-        })
-    });
-
-    #[cfg(any(feature = "debug_support"))]
-    println!("count: {}",count);
-    // TEMP for debug
-
     commands.spawn((grass_field));
     // T: generate the grass (END)
 
 
-    // T: generate sheeps (START)
+
+    // T: generate sheep (START)
     #[cfg(any(feature = "debug_support"))]
     println!("generate sheeps");
 
@@ -695,9 +634,11 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
 
     let sheeps_field = DenseBagGrid2D::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
     commands.spawn((sheeps_field));
-    // T: generate sheeps (END)
+    // T: generate sheep (END)
 
-    // T: generate wolfs (START)
+
+
+    // T: generate wolves (START)
     #[cfg(any(feature = "debug_support"))]
     println!("genereate wolfs");
 
@@ -725,8 +666,8 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         ));
     }
 
-    //commands.spawn((AtomicGrid2D::<CountWolfs>::new(0u32, DIM_X as i32, DIM_Y as i32)));
     commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
+    // T: generate wolves (END)
 }
 
 
