@@ -768,7 +768,7 @@ fn save_elapsed_time(elapsed_time: core::time::Duration) {
     use std::io::prelude::*;
     
     //Write on file the elapsed time
-    let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");
+    let path = Path::new("elapsed_time.txt");
     let display = path.display();
 
     // Open a file in write-only mode
