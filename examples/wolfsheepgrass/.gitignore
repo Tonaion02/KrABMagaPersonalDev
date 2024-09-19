@@ -2,3 +2,5 @@
 Cargo.lock
 .idea
 /output
+
+elapsed_time.txt

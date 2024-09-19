@@ -25,6 +25,9 @@ use crate::rayon::iter::ParallelIterator;
 use crate::rayon::iter::IndexedParallelIterator;
 // T: importing rayon (END)
 
+// T: importing lazy_static
+use lazy_static::lazy_static;
+
 use std::env::consts::EXE_SUFFIX;
 use std::time::Instant;
 
@@ -35,7 +38,6 @@ use std::sync::Mutex;
 
 
 
-//use crate::model::state::WsgState;
 // T: model's import
 mod model;
 use crate::model::animals::Sheep;
@@ -109,16 +111,53 @@ pub const WOLF_REPR: f64 = 0.1;
 
 pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-pub const STEPS: u32 = 200;
-pub const NUM_THREADS: usize = 4;
-pub const DIM_X: f64 = 5000.;
-pub const DIM_Y: f64 = DIM_X;
-pub const NUM_AGENTS: f64 = 2000000.;
-pub const PERC_SHEEPS: f64 = 0.6;
-pub const PERC_WOLFS: f64 = 0.4;
-pub const NUM_INITIAL_SHEEPS: u64 = (NUM_AGENTS * PERC_SHEEPS) as u64;
-pub const NUM_INITIAL_WOLFS: u64 = (NUM_AGENTS * PERC_WOLFS) as u64;
+// pub const STEPS: u32 = 200;
+// pub const NUM_THREADS: usize = 4;
+// pub const DIM_X: f64 = 5000.;
+// pub const DIM_Y: f64 = DIM_X;
+// pub const NUM_AGENTS: f64 = 2000000.;
+// pub const PERC_SHEEPS: f64 = 0.6;
+// pub const PERC_WOLFS: f64 = 0.4;
+// pub const NUM_INITIAL_SHEEPS: u64 = (NUM_AGENTS * PERC_SHEEPS) as u64;
+// pub const NUM_INITIAL_WOLFS: u64 = (NUM_AGENTS * PERC_WOLFS) as u64;
 pub const SEED: u64 = 21382193872;
+
+// MODIFIED: now we retrieve this parameters from command line
+// but that acts like "static constants", little trick from here:
+// https://stackoverflow.com/questions/37405835/populating-a-static-const-with-an-environment-variable-at-runtime-in-rust
+lazy_static! {
+    static ref NUM_THREADS: usize = 
+    match (std::env::args().collect::<Vec<String>>().get(1)) {
+        Some(value) => { value.clone().parse::<usize>().unwrap() }
+        None => { 0usize }
+    };
+
+    static ref NUM_AGENTS: u64 = 
+    match (std::env::args().collect::<Vec<String>>().get(2)) {
+        Some(value) => { value.clone().parse::<u64>().unwrap() }
+        None => { 0u64 }
+    };
+
+    static ref DIM_X: f64 = 
+    match (std::env::args().collect::<Vec<String>>().get(3)) {
+        Some(value) => { value.clone().parse::<f64>().unwrap() }
+        None => { 0. }
+    };
+
+    static ref STEPS: u32 =
+    match (std::env::args().collect::<Vec<String>>().get(4)) {
+        Some(value) => { value.clone().parse::<u32>().unwrap() }
+        None => { 0u32 }
+    };
+
+    static ref DIM_Y: f64 = *DIM_X;
+
+    static ref PERC_SHEEPS: f64 = 0.6;
+    static ref PERC_WOLFS: f64 = 0.4;
+    
+    static ref NUM_INITIAL_SHEEPS: u64 = ((*NUM_AGENTS as f64) * (*PERC_SHEEPS)) as u64;
+    static ref NUM_INITIAL_WOLFS: u64 = ((*NUM_AGENTS as f64) * (*PERC_WOLFS)) as u64;
+}
 // T: new costants(END)
 // T: Constants(END)
 
@@ -147,6 +186,9 @@ use krabmaga::*;
 
 #[cfg(not(any(feature = "visualization", feature = "visualization_wasm")))]
 fn main() {
+
+    println!("{}", *NUM_INITIAL_SHEEPS);
+
     let now = Instant::now();
 
     // T: why steps are not a constant?
@@ -167,7 +209,7 @@ fn main() {
     simulation.run();
 
     let elapsed_time = now.elapsed();
-    println!("Elapsed: {:.2?}, steps per second: {}", elapsed_time, STEPS as f64 / elapsed_time.as_secs_f64());
+    println!("Elapsed: {:.2?}, steps per second: {}", elapsed_time, *STEPS as f64 / elapsed_time.as_secs_f64());
     save_elapsed_time(elapsed_time);
 }
 
@@ -175,9 +217,9 @@ fn build_simulation() -> Simulation {
     
     let mut simulation = Simulation::build();
     simulation = simulation
-    .with_steps(STEPS)
-    .with_num_threads(NUM_THREADS)
-    .with_simulation_dim(Real2D {x: DIM_X as f32, y: DIM_Y as f32}) 
+    .with_steps(*STEPS)
+    .with_num_threads(*NUM_THREADS)
+    .with_simulation_dim(Real2D {x: *DIM_X as f32, y: *DIM_Y as f32}) 
     .with_seed(SEED);
 
     //Add the components that must be double buffered
@@ -259,7 +301,7 @@ fn step (
                 let ym = y + (y - pos.y);
                 let new_loc = Int2D { x: xm, y: ym };
                 // TRY TO MOVE WITH MOMENTUM_PROBABILITY
-                if xm >= 0 && xm < DIM_X as i32 && ym >= 0 && ym < DIM_Y as i32 {
+                if xm >= 0 && xm < *DIM_X as i32 && ym >= 0 && ym < *DIM_Y as i32 {
                     loc.0 = Location(new_loc);
                     last_loc.0 = LastLocation(Some(Int2D { x, y }));
                     moved = true;
@@ -269,9 +311,9 @@ fn step (
 
         if !moved {
             let xmin = if x > 0 { -1 } else { 0 };
-            let xmax = i32::from(x < DIM_X as i32 - 1);
+            let xmax = i32::from(x < *DIM_X as i32 - 1);
             let ymin = if y > 0 { -1 } else { 0 };
-            let ymax = i32::from(y < DIM_Y as i32 - 1);
+            let ymax = i32::from(y < *DIM_Y as i32 - 1);
 
             // let nx = if rng.gen_bool(0.5) { xmin } else { xmax };
             // let ny = if rng.gen_bool(0.5) { ymin } else { ymax };
@@ -561,10 +603,10 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
     #[cfg(any(feature = "debug_support"))]
     println!("generate grass");
 
-    let mut grass_field = DenseSingleValueGrid2D::<u16>::new(DIM_X as i32, DIM_Y as i32);
+    let mut grass_field = DenseSingleValueGrid2D::<u16>::new(*DIM_X as i32, *DIM_Y as i32);
 
-    (0..DIM_X as i64).into_iter().for_each(|x| {
-        (0..DIM_Y as i64).into_iter().for_each(|y| {
+    (0.. *DIM_X as i64).into_iter().for_each(|x| {
+        (0.. *DIM_Y as i64).into_iter().for_each(|y| {
 
             #[cfg(not(any(feature = "fixed_random")))]
             let mut rng = rand::thread_rng();
@@ -625,16 +667,16 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
     #[cfg(any(feature = "debug_support"))]
     println!("generate sheeps");
 
-    for sheep_id in 0..NUM_INITIAL_SHEEPS {
+    for sheep_id in 0.. *NUM_INITIAL_SHEEPS {
 
-        let id_to_assign = sheep_id + NUM_INITIAL_WOLFS;
+        let id_to_assign = sheep_id + *NUM_INITIAL_WOLFS;
 
         #[cfg(not(any(feature = "fixed_random")))]
         let mut rng = rand::thread_rng();
         #[cfg(any(feature="fixed_random"))]
         let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step + id_to_assign);
 
-        let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
+        let loc = Int2D { x: rng.gen_range(0.. *DIM_X as i32), y: rng.gen_range(0.. *DIM_Y as i32) };
         let initial_energy = rng.gen_range(0. ..(2. * GAIN_ENERGY_SHEEP));
         //println!("{}", initial_energy);
 
@@ -647,11 +689,11 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
             DoubleBuffered::new(Location(loc)),
             DoubleBuffered::new(LastLocation(None)),
 
-            Agent { id: id_to_assign + NUM_INITIAL_WOLFS },
+            Agent { id: id_to_assign + *NUM_INITIAL_WOLFS },
         ));
     }
 
-    let sheeps_field = DenseBagGrid2D::<Entity, SheepField>::new(DIM_X as i32, DIM_Y as i32);
+    let sheeps_field = DenseBagGrid2D::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
     commands.spawn((sheeps_field));
     // T: generate sheeps (END)
 
@@ -659,14 +701,14 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
     #[cfg(any(feature = "debug_support"))]
     println!("genereate wolfs");
 
-    for wolf_id in 0..NUM_INITIAL_WOLFS {
+    for wolf_id in 0.. *NUM_INITIAL_WOLFS {
 
         #[cfg(not(any(feature = "fixed_random")))]
         let mut rng = rand::thread_rng();
         #[cfg(any(feature="fixed_random"))]
         let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step + wolf_id);
 
-        let loc = Int2D { x: rng.gen_range(0..DIM_X as i32), y: rng.gen_range(0..DIM_Y as i32) };
+        let loc = Int2D { x: rng.gen_range(0.. *DIM_X as i32), y: rng.gen_range(0.. *DIM_Y as i32) };
         let initial_energy = rng.gen_range(0. ..(2. * GAIN_ENERGY_WOLF));
 
         let entity_command = commands.spawn(
@@ -684,7 +726,7 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
     }
 
     //commands.spawn((AtomicGrid2D::<CountWolfs>::new(0u32, DIM_X as i32, DIM_Y as i32)));
-    commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(DIM_X as i32, DIM_Y as i32)));
+    commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
 }
 
 
