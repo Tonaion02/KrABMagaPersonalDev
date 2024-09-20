@@ -31,8 +31,11 @@ use lazy_static::lazy_static;
 use std::env::consts::EXE_SUFFIX;
 use std::time::Instant;
 
+use std::hash::Hash;
+
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::RwLock;
 
 
 
@@ -66,6 +69,8 @@ use engine::location::Int2D;
 use krabmaga::engine::simulation::Simulation;
 use krabmaga::engine::fields::dense_number_grid_2d_t::DenseSingleValueGrid2D;
 use krabmaga::engine::fields::dense_object_grid_2d_t::DenseBagGrid2D;
+
+use krabmaga::engine::fields::dense_object_grid_2d_t::ParDenseBagGrid2D;
 
 use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
 
@@ -256,9 +261,11 @@ fn step (
     mut query_sheeps: Query<(Entity, &mut Sheep, &DBRead<Location>)>,
 
     mut query_agents: Query<(&Agent, &mut DBWrite<Location>, &mut DBWrite<LastLocation>)>,
-    
-    query_wolfs_field: Query<(&DenseBagGrid2D<Entity, WolfField>)>,
-    query_sheeps_field: Query<(&DenseBagGrid2D<Entity, SheepField>)>,
+
+    query_wolfs_field: Query<(&ParDenseBagGrid2D<Entity, WolfField>)>,
+    query_sheeps_field: Query<(&ParDenseBagGrid2D<Entity, SheepField>)>,
+    // query_wolfs_field: Query<(&DenseBagGrid2D<Entity, WolfField>)>,
+    // query_sheeps_field: Query<(&DenseBagGrid2D<Entity, SheepField>)>,
 
     query_wolfs: Query<(Entity, &Wolf, &DBRead<Location>)>,
 
@@ -274,8 +281,6 @@ fn step (
     // T: move agents (START)
     let span = info_span!("move agents");
     let span = span.enter();
-
-
 
     query_agents.par_iter_mut().for_each(|(agent, mut loc, mut last_loc)|{
 
@@ -392,18 +397,21 @@ fn step (
 
     let sheep_field = query_sheeps_field.single();
     let wolfs_field = query_wolfs_field.single();
-    
-    let sheep_field_iter = sheep_field.bags.par_iter();
-    wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag, sheep_bag)|{
 
-        let mut sheep_index = 0usize;
+    let sheep_field_iter = sheep_field.bags.par_iter();
+    wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag_lock, sheep_bag_lock)| {
+
+        let wolf_bag = wolf_bag_lock.read().unwrap();
+        let sheep_bag = sheep_bag_lock.read().unwrap();
+
         let mut wolf_index = 0usize;
+        let mut sheep_index = 0usize;
 
         // T: for all the wolves in the bag (START)
-        while (wolf_index < wolf_bag.len()) {
+        while(wolf_index < wolf_bag.len()) {
 
             // T: Search an alive sheep in the bag of sheep (START)
-            while (sheep_index < sheep_bag.len()) {
+            while(sheep_index < sheep_bag.len()) {
 
                 let sheep_entity = sheep_bag[sheep_index];
                 let sheep_data = query_sheeps.get(sheep_entity).unwrap().1;
@@ -430,6 +438,44 @@ fn step (
         }
         // T: for all the wolves in the bag (END)
     });
+
+    // let sheep_field_iter = sheep_field.bags.par_iter();
+    // wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag, sheep_bag)|{
+
+    //     let mut sheep_index = 0usize;
+    //     let mut wolf_index = 0usize;
+
+    //     // T: for all the wolves in the bag (START)
+    //     while (wolf_index < wolf_bag.len()) {
+
+    //         // T: Search an alive sheep in the bag of sheep (START)
+    //         while (sheep_index < sheep_bag.len()) {
+
+    //             let sheep_entity = sheep_bag[sheep_index];
+    //             let sheep_data = query_sheeps.get(sheep_entity).unwrap().1;
+
+    //             sheep_index += 1;
+
+    //             if sheep_data.energy > 0. {
+
+    //                 parallel_commands.command_scope(|mut commands: Commands| {
+    //                     commands.entity(sheep_entity).despawn();
+    //                 });
+
+    //                 let wolf_entity = wolf_bag[wolf_index];
+    //                 let wolf_data = query_wolfs.get(wolf_entity).unwrap().1;
+    //                 let mut energy_wolf = wolf_data.energy.lock().unwrap();
+    //                 *energy_wolf += GAIN_ENERGY_WOLF;
+
+    //                 break;
+    //             }
+    //         }
+    //         // T: Search an alive sheep in the bag of sheep (END)
+
+    //         wolf_index += 1;
+    //     }
+    //     // T: for all the wolves in the bag (END)
+    // });
 
     std::mem::drop(span);
     // T: Wolves eat (END)
@@ -489,35 +535,51 @@ fn step (
 
 
 // T: Run before step
-fn update_wolves_field(query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>, mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>) {
+fn update_wolves_field(
+    query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>, 
+    // mut query_wolfs_field: Query<(&mut DenseBagGrid2D<Entity, WolfField>)>,
+    mut query_wolfs_field: Query<(&mut ParDenseBagGrid2D<Entity, WolfField>)>,
+) {
 
     let mut wolfs_field = query_wolfs_field.single_mut();
     wolfs_field.clear();
 
     let process_wolf = |(entity, wolf, loc) : (Entity, &Wolf, &DBWrite<Location>)| {
 
-        let energy = wolf.energy.lock().unwrap();
-        if *energy > 0. {
-            wolfs_field.push_object_location(entity, &loc.0.0);
-        }
+        // T: TODO check if it is necessary to verify that the wolves are alive
+        // let energy = wolf.energy.lock().unwrap();
+        // if *energy > 0. {
+        //     wolfs_field.push_object_location(entity, &loc.0.0);
+        // }
 
+        let mut wolf_bag = wolfs_field.get_write_bag(&loc.0.0);
+        wolf_bag.push(entity);
     };
 
-    query_wolfs.iter().for_each(process_wolf);
+    query_wolfs.par_iter().for_each(process_wolf);
 }
 
-fn update_sheeps_field(query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>, mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>) {
+fn update_sheeps_field(
+    query_sheeps: Query<(Entity, &Sheep, &DBWrite<Location>)>, 
+    mut query_sheeps_field: Query<(&mut ParDenseBagGrid2D<Entity, SheepField>)>,
+    // mut query_sheeps_field: Query<(&mut DenseBagGrid2D<Entity, SheepField>)>,
+) {
 
     let mut sheeps_field = query_sheeps_field.single_mut();
     sheeps_field.clear();
 
     let process_sheep = |(entity, sheep, loc): (Entity, &Sheep, &DBWrite<Location>)| {
-        if sheep.energy > 0. {
-            sheeps_field.push_object_location(entity, &loc.0.0);
-        }
+
+        // T: TODO check if it is necessary this control
+        // if sheep.energy > 0. {
+        //     sheeps_field.push_object_location(entity, &loc.0.0);
+        // }
+
+        let mut sheep_bag = sheeps_field.get_write_bag(&loc.0.0);
+        sheep_bag.push(entity);
     };
 
-    query_sheeps.iter().for_each(process_sheep);
+    query_sheeps.par_iter().for_each(process_sheep);
 }
 
 fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
@@ -632,8 +694,9 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         ));
     }
 
-    let sheeps_field = DenseBagGrid2D::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
-    commands.spawn((sheeps_field));
+    // let sheep_field = DenseBagGrid2D::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
+    let sheep_field = ParDenseBagGrid2D::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
+    commands.spawn((sheep_field));
     // T: generate sheep (END)
 
 
@@ -666,7 +729,8 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         ));
     }
 
-    commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
+    //commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
+    commands.spawn((ParDenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
     // T: generate wolves (END)
 }
 
