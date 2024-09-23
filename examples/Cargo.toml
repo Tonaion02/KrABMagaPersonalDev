@@ -13,4 +13,9 @@ members = [
     "template",
     "virusnetwork",
     "wolfsheepgrass",
+
+    # krabmaga's projects
+    "wolfsheepgrass_exp_3",
+    "wolfsheepgrass_exp_4",
+    "wolfsheepgrass_exp_5",
 ]
