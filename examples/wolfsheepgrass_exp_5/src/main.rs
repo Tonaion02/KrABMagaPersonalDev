@@ -68,9 +68,8 @@ use engine::location::Real2D;
 use engine::location::Int2D;
 use krabmaga::engine::simulation::Simulation;
 use krabmaga::engine::fields::dense_number_grid_2d_t::DenseSingleValueGrid2D;
-use krabmaga::engine::fields::dense_object_grid_2d_t::DenseBagGrid2D;
-
-use krabmaga::engine::fields::dense_object_grid_2d_t::ParDenseBagGrid2D;
+// use krabmaga::engine::fields::dense_object_grid_2d_t::DenseBagGrid2D;
+use krabmaga::engine::fields::parallel_dense_object_grid_2d_t::ParDenseBagGrid2D;
 
 use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
 
