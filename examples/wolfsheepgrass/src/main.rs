@@ -110,11 +110,11 @@ pub const WOLF_REPR: f64 = 0.1;
 
 pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-pub const STEPS: u32 = 100;
+pub const STEPS: u32 = 200;
 pub const NUM_THREADS: usize = 4;
-pub const DIM_X: f64 = 50.;
+pub const DIM_X: f64 = 5000.;
 pub const DIM_Y: f64 = DIM_X;
-pub const NUM_AGENTS: f64 = 200.;
+pub const NUM_AGENTS: f64 = 2000000.;
 pub const PERC_SHEEPS: f64 = 0.6;
 pub const PERC_WOLFS: f64 = 0.4;
 pub const NUM_INITIAL_SHEEPS: u64 = (NUM_AGENTS * PERC_SHEEPS) as u64;

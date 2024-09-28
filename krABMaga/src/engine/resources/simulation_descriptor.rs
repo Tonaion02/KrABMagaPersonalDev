@@ -22,6 +22,8 @@ pub struct SimulationDescriptorT {
 
     // T: added to support fixed random(to put in RNG)
     pub seed: u64,
+
+    pub title: String,
 }
 
 impl Default for SimulationDescriptorT {
@@ -37,6 +39,8 @@ impl Default for SimulationDescriptorT {
             num_threads: 1,
 
             seed: 0,
+            
+            title: String::from("default-simulation-title"),
         }
     }
 

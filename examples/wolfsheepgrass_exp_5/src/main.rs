@@ -187,20 +187,6 @@ fn main() {
 
     let now = Instant::now();
 
-    // T: why steps are not a constant?
-    // T: probably they cannot be only a constant cause the fact
-    // T: that we need to access to steps from other sources
-    let step = 200;
-
-    // T: why dim are not a constant?
-    // T: same that above with steps
-    let dim: (i32, i32) = (50, 50);
-    // T: same that above
-    let initial_animals: (u32, u32) = ((200. * 0.6) as u32, (200. * 0.4) as u32);
-
-    // T: commented because out-dated
-    // let state = WsgState::new(dim, initial_animals);
-    // let _ = simulate!(state, step, 10);
     let simulation = build_simulation();
     simulation.run();
 
@@ -210,9 +196,15 @@ fn main() {
 }
 
 fn build_simulation() -> Simulation {
-    
+
+    // T: Setting rayon's enviroment variable
+    // T: TODO move this in the correct place
+    rayon::ThreadPoolBuilder::new().num_threads(*NUM_THREADS).build_global().unwrap();
+
+
     let mut simulation = Simulation::build();
     simulation = simulation
+    .with_title(String::from("WolfSheepGrass_exp_5"))
     .with_steps(*STEPS)
     .with_num_threads(*NUM_THREADS)
     .with_simulation_dim(Real2D {x: *DIM_X as f32, y: *DIM_Y as f32}) 

@@ -39,6 +39,8 @@ pub struct Simulation {
 
     // T: TODO verify if it is necessary
     num_threads: usize,
+
+    simulation_title: String,
 }
 
 impl Simulation {
@@ -103,7 +105,7 @@ impl Simulation {
         );
         //T: In case feature visualization is defined
 
-        Self { app, steps: None, num_threads: 1 }
+        Self { app, steps: None, num_threads: 1, simulation_title: String::from("default-simulation-title"), }
     }
 
     pub fn with_simulation_dim(mut self, simulation_dim: Real2D) -> Self {
@@ -202,6 +204,15 @@ impl Simulation {
         self
     }
 
+    pub fn with_title(mut self, title: String) -> Self {
+        
+        self.simulation_title = title.clone();
+        
+        self.app.world.get_resource_mut::<SimulationDescriptorT>().unwrap().title = title;
+
+        self
+    }
+
     pub fn add_field(&mut self, field: Field2D<Entity>) -> &mut Simulation {
         self.app.world.spawn((field,));
         self.app
@@ -211,6 +222,9 @@ impl Simulation {
     }
 
     pub fn run(mut self) {
+
+        println!("Starting: {} simulation", self.simulation_title);
+
         match self.steps {
             Some(steps) => {
                 for _ in 0..steps {
