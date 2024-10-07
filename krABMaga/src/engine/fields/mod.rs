@@ -21,3 +21,4 @@ pub mod dense_object_grid_2d_t;
 pub mod atomic_grid;
 
 pub mod parallel_dense_object_grid_2d_t;
+pub mod parallel_dense_object_grid_2d_exp_6;
