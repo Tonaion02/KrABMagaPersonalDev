@@ -115,15 +115,6 @@ pub const WOLF_REPR: f64 = 0.1;
 
 pub const MOMENTUM_PROBABILITY: f32 = 0.8;
 // T: new costants(START)
-// pub const STEPS: u32 = 200;
-// pub const NUM_THREADS: usize = 4;
-// pub const DIM_X: f64 = 5000.;
-// pub const DIM_Y: f64 = DIM_X;
-// pub const NUM_AGENTS: f64 = 2000000.;
-// pub const PERC_SHEEPS: f64 = 0.6;
-// pub const PERC_WOLFS: f64 = 0.4;
-// pub const NUM_INITIAL_SHEEPS: u64 = (NUM_AGENTS * PERC_SHEEPS) as u64;
-// pub const NUM_INITIAL_WOLFS: u64 = (NUM_AGENTS * PERC_WOLFS) as u64;
 pub const SEED: u64 = 21382193872;
 
 // MODIFIED: now we retrieve this parameters from command line
@@ -169,9 +160,10 @@ lazy_static! {
 
 
 
-// T: markers for fields
+// T: markers for fields (START)
 pub struct SheepField;
 pub struct WolfField;
+// T: markers for fields (END)
 
 
 
@@ -254,8 +246,6 @@ fn step (
 
     query_wolfs_field: Query<(&ParDenseBagGrid2D_exp_6<Entity, WolfField>)>,
     query_sheeps_field: Query<(&ParDenseBagGrid2D_exp_6<Entity, SheepField>)>,
-    // query_wolfs_field: Query<(&DenseBagGrid2D<Entity, WolfField>)>,
-    // query_sheeps_field: Query<(&DenseBagGrid2D<Entity, SheepField>)>,
 
     query_wolfs: Query<(Entity, &Wolf, &DBRead<Location>)>,
 
@@ -340,8 +330,6 @@ fn step (
     let span = info_span!("sheeps reproduce");
     let span = span.enter();
 
-    // T: sequential version
-    //query_sheeps.iter_mut().for_each(|(entity, mut sheep_data, loc)| {
     // T: parallel version
     query_sheeps.par_iter_mut().for_each(|(entity, mut sheep_data, loc)| {
 
@@ -391,8 +379,10 @@ fn step (
     let sheep_field_iter = sheep_field.bags.par_iter();
     wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag_lock, sheep_bag_lock)| {
 
+        // Locking resources to make parallelization (START) 
         let wolf_bag = wolf_bag_lock.read().unwrap();
         let sheep_bag = sheep_bag_lock.read().unwrap();
+        // Locking resources to make parallelization (END)
 
         let mut wolf_index = 0usize;
         let mut sheep_index = 0usize;
@@ -429,44 +419,6 @@ fn step (
         // T: for all the wolves in the bag (END)
     });
 
-    // let sheep_field_iter = sheep_field.bags.par_iter();
-    // wolfs_field.bags.par_iter().zip(sheep_field_iter).for_each(|(wolf_bag, sheep_bag)|{
-
-    //     let mut sheep_index = 0usize;
-    //     let mut wolf_index = 0usize;
-
-    //     // T: for all the wolves in the bag (START)
-    //     while (wolf_index < wolf_bag.len()) {
-
-    //         // T: Search an alive sheep in the bag of sheep (START)
-    //         while (sheep_index < sheep_bag.len()) {
-
-    //             let sheep_entity = sheep_bag[sheep_index];
-    //             let sheep_data = query_sheeps.get(sheep_entity).unwrap().1;
-
-    //             sheep_index += 1;
-
-    //             if sheep_data.energy > 0. {
-
-    //                 parallel_commands.command_scope(|mut commands: Commands| {
-    //                     commands.entity(sheep_entity).despawn();
-    //                 });
-
-    //                 let wolf_entity = wolf_bag[wolf_index];
-    //                 let wolf_data = query_wolfs.get(wolf_entity).unwrap().1;
-    //                 let mut energy_wolf = wolf_data.energy.lock().unwrap();
-    //                 *energy_wolf += GAIN_ENERGY_WOLF;
-
-    //                 break;
-    //             }
-    //         }
-    //         // T: Search an alive sheep in the bag of sheep (END)
-
-    //         wolf_index += 1;
-    //     }
-    //     // T: for all the wolves in the bag (END)
-    // });
-
     std::mem::drop(span);
     // T: Wolves eat (END)
 
@@ -478,8 +430,6 @@ fn step (
 
 
 
-    // T: Sequential version
-    // query_wolfs.iter_mut().for_each(
     // T: Parallel version
     query_wolfs.par_iter().for_each(
         |(entity, wolf_data, loc)| {
@@ -560,7 +510,7 @@ fn update_sheeps_field(
 }
 
 fn grass_grow(mut query_grass_field: Query<(&mut DenseSingleValueGrid2D<u16>)>) {
-    // TODO Test if is good or not
+    // TODO Test if it is good or not for performances
     // TODO insert here some spans
     let mut grass_field = &mut query_grass_field.single_mut();
 
@@ -710,37 +660,6 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
     //commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
     commands.spawn((ParDenseBagGrid2D_exp_6::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
     // T: generate wolves (END)
-}
-
-
-
-
-#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
-mod visualization;
-
-#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
-use {
-    crate::visualization::vis_state::VisState, krabmaga::bevy::prelude::Color,
-    krabmaga::engine::fields::dense_number_grid_2d::DenseNumberGrid2D,
-    krabmaga::visualization::fields::number_grid_2d::BatchRender,
-    krabmaga::visualization::visualization::Visualization,
-};
-
-// Main used when a visualization feature is applied
-#[cfg(any(feature = "visualization", feature = "visualization_wasm"))]
-fn main() {
-    let dim: (i32, i32) = (25, 25);
-
-    let initial_animals: (u32, u32) = ((60. * 0.6) as u32, (60. * 0.4) as u32);
-
-    let state = WsgState::new(dim, initial_animals);
-    let mut app = Visualization::default()
-        .with_background_color(Color::rgb(255., 255., 255.))
-        .with_simulation_dimensions(dim.0 as f32, dim.1 as f32)
-        .with_window_dimensions(1000., 700.)
-        .setup::<VisState, WsgState>(VisState, state);
-    app.add_system(DenseNumberGrid2D::batch_render);
-    app.run()
 }
 
 // T: TODO check what macro make this work before ECS experiment
