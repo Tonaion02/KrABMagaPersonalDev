@@ -195,7 +195,7 @@ fn build_simulation() -> Simulation {
 
     let mut simulation = Simulation::build();
     simulation = simulation
-    .with_title(String::from("WolfSheepGrass_exp_5"))
+    .with_title(String::from("WolfSheepGrass_exp_6"))
     .with_steps(*STEPS)
     .with_num_threads(*NUM_THREADS)
     .with_simulation_dim(Real2D {x: *DIM_X as f32, y: *DIM_Y as f32}) 
