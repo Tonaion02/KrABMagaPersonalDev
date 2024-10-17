@@ -559,10 +559,21 @@ fn step (
                     commands.entity(entity).despawn();
                 });
             }              
-
+            
         }
     );
     
+    std::mem::drop(span);
+    // T: Reproduce wolves (END)
+    
+
+
+    // T: factively spawn entities at the end of the step (START)
+    let span = info_span!("creating commands to spawn entities");
+    let span = span.enter();
+
+
+
     parallel_commands.command_scope(|mut commands:Commands| {
         // wolvesBuffer.drain::<Vec<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>>().into_iter()
 
@@ -584,21 +595,7 @@ fn step (
     });
 
     std::mem::drop(span);
-    // T: Reproduce wolves (END)
-}
-
-
-
-
-
-// T: System that we are trying to create to delete and spawn entities at the end of the step
-
-// T: TODO think a way to break-up this system and move a part(the most general part) directly
-// T: in Simulation Object.
-fn cimitery_system(
-    world: &mut World,
-) {
-
+    // T: factively spawn entities at the end of the step (END)
 }
 
 
@@ -753,7 +750,6 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         ));
     }
 
-    // let sheep_field = DenseBagGrid2D::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
     let sheep_field = ParDenseBagGrid2D_exp_6::<Entity, SheepField>::new(*DIM_X as i32, *DIM_Y as i32);
     commands.spawn((sheep_field));
     // T: generate sheep (END)
@@ -788,15 +784,17 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
         ));
     }
 
-    //commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
-    commands.spawn((ParDenseBagGrid2D_exp_6::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
+    let wolves_field = ParDenseBagGrid2D_exp_6::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32);
+    commands.spawn((wolves_field));
     // T: generate wolves (END)
 
 
 
 
     // T: Initialize buffers for CimiterySystem (START)
-    // T: TODO replace this definitions with some types of macros
+    // T: TODO replace this definitions with some types of macros that can save
+    // T: some orrible syntax to people. 
+    // T: I want to keep all the orrible syntax only for me.
     let mut wolvesBuffer = AgentBuffer::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), WolvesBuffer>::new();
     commands.spawn((wolvesBuffer));
 
