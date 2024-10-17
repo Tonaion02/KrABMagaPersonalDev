@@ -30,6 +30,7 @@ use engine::resources::cimitery_buffer_exp_7::CimiteryBufferExp7;
 use lazy_static::lazy_static;
 
 use std::env::consts::EXE_SUFFIX;
+use std::marker::PhantomData;
 use std::time::Instant;
 
 use std::hash::Hash;
@@ -99,6 +100,8 @@ use krabmaga::engine::bevy_ecs::prelude::EntityWorldMut;
 use krabmaga::engine::ParallelCommands;
 use krabmaga::engine::Without;
 use krabmaga::engine::bevy_prelude::*;
+
+use krabmaga::engine::bevy_utils::Parallel;
 // T: bevy's import (START)
 
 // T: debug's import (START)
@@ -164,11 +167,6 @@ lazy_static! {
 }
 // T: new costants(END)
 
-// T: TODO try to access to this RefCell directly with an Unsafe Block
-thread_local! {
-    pub static wolvesBuffer: RefCell<Vec<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>> = RefCell::new(Vec::new());
-}
-
 // T: Constants(END)
 
 
@@ -182,6 +180,27 @@ pub struct WolfField;
 pub struct WolvesBuffer;
 pub struct SheepBuffer;
 // T: markers for fields (END)
+
+// T: create structure to keep buffers (START)
+#[derive(Component)]
+pub struct AgentBuffer<O: Send,M: Sized> {
+    pub internal_buffer: Parallel::<Vec<O>>, 
+
+    phantom: PhantomData<M>,
+}
+
+impl<O: Send, M: Sized> AgentBuffer<O, M> {
+
+    pub fn new() -> AgentBuffer<O, M> {
+        AgentBuffer {
+            internal_buffer: Parallel::<Vec<O>>::default(),
+
+            phantom: PhantomData,
+        }
+    }
+
+}
+// T: create structure to keep buffers (END)
 
 
 
@@ -213,40 +232,13 @@ fn build_simulation() -> Simulation {
 
     rayon::ThreadPoolBuilder::new().
     num_threads(*NUM_THREADS).
-    // T: TODO try to make the numbering of threads like usize that is between the interval 0..NUM_THREADS
-    // T: so we can directly use that like index in our data structure
-    // T: probably this must be made before any other operation, so we can try to remove from Simulation the
-    // T: method with_num_threads and add this info directly in the constructor of Simulation. 
+
     start_handler(|real_thread_id| {
         thread_id.with(|cell| { cell.set(real_thread_id); });
-
-        // T: TEMP
-        // T: CODE EXAMPLE TO ADD SOMETHING TO THE COMMON VECTOR
-        // wolvesBuffer.with(|ref_cell| {ref_cell.borrow_mut().push((
-        //             Wolf {
-        //                 id: 0,
-        //                 energy: Mutex::new(0.0),
-        //             }, 
-          
-        //             DoubleBuffered::new(Location(Int2D {x: 0, y: 0})),
-        //             DoubleBuffered::new(LastLocation(None)),
-          
-        //             Agent {id: 0,},));});
-
-        // T: TEMP for debugging purpose
-        // let _thread_id = thread_id.get();
-        // println!("Thread id {_thread_id}");
     }).
     build_global().
     unwrap();
     // T: Setting rayon's enviroment variable (END)
-
-
-
-
-
-    use engine::resources::cimitery_buffer_exp_7::CimiteryBufferExp7;
-    let cimitery_buffer = CimiteryBufferExp7::<Entity, usize>::new(*NUM_THREADS);
 
 
 
@@ -310,9 +302,24 @@ fn step (
 
     mut parallel_commands: ParallelCommands,
 
+    mut query_wolves_buffer: Query<(&mut AgentBuffer<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), WolvesBuffer>)>,
+    mut query_sheep_buffer: Query<(&mut AgentBuffer<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), SheepBuffer>)>,
+
     simulation_descriptor: Res<SimulationDescriptorT>,
 )
 {
+    // T: TEMP
+    // T: Trying to instance a parallel collection
+    // let mut wolvesBuffer = Parallel::<Vec<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>>::default();
+    // let mut sheepBuffer = Parallel::<Vec<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>>::default();
+    // wolvesBuffer.scope(|(a)| {
+    // });
+
+    // T: Retrieve buffers for each category of agents (START)
+    let wolves_buffer = query_wolves_buffer.single_mut();
+    let sheep_buffer = query_sheep_buffer.single_mut();
+    // T: Retrieve buffers for each category of agents (END)
+
     let mut grass_field = query_grass_field.single_mut();
 
 
@@ -394,33 +401,48 @@ fn step (
 
         sheep_data.energy -= ENERGY_CONSUME;
 
-        parallel_commands.command_scope(|mut commands| {
-
-            #[cfg(not(any(feature="fixed_random")))]
-            let mut rng = rand::thread_rng();
-            #[cfg(any(feature="fixed_random"))]
-            let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
+        
+        #[cfg(not(any(feature="fixed_random")))]
+        let mut rng = rand::thread_rng();
+        #[cfg(any(feature="fixed_random"))]
+        let mut rng = RNG::new(simulation_descriptor.rand_seed, simulation_descriptor.current_step);
 
             if sheep_data.energy > 0. && rng.gen_bool(SHEEP_REPR as f64) {
     
                 sheep_data.energy /= 2.0;
 
-                commands.spawn((
-                    Sheep {
-                        id: 0,
-                        energy: sheep_data.energy,
-                    },
+                // commands.spawn((
+                //     Sheep {
+                //         id: 0,
+                //         energy: sheep_data.energy,
+                //     },
 
-                    DoubleBuffered::new(Location(loc.0.0)),
-                    DoubleBuffered::new(LastLocation(None)),
+                //     DoubleBuffered::new(Location(loc.0.0)),
+                //     DoubleBuffered::new(LastLocation(None)),
 
-                    Agent {id: 0},
-                ));
-            }
-            if sheep_data.energy <= 0. {
-                commands.entity(entity).despawn();
-            }
-        });
+                //     Agent {id: 0},
+                // ));
+
+                sheep_buffer.internal_buffer.scope(|coll| {
+                    coll.push((
+                            Sheep {
+                                id: 0,
+                                energy: sheep_data.energy,
+                            },
+        
+                            DoubleBuffered::new(Location(loc.0.0)),
+                            DoubleBuffered::new(LastLocation(None)),
+        
+                            Agent {id: 0},
+                        ));
+                    });
+                    
+                }
+                if sheep_data.energy <= 0. {
+                    parallel_commands.command_scope(|mut commands| {
+                        commands.entity(entity).despawn();
+                    });
+                }
     });
 
     std::mem::drop(span);
@@ -496,7 +518,7 @@ fn step (
             let mut energy_wolf = wolf_data.energy.lock().unwrap();
             *energy_wolf -= ENERGY_CONSUME;
 
-            parallel_commands.command_scope(|mut commands| {
+            
                       
             #[cfg(not(any(feature="fixed_random")))]
             let mut rng_div = rand::thread_rng(); 
@@ -506,26 +528,61 @@ fn step (
             if *energy_wolf > 0. && rng_div.gen_bool(WOLF_REPR as f64) {
                 *energy_wolf /= 2.0;
                 
-                commands.spawn((
-                    Wolf {
-                        id: 0,
-                        energy: Mutex::new(*energy_wolf),
-                        }, 
+                // commands.spawn((
+                //     Wolf {
+                //         id: 0,
+                //         energy: Mutex::new(*energy_wolf),
+                //         }, 
               
-                    DoubleBuffered::new(Location(loc.0.0)),
-                    DoubleBuffered::new(LastLocation(None)),
+                //     DoubleBuffered::new(Location(loc.0.0)),
+                //     DoubleBuffered::new(LastLocation(None)),
               
-                    Agent {id: 0,},)
-                    );
+                //     Agent {id: 0,},)
+                //     );
+                
+                wolves_buffer.internal_buffer.scope(|(coll)| {
+                    coll.push((
+                        Wolf {
+                            id: 0,
+                            energy: Mutex::new(*energy_wolf),
+                            }, 
+                  
+                        DoubleBuffered::new(Location(loc.0.0)),
+                        DoubleBuffered::new(LastLocation(None)),
+                  
+                        Agent {id: 0,},));
+                });
 
             }
             if *energy_wolf <= 0. {
-                commands.entity(entity).despawn();
+                parallel_commands.command_scope(|mut commands| {
+                    commands.entity(entity).despawn();
+                });
             }              
-            });
+
         }
     );
     
+    parallel_commands.command_scope(|mut commands:Commands| {
+        // wolvesBuffer.drain::<Vec<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>>().into_iter()
+
+        // T: TODO Move the declaration of global_vec in a place where we can reuse this fucking memory
+        // T: NOTES: we have the problem that this piece of memory must be reused for different 
+        // T: kind of data.
+        // T: NOTES: we have the problem that we must retrieve another time the internal_buffer but this time
+        // T: like a mutable buffer.
+        // T: TODO evaluate to make a method to abstract away this feature 
+        let mut global_vec = Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+        let mut wolves_buffer = query_wolves_buffer.single_mut();
+        wolves_buffer.internal_buffer.drain_into(&mut global_vec);
+        commands.spawn_batch(global_vec);
+
+        let mut global_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+        let mut sheep_buffer = query_sheep_buffer.single_mut();
+        sheep_buffer.internal_buffer.drain_into(&mut global_vec);
+        commands.spawn_batch(global_vec);        
+    });
+
     std::mem::drop(span);
     // T: Reproduce wolves (END)
 }
@@ -541,8 +598,6 @@ fn step (
 fn cimitery_system(
     world: &mut World,
 ) {
-
-
 
 }
 
@@ -741,7 +796,12 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
 
 
     // T: Initialize buffers for CimiterySystem (START)
-    // commands.spawn(CimiteryBufferExp7::<(), WolvesBuffer>::new(*NUM_THREADS));
+    // T: TODO replace this definitions with some types of macros
+    let mut wolvesBuffer = AgentBuffer::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), WolvesBuffer>::new();
+    commands.spawn((wolvesBuffer));
+
+    let mut sheepBuffer = AgentBuffer::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), SheepBuffer>::new();
+    commands.spawn((sheepBuffer));
     // T: Initialize buffers for CimiterySystem (END)
 }
 

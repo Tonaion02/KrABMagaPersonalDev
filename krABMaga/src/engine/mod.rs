@@ -19,6 +19,9 @@ pub use bevy::prelude::Startup;
 pub use bevy::ecs::system::ParallelCommands;
 pub use bevy::prelude as bevy_prelude;
 
+pub use bevy_utils;
+pub use bevy_utils::Parallel;
+
 /// Module to define Agent methods
 pub mod agent;
 
