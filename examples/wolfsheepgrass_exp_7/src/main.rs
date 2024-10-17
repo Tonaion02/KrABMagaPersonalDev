@@ -25,6 +25,7 @@ use crate::rayon::iter::ParallelIterator;
 use crate::rayon::iter::IndexedParallelIterator;
 // T: importing rayon (END)
 
+use engine::resources::cimitery_buffer_exp_7::CimiteryBufferExp7;
 // T: importing lazy_static
 use lazy_static::lazy_static;
 
@@ -36,7 +37,10 @@ use std::hash::Hash;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::RwLock;
-use std::cell::Cell;
+
+use std::cell::RefCell;
+
+use std::thread::LocalKey;
 
 
 
@@ -61,6 +65,8 @@ use engine::simulation;
 use krabmaga::engine::components::double_buffer::DoubleBuffered;
 use krabmaga::engine::components::double_buffer::DBRead;
 use krabmaga::engine::components::double_buffer::DBWrite;
+
+use engine::thread_id::thread_id;
 
 #[cfg(not(any(feature="fixed_random")))]
 use krabmaga::rand::Rng;
@@ -158,14 +164,10 @@ lazy_static! {
 }
 // T: new costants(END)
 
-
-
-// T: costants id for threads (START)
-// T: Inspired by: https://play.rust-lang.org/?version=stable&mode=debug&edition=2021&gist=4056d6d4d7e5e81e587baa29f780fe45
+// T: TODO try to access to this RefCell directly with an Unsafe Block
 thread_local! {
-    pub static thread_id: Cell<usize> = Cell::new(usize::MAX);
+    pub static wolvesBuffer: RefCell<Vec<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>> = RefCell::new(Vec::new());
 }
-// T: costants id for threads (END)
 
 // T: Constants(END)
 
@@ -176,6 +178,9 @@ thread_local! {
 // T: markers for fields (START)
 pub struct SheepField;
 pub struct WolfField;
+
+pub struct WolvesBuffer;
+pub struct SheepBuffer;
 // T: markers for fields (END)
 
 
@@ -210,8 +215,23 @@ fn build_simulation() -> Simulation {
     num_threads(*NUM_THREADS).
     // T: TODO try to make the numbering of threads like usize that is between the interval 0..NUM_THREADS
     // T: so we can directly use that like index in our data structure
+    // T: probably this must be made before any other operation, so we can try to remove from Simulation the
+    // T: method with_num_threads and add this info directly in the constructor of Simulation. 
     start_handler(|real_thread_id| {
         thread_id.with(|cell| { cell.set(real_thread_id); });
+
+        // T: TEMP
+        // T: CODE EXAMPLE TO ADD SOMETHING TO THE COMMON VECTOR
+        // wolvesBuffer.with(|ref_cell| {ref_cell.borrow_mut().push((
+        //             Wolf {
+        //                 id: 0,
+        //                 energy: Mutex::new(0.0),
+        //             }, 
+          
+        //             DoubleBuffered::new(Location(Int2D {x: 0, y: 0})),
+        //             DoubleBuffered::new(LastLocation(None)),
+          
+        //             Agent {id: 0,},));});
 
         // T: TEMP for debugging purpose
         // let _thread_id = thread_id.get();
@@ -220,6 +240,15 @@ fn build_simulation() -> Simulation {
     build_global().
     unwrap();
     // T: Setting rayon's enviroment variable (END)
+
+
+
+
+
+    use engine::resources::cimitery_buffer_exp_7::CimiteryBufferExp7;
+    let cimitery_buffer = CimiteryBufferExp7::<Entity, usize>::new(*NUM_THREADS);
+
+
 
 
 
@@ -488,6 +517,7 @@ fn step (
               
                     Agent {id: 0,},)
                     );
+
             }
             if *energy_wolf <= 0. {
                 commands.entity(entity).despawn();
@@ -504,15 +534,12 @@ fn step (
 
 
 
-
 // T: System that we are trying to create to delete and spawn entities at the end of the step
 
 // T: TODO think a way to break-up this system and move a part(the most general part) directly
 // T: in Simulation Object.
 fn cimitery_system(
     world: &mut World,
-
-
 ) {
 
 
@@ -709,6 +736,13 @@ fn init_world(simulation_descriptor: Res<SimulationDescriptorT> ,mut commands: C
     //commands.spawn((DenseBagGrid2D::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
     commands.spawn((ParDenseBagGrid2D_exp_6::<Entity, WolfField>::new(*DIM_X as i32, *DIM_Y as i32)));
     // T: generate wolves (END)
+
+
+
+
+    // T: Initialize buffers for CimiterySystem (START)
+    // commands.spawn(CimiteryBufferExp7::<(), WolvesBuffer>::new(*NUM_THREADS));
+    // T: Initialize buffers for CimiterySystem (END)
 }
 
 // T: TODO check what macro make this work before ECS experiment

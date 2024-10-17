@@ -35,10 +35,9 @@ pub mod simulation;
 pub mod state;
 pub mod systems;
 
+pub mod thread_id;
+
 // TODO consider removing/abstracting away
-
-
-
 
 // TEMP
 pub use rand::distributions::uniform::SampleRange;
