@@ -308,13 +308,6 @@ fn step (
     simulation_descriptor: Res<SimulationDescriptorT>,
 )
 {
-    // T: TEMP
-    // T: Trying to instance a parallel collection
-    // let mut wolvesBuffer = Parallel::<Vec<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>>::default();
-    // let mut sheepBuffer = Parallel::<Vec<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>>::default();
-    // wolvesBuffer.scope(|(a)| {
-    // });
-
     // T: Retrieve buffers for each category of agents (START)
     let wolves_buffer = query_wolves_buffer.single_mut();
     let sheep_buffer = query_sheep_buffer.single_mut();
@@ -410,18 +403,6 @@ fn step (
             if sheep_data.energy > 0. && rng.gen_bool(SHEEP_REPR as f64) {
     
                 sheep_data.energy /= 2.0;
-
-                // commands.spawn((
-                //     Sheep {
-                //         id: 0,
-                //         energy: sheep_data.energy,
-                //     },
-
-                //     DoubleBuffered::new(Location(loc.0.0)),
-                //     DoubleBuffered::new(LastLocation(None)),
-
-                //     Agent {id: 0},
-                // ));
 
                 sheep_buffer.internal_buffer.scope(|coll| {
                     coll.push((
@@ -527,19 +508,7 @@ fn step (
                 
             if *energy_wolf > 0. && rng_div.gen_bool(WOLF_REPR as f64) {
                 *energy_wolf /= 2.0;
-                
-                // commands.spawn((
-                //     Wolf {
-                //         id: 0,
-                //         energy: Mutex::new(*energy_wolf),
-                //         }, 
-              
-                //     DoubleBuffered::new(Location(loc.0.0)),
-                //     DoubleBuffered::new(LastLocation(None)),
-              
-                //     Agent {id: 0,},)
-                //     );
-                
+                                
                 wolves_buffer.internal_buffer.scope(|(coll)| {
                     coll.push((
                         Wolf {
