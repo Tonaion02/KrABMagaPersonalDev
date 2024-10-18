@@ -124,3 +124,67 @@ We can't easily solve the problem putting a lock on the grid. Because each agent
 If we see the problem from another prospective, we can say that each agent make a race condition among a bag of the grid. We don't modify the grid or the vector where the bags reside. For each agent we only modify one bag.
 
 The idea is to put a lock on each bag. With this technique we can lock only the bag where the agent must be inserted. With this technique we easily reduce the number of threads that wait other threads to release the locks.
+
+## EXPERIMENT 6
+
+### WHAT I TRIED
+With the previous experiment i have tried to obtain a speed-up parallelizing the operation of re-creating a field(DenseGrid).
+
+I haven't noticed a notable speedup after this operation.
+I have thinked that is because for race conditions about the bag for each cell, but during profiling i have noticed something strange:
+<img title="profiling_image_exp_6" alt="profiling_image_exp_6" src="experiments_doc/wolfsheepgrass/profiling_image_exp_6.PNG">
+From this trace we can see that all the threads is used only during the last part of recreating a field.
+This suggest that there is another operation that takes the major part of the time.
+How we can see the only other part of this method is the clearing of update field.
+```rust
+fn update_wolves_field(
+    query_wolfs: Query<(Entity, &Wolf, &DBWrite<Location>)>, 
+    mut query_wolfs_field: Query<(&mut ParDenseBagGrid2D_exp_6<Entity, WolfField>)>,
+) {
+
+    let mut wolfs_field = query_wolfs_field.single_mut();
+    
+    // The last part that remains is the clear
+    // In fact this operation is realized in sequential on each cell of the grid
+    wolfs_field.clear();
+
+    // This part is executed in parallel in the last part of the profiling (START)
+    let process_wolf = |(entity, wolf, loc) : (Entity, &Wolf, &DBWrite<Location>)| {
+
+        let mut wolf_bag = wolfs_field.get_write_bag(&loc.0.0);
+        wolf_bag.push(entity);
+    };
+    // The last part that remains is the clear (END)
+
+    query_wolfs.par_iter().for_each(process_wolf);
+    // This part is executed in parallel in the last part of the profiling (END)    
+}
+```
+
+### NEW IMPLEMENTATION
+Simple we will try to parallelize this operation.
+
+## EXPERIMENT 7
+
+### WHAT IS THE PROBLEM NOW
+After we have solved/mitigated the problem of updating fields during the simulation migrating it to parallel, we have left one great operation like a sequential inefficient block: the deferred applying of commands.
+
+We have used [ParallelCommands](https://docs.rs/bevy/latest/bevy/prelude/struct.ParallelCommands.html) to delay the insertion/deletion from pool of entities to not create race condition about the entire structure during the process of reproduction/killing of elements that is realized in parallel.
+All the commands that we create is then applyed in sequential at the end of step/frame.
+<img title="profiling_image_exp_7" alt="profiling_image_exp_7" src="experiments_doc/wolfsheepgrass/profiling_image_exp_7.PNG">
+This create some problem, this part takes more time than the entire simulation.
+
+### NEW IMPLEMENTATION
+The idea is to stop using ParallelCommands to save the agents to spawn.
+We can easily optimize the spawning of new agents with [spawn_batch](https://docs.rs/bevy/latest/bevy/ecs/prelude/struct.Commands.html#method.spawn_batch). We can pass an iterator to spawn_batch for the data we want to use to initialize the new agents(entities in general).
+
+So the idea is to accumulate all the data for the new agents in a single buffer to initialize then the new agents.
+But we must share this buffer in a parallel context, so we tried to use [Parallel](https://docs.rs/bevy/latest/bevy/utils/struct.Parallel.html) from bevy_utils.
+
+<br>
+
+# FLOCKERS EXPERIMENTS
+
+# FIXED VISUALIZATION
+
+Flockers is the first simulation that is re-developed with the ECS(not by me, but by [Carbon](https://github.com/carbonhell)). The visualization part is break because even is written in Bevy rely on the Object-Based architecture of original KrABMaga. The idea is to re-implement the visualization to explore the possible solution to deliver to people a solution to implement rapidly a visualization for their simulations. 
