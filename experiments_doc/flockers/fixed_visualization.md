@@ -1,0 +1,3 @@
+# FIXED VISUALIZATION
+
+Flockers is the first simulation that is re-developed with the ECS(not by me, but by [Carbon](https://github.com/carbonhell)). The visualization part is break because even is written in Bevy rely on the Object-Based architecture of original KrABMaga. The idea is to re-implement the visualization to explore the possible solution to deliver to people a solution to implement rapidly a visualization for their simulations. 
