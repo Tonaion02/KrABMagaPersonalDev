@@ -1,5 +1,5 @@
 [package]
-name = "flockers"
+name = "flockers_fixed_visualization"
 version = "0.3.0"
 authors = [
     "Carmine Spagnuolo <spagnuolocarmine@gmail.com>", 
