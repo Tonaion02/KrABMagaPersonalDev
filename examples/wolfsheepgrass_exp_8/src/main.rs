@@ -287,7 +287,7 @@ fn build_simulation() -> Simulation {
     // T: added to recycle entities
     app.add_systems(Update, cimitery_system.in_set(AfterStep));
     
-    // app.add_systems(Update, info_debug.in_set(AfterStep).after(cimitery_system));
+    app.add_systems(Update, info_debug.in_set(AfterStep).after(cimitery_system));
     // app.add_systems(Update, count_agents.in_set(BeforeStep));
     // app.add_systems(Update, count_sheeps.in_set(BeforeStep));
     // app.add_systems(Update, count_wolfs.in_set(BeforeStep));
@@ -625,31 +625,31 @@ fn cimitery_system(
     if(wolves_buffer_vec.len() > 0 && deleted_wolves_buffer_vec.len() > 0) {
         // T: DEBUG
         // println!("Entered in wolves if");
-    let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number];
-    let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number];
+        let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number];
+        let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number];
 
-    // T: Retrieve slices on the base of mimimum size buffers
-    let mut iter_mut_slice_for_wolves = slice_for_wolves.iter_mut();
-    let mut iter_mut_slice_for_deleted_wolves = slice_for_deleted_wolves.iter_mut();
+        // T: Retrieve slices on the base of mimimum size buffers
+        let mut iter_mut_slice_for_wolves = slice_for_wolves.iter_mut();
+        let mut iter_mut_slice_for_deleted_wolves = slice_for_deleted_wolves.iter_mut();
     
-    // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (START)
-    // T: new_wolf is an n-uple formed by all the data necessary to initialize a new wolf
-    // T: deleted_wolf is an Entity that indicates an Entity that has died and can be re-used 
-    iter_mut_slice_for_wolves.zip(iter_mut_slice_for_deleted_wolves).for_each(|(new_wolf, deleted_wolf_entity)|{
-        let mut deleted_wolf = query_wolves.get_mut(world, *deleted_wolf_entity).expect("Is not possible!");
-        
-        // T: NOTES very problematic part to search to automize this part of the code (START)
-        // T: It's difficult to write a generic copy for the data
-        *deleted_wolf.0.energy.lock().unwrap() = *new_wolf.0.energy.lock().unwrap();
-        deleted_wolf.0.id = new_wolf.0.id;
-        *deleted_wolf.1 = new_wolf.1.write; 
-        *deleted_wolf.2 = new_wolf.1.read;
-        *deleted_wolf.3 = new_wolf.2.write;
-        *deleted_wolf.4 = new_wolf.2.read;
-        *deleted_wolf.5 = new_wolf.3;
-        // T: NOTES very problematic part to search to automize this part of the code (END)
-    });
-    // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (END)
+        // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (START)
+        // T: new_wolf is an n-uple formed by all the data necessary to initialize a new wolf
+        // T: deleted_wolf is an Entity that indicates an Entity that has died and can be re-used 
+        iter_mut_slice_for_wolves.zip(iter_mut_slice_for_deleted_wolves).for_each(|(new_wolf, deleted_wolf_entity)|{
+            let mut deleted_wolf = query_wolves.get_mut(world, *deleted_wolf_entity).expect("Is not possible!");
+
+            // T: NOTES very problematic part to search to automize this part of the code (START)
+            // T: It's difficult to write a generic copy for the data
+            *deleted_wolf.0.energy.lock().unwrap() = *new_wolf.0.energy.lock().unwrap();
+            deleted_wolf.0.id = new_wolf.0.id;
+            *deleted_wolf.1 = new_wolf.1.write; 
+            *deleted_wolf.2 = new_wolf.1.read;
+            *deleted_wolf.3 = new_wolf.2.write;
+            *deleted_wolf.4 = new_wolf.2.read;
+            *deleted_wolf.5 = new_wolf.3;
+            // T: NOTES very problematic part to search to automize this part of the code (END)
+        });
+        // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (END)
     }    
 
     std::mem::drop(span_effectively_recycling);
@@ -662,7 +662,7 @@ fn cimitery_system(
     // T: NOTES: there is the inefficiency to re-allocate some memory during this operation
     // T: I cannot find a way to pass a slice to spawn_batch
     if (wolves_buffer_vec.len() > deleted_wolves_buffer_vec.len()) {
-        let span_spawning_remaining_agents = info_span!("spawning remaining agents(WOLFS)");
+        let span_spawning_remaining_agents = info_span!("spawning remaining agents(WOLVES)");
         let span_spawning_remaining_agents = span_spawning_remaining_agents.enter();     
 
         let remaining_wolves_to_spawn: Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)> = wolves_buffer_vec.drain(min_wolves_number+1..).collect();
@@ -674,7 +674,7 @@ fn cimitery_system(
     
     // T: Case where the dead agents is more than the number of agents to spawn for this type (START)
     else if(wolves_buffer_vec.len() < deleted_wolves_buffer_vec.len()) {
-        let span_despawn_remaining_agents = info_span!("despawning remaining agents(WOLFS)");
+        let span_despawn_remaining_agents = info_span!("despawning remaining agents(WOLVES)");
         let span_despawn_remaining_agents = span_despawn_remaining_agents.enter();
 
         let remaining_slice_for_deleted_wolves = &deleted_wolves_buffer_vec[min_wolves_number+1..];
@@ -724,27 +724,27 @@ fn cimitery_system(
     if(sheep_buffer_vec.len() > 0 && deleted_sheep_buffer_vec.len() > 0) {
         // T: DEBUG
         // println!("Entered in sheep if");
-    let mut slice_for_sheep = &mut sheep_buffer_vec[..min_sheep_number];
-    let mut slice_for_deleted_sheep = &mut deleted_sheep_buffer_vec[..min_sheep_number];
+        let mut slice_for_sheep = &mut sheep_buffer_vec[..min_sheep_number];
+        let mut slice_for_deleted_sheep = &mut deleted_sheep_buffer_vec[..min_sheep_number];
 
-    // T: Retrieve slices on the base of mimimum size buffers
-    let mut iter_mut_slice_for_sheep = slice_for_sheep.iter_mut();
-    let mut iter_mut_slice_for_deleted_sheep = slice_for_deleted_sheep.iter_mut();
+        // T: Retrieve slices on the base of mimimum size buffers
+        let mut iter_mut_slice_for_sheep = slice_for_sheep.iter_mut();
+        let mut iter_mut_slice_for_deleted_sheep = slice_for_deleted_sheep.iter_mut();
 
-    // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (START)
-    // T: new_sheep is an n-uple formed by all the data necessary to initialize a new sheep
-    // T: deleted_sheep is an Entity that indicates an Entity that has died and can be re-used 
-    iter_mut_slice_for_sheep.zip(iter_mut_slice_for_deleted_sheep).for_each(|(new_sheep, deleted_sheep_entity)|{
-        let mut deleted_sheep = query_sheep.get_mut(world, *deleted_sheep_entity).expect("Is not possible!");
-        
-        *deleted_sheep.0 = new_sheep.0;
-        *deleted_sheep.1 = new_sheep.1.write;
-        *deleted_sheep.2 = new_sheep.1.read;
-        *deleted_sheep.3 = new_sheep.2.write;
-        *deleted_sheep.4 = new_sheep.2.read;
-        *deleted_sheep.5 = new_sheep.3;
-    });
-    // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (END)
+        // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (START)
+        // T: new_sheep is an n-uple formed by all the data necessary to initialize a new sheep
+        // T: deleted_sheep is an Entity that indicates an Entity that has died and can be re-used 
+        iter_mut_slice_for_sheep.zip(iter_mut_slice_for_deleted_sheep).for_each(|(new_sheep, deleted_sheep_entity)|{
+            let mut deleted_sheep = query_sheep.get_mut(world, *deleted_sheep_entity).expect("Is not possible!");
+
+            *deleted_sheep.0 = new_sheep.0;
+            *deleted_sheep.1 = new_sheep.1.write;
+            *deleted_sheep.2 = new_sheep.1.read;
+            *deleted_sheep.3 = new_sheep.2.write;
+            *deleted_sheep.4 = new_sheep.2.read;
+            *deleted_sheep.5 = new_sheep.3;
+        });
+        // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (END)
     }
 
     std::mem::drop(span_effectively_recycling);

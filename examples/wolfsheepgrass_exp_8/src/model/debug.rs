@@ -114,14 +114,22 @@ pub fn info_debug(
     query_sheeps: Query<&Sheep>, 
     query_wolfs: Query<&Wolf>
 ) {
-    println!("---------------------STEP---------------->: {}", simulation_descriptor.current_step);
-    let mut count = 0u32;
+    let mut message = simulation_descriptor.current_step.to_string();
+    
 
+
+    // println!("---------------------STEP---------------->: {}", simulation_descriptor.current_step);
+    let mut count = 0u32;
+    
     query_agents.for_each(|(agent)| {
         count = count + 1;
     });
+    
+    // print!("Agents: {} ", count);
+    message.push_str(" Agents:");
+    message.push_str(&count.to_string());
 
-    print!("Agents: {} ", count);
+
 
     let mut count = 0u32;
 
@@ -129,7 +137,11 @@ pub fn info_debug(
         count = count + 1;
     });
 
-    print!("Wolfs: {} ", count);
+    // print!("Wolfs: {} ", count);
+    message.push_str(" Wolves:");
+    message.push_str(&count.to_string());
+
+
     
     let mut count = 0u32;
 
@@ -137,7 +149,11 @@ pub fn info_debug(
         count = count + 1;
     });
 
-    print!("Sheeps: {} ", count);
+    // print!("Sheeps: {} ", count);
+    message.push_str(" Sheep:");
+    message.push_str(&count.to_string());
 
-    println!("");
+    // println!("");
+
+    info!(message);
 }
