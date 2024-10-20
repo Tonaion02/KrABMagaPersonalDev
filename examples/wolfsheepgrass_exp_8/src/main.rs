@@ -621,7 +621,7 @@ fn cimitery_system(
     mut query_deleted_sheep_buffer: &mut QueryState<(&mut AgentBuffer<(Entity), DeletedSheepBuffer>)>,
 ) {
     // T: DEBUG
-    println!("Recycling entities!");
+    // println!("Recycling entities!");
 
 
 
@@ -654,7 +654,7 @@ fn cimitery_system(
 
     if(wolves_buffer_vec.len() > 0 && deleted_wolves_buffer_vec.len() > 0) {
         // T: DEBUG
-        println!("Entered in wolves if");
+        // println!("Entered in wolves if");
     let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number];
     let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number];
 
@@ -735,7 +735,7 @@ fn cimitery_system(
 
     if(sheep_buffer_vec.len() > 0 && deleted_sheep_buffer_vec.len() > 0) {
         // T: DEBUG
-        println!("Entered in sheep if");
+        // println!("Entered in sheep if");
     let mut slice_for_sheep = &mut sheep_buffer_vec[..min_sheep_number];
     let mut slice_for_deleted_sheep = &mut deleted_sheep_buffer_vec[..min_sheep_number];
 
