@@ -635,23 +635,28 @@ fn cimitery_system(
     let span = span.enter();
 
 
-
-    let wolves_buffer = query_wolves_buffer.single(world);
-    let deleted_wolves_buffer = query_deleted_wolves_buffer.single(world);
-
-
+    // T: Retrieving elements from parallels buffers (START)
+    let mut wolves_buffer = query_wolves_buffer.single_mut(world);
     let mut wolves_buffer_vec = Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+    wolves_buffer.internal_buffer.drain_into(&mut wolves_buffer_vec);
+    std::mem::drop(wolves_buffer);
+
+    let mut deleted_wolves_buffer = query_deleted_wolves_buffer.single_mut(world);
     let mut deleted_wolves_buffer_vec = Vec::<(Entity)>::new();
+    deleted_wolves_buffer.internal_buffer.drain_into(&mut deleted_wolves_buffer_vec);
+    std::mem::drop(deleted_wolves_buffer);
+    // T: Retrieving elements from parallels buffers (END)
+
 
     
     // T: compute minimum between size of buffers
     let min_wolves_number = min(wolves_buffer_vec.len(), deleted_wolves_buffer_vec.len());
 
     if(wolves_buffer_vec.len() > 0 && deleted_wolves_buffer_vec.len() > 0) {
-
+        // T: DEBUG
         println!("Entered in wolves if");
-    let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number+1];
-    let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number+1];
+    let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number];
+    let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number];
 
     // T: Retrieve slices on the base of mimimum size buffers
     let mut iter_mut_slice_for_wolves = slice_for_wolves.iter_mut();
@@ -715,19 +720,24 @@ fn cimitery_system(
 
 
 
-    let sheep_buffer = query_sheep_buffer.single(world);
-    let deleted_sheep_buffer = query_deleted_sheep_buffer.single(world);    
-
+    let mut sheep_buffer = query_sheep_buffer.single_mut(world);
     let mut sheep_buffer_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+    sheep_buffer.internal_buffer.drain_into(&mut sheep_buffer_vec);
+    std::mem::drop(sheep_buffer);
+
+    let mut deleted_sheep_buffer = query_deleted_sheep_buffer.single_mut(world);    
     let mut deleted_sheep_buffer_vec = Vec::<(Entity)>::new();
+    deleted_sheep_buffer.internal_buffer.drain_into(&mut deleted_sheep_buffer_vec);
+    std::mem::drop(deleted_sheep_buffer);
 
     // T: compute minimum between size of buffers
     let min_sheep_number = min(sheep_buffer_vec.len(), deleted_sheep_buffer_vec.len());
 
     if(sheep_buffer_vec.len() > 0 && deleted_sheep_buffer_vec.len() > 0) {
+        // T: DEBUG
         println!("Entered in sheep if");
-    let mut slice_for_sheep = &mut sheep_buffer_vec[..min_sheep_number+1];
-    let mut slice_for_deleted_sheep = &mut deleted_sheep_buffer_vec[..min_sheep_number+1];
+    let mut slice_for_sheep = &mut sheep_buffer_vec[..min_sheep_number];
+    let mut slice_for_deleted_sheep = &mut deleted_sheep_buffer_vec[..min_sheep_number];
 
     // T: Retrieve slices on the base of mimimum size buffers
     let mut iter_mut_slice_for_sheep = slice_for_sheep.iter_mut();
