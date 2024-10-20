@@ -2,14 +2,21 @@
 //==============================================================================================================
 //--------------------------------------------------------------------------------------------------------------
 // WOLF-SHEEP-GRASS SIMULATION
+// EXPERIMENT 8
 //--------------------------------------------------------------------------------------------------------------
-// STEPS NUM_AGENTS NUM_THREADS PERC_WOLF PERC_SHEEPS
-// 
-//
+// LIST OF PARAMETERS OF SIMULATION
+// STEPS: number of step the simulation must run
+// NUM_AGENTS: The total number of agents the simulation starts with  
+// NUM_THREADS: The total number of threads the simulation can use. This parameter is considered only if 
+// we pass the correct command line features to the compiler.
+// PERC_WOLF: The percentage of wolves about NUM_AGENTS in this simulation.
+// PERC_SHEEPS: The percentage of sheep about NUM_AGENTS in this simulation.
+// DIM_X, DIM_Y: Dimension of the enviroment, correspond to the number of possible position that the agents
+// can be and the number of cells a grid is formed.
 //--------------------------------------------------------------------------------------------------------------
+// Read to understand better the code base
 // The comment's lines that start with 'T:' are left by Tonaion02.
-// The comment's lines where there is 'TODO' is a reminder for something that we must
-// to do.
+// The comment's lines where there is 'TODO' is a reminder for something that we must do.
 // The comment's lines where there is 'WARNING' represent some information that you
 // have to consider to use the code in proper way.
 // The comment's lines that end with '(START)' are the begin of a block of code.
@@ -234,8 +241,6 @@ fn build_simulation() -> Simulation {
     // T: Setting rayon's enviroment variable (START)
     // T: TODO move this in the correct place
 
-    // rayon::ThreadPoolBuilder::new().num_threads(*NUM_THREADS).build_global().unwrap();
-
     rayon::ThreadPoolBuilder::new().
     num_threads(*NUM_THREADS).
 
@@ -279,7 +284,6 @@ fn build_simulation() -> Simulation {
     app.add_systems(Update, grass_grow.in_set(BeforeStep));
 
     // T: added to recycle entities
-    // app.add_systems(Update, cimitery_system.in_set(AfterStep));
     app.add_systems(Update, cimitery_system.in_set(AfterStep));
     
     // app.add_systems(Update, count_agents.in_set(BeforeStep));
@@ -561,35 +565,6 @@ fn step (
     
     std::mem::drop(span);
     // T: Reproduce wolves (END)
-    
-
-
-    // // T: factively spawn entities at the end of the step (START)
-    // let span = info_span!("creating commands to spawn entities");
-    // let span = span.enter();
-
-
-
-    // parallel_commands.command_scope(|mut commands:Commands| {
-    //     // T: TODO Move the declaration of global_vec in a place where we can reuse this fucking memory
-    //     // T: NOTES: we have the problem that this piece of memory must be reused for different 
-    //     // T: kind of data.
-    //     // T: NOTES: we have the problem that we must retrieve another time the internal_buffer but this time
-    //     // T: like a mutable buffer.
-    //     // T: TODO evaluate to make a method to abstract away this feature 
-    //     let mut global_vec = Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
-    //     let mut wolves_buffer = query_wolves_buffer.single_mut();
-    //     wolves_buffer.internal_buffer.drain_into(&mut global_vec);
-    //     commands.spawn_batch(global_vec);
-
-    //     let mut global_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
-    //     let mut sheep_buffer = query_sheep_buffer.single_mut();
-    //     sheep_buffer.internal_buffer.drain_into(&mut global_vec);
-    //     commands.spawn_batch(global_vec);        
-    // });
-
-    // std::mem::drop(span);
-    // // T: factively spawn entities at the end of the step (END)
 }
 
 
