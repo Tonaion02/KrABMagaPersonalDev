@@ -29,6 +29,7 @@ use engine::resources::cimitery_buffer_exp_7::CimiteryBufferExp7;
 // T: importing lazy_static
 use lazy_static::lazy_static;
 
+use std::borrow::Borrow;
 use std::env::consts::EXE_SUFFIX;
 use std::marker::PhantomData;
 use std::time::Instant;
@@ -446,7 +447,7 @@ fn step (
 
 
     // T: Wolves eat (START)
-    let span = info_span!("wolfs eat");
+    let span = info_span!("wolves eat");
     let span = span.enter();
 
     let sheep_field = query_sheeps_field.single();
@@ -602,10 +603,11 @@ fn step (
 fn cimitery_system(
     world: &mut World,
 
-    mut query_wolves: &mut QueryState<(&mut Wolf, &mut DoubleBuffered<Location>, &mut DoubleBuffered<LastLocation>, Agent)>,
+    mut query_wolves: &mut QueryState<(&mut Wolf, &mut DBWrite<Location>, &mut DBRead<Location>, &mut DBWrite<LastLocation>, &mut DBRead<LastLocation>, &mut Agent)>,
     mut query_wolves_buffer: &mut QueryState<(&mut AgentBuffer<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), WolvesBuffer>)>,
     mut query_deleted_wolves_buffer: &mut QueryState<(&mut AgentBuffer<(Entity), DeletedWolvesBuffer>)>,
     
+    mut query_sheep: &mut QueryState<(&mut Sheep, &mut DBWrite<Location>, &mut DBRead<Location>, &mut DBWrite<LastLocation>, &mut DBRead<LastLocation>, &mut Agent)>,
     mut query_sheep_buffer: &mut QueryState<(&mut AgentBuffer<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), SheepBuffer>)>,
     mut query_deleted_sheep_buffer: &mut QueryState<(&mut AgentBuffer<(Entity), DeletedSheepBuffer>)>,
 ) {
@@ -635,18 +637,30 @@ fn cimitery_system(
 
     // T: compute minimum between size of buffers
     let min_wolves_number = min(wolves_buffer_vec.len(), deleted_wolves_buffer_vec.len());
-    let mut slice_for_wolves = &wolves_buffer_vec[..min_wolves_number];
-    let mut slice_for_deleted_wolves = &deleted_wolves_buffer_vec[..min_wolves_number];
+    let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number];
+    let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number];
 
-    // T: trying to obtain a slice
-    // T: If i can do this, and i can iterate in parallel among multiple slices,
-    // T: i can solve the problem that the number of entities cannot be used as the same
-    let wolves_iter = slice_for_wolves.par_iter();
-    let deleted_wolves_iter = slice_for_deleted_wolves.par_iter();
-    wolves_iter.zip(deleted_wolves_iter).for_each(|(wolf, deleted_wolf)| {
-
+    let mut slice_for_wolves_iter_mut = slice_for_wolves.iter_mut();
+    let mut slice_for_deleted_wolves_iter_mut = slice_for_deleted_wolves.iter_mut();
+    
+    // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (START)
+    // T: new_wolf is an n-uple formed by all the data necessary to initialize a new wolf
+    // T: deleted_wolf is an Entity that indicates an Entity that has died and can be re-used 
+    slice_for_wolves_iter_mut.zip(slice_for_deleted_wolves_iter_mut).for_each(|(new_wolf, deleted_wolf_entity)|{
+        let mut deleted_wolf = query_wolves.get_mut(world, *deleted_wolf_entity).expect("Is not possible!");
+        
+        // T: NOTES very problematic part to search to automize this part of the code (START)
+        // T: It's difficult to write a generic copy for the data
+        *deleted_wolf.0.energy.lock().unwrap() = *new_wolf.0.energy.lock().unwrap();
+        deleted_wolf.0.id = new_wolf.0.id;
+        *deleted_wolf.1 = new_wolf.1.write; 
+        *deleted_wolf.2 = new_wolf.1.read;
+        *deleted_wolf.3 = new_wolf.2.write;
+        *deleted_wolf.4 = new_wolf.2.read;
+        *deleted_wolf.5 = new_wolf.3;
+        // T: NOTES very problematic part to search to automize this part of the code (END)
     });
-
+    // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (END)
     
     
 
