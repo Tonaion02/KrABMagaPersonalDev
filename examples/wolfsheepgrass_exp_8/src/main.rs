@@ -35,6 +35,7 @@ use crate::rayon::iter::IndexedParallelIterator;
 use engine::resources::cimitery_buffer_exp_7::CimiteryBufferExp7;
 // T: importing lazy_static
 use lazy_static::lazy_static;
+use model::debug::info_debug;
 
 use std::borrow::Borrow;
 use std::env::consts::EXE_SUFFIX;
@@ -286,6 +287,7 @@ fn build_simulation() -> Simulation {
     // T: added to recycle entities
     app.add_systems(Update, cimitery_system.in_set(AfterStep));
     
+    // app.add_systems(Update, info_debug.in_set(AfterStep).after(cimitery_system));
     // app.add_systems(Update, count_agents.in_set(BeforeStep));
     // app.add_systems(Update, count_sheeps.in_set(BeforeStep));
     // app.add_systems(Update, count_wolfs.in_set(BeforeStep));
@@ -615,7 +617,7 @@ fn cimitery_system(
     // T: compute minimum between size of buffers
     let min_wolves_number = min(wolves_buffer_vec.len(), deleted_wolves_buffer_vec.len());
 
-    let span_effectively_recycling = info_span!("Effectively recycling sheep");
+    let span_effectively_recycling = info_span!("Effectively recycling wolves");
     let span_effectively_recycling = span_effectively_recycling.enter();
 
 

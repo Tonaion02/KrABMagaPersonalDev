@@ -107,3 +107,37 @@ pub fn population_debug_info(query_agents: Query<&Agent>, query_sheeps: Query<&S
 pub fn print_step(simulation_descriptor: Res<SimulationDescriptorT>) {
     println!("---------------------STEP---------------->: {}", simulation_descriptor.current_step);
 }
+
+pub fn info_debug(
+    simulation_descriptor: Res<SimulationDescriptorT>,
+    query_agents: Query<&Agent>, 
+    query_sheeps: Query<&Sheep>, 
+    query_wolfs: Query<&Wolf>
+) {
+    println!("---------------------STEP---------------->: {}", simulation_descriptor.current_step);
+    let mut count = 0u32;
+
+    query_agents.for_each(|(agent)| {
+        count = count + 1;
+    });
+
+    print!("Agents: {} ", count);
+
+    let mut count = 0u32;
+
+    query_wolfs.for_each(|(sheep)|{
+        count = count + 1;
+    });
+
+    print!("Wolfs: {} ", count);
+    
+    let mut count = 0u32;
+
+    query_sheeps.for_each(|(wolf)| {
+        count = count + 1;
+    });
+
+    print!("Sheeps: {} ", count);
+
+    println!("");
+}
