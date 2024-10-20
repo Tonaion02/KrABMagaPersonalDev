@@ -615,6 +615,11 @@ fn cimitery_system(
     // T: compute minimum between size of buffers
     let min_wolves_number = min(wolves_buffer_vec.len(), deleted_wolves_buffer_vec.len());
 
+    let span_effectively_recycling = info_span!("Effectively recycling sheep");
+    let span_effectively_recycling = span_effectively_recycling.enter();
+
+
+
     if(wolves_buffer_vec.len() > 0 && deleted_wolves_buffer_vec.len() > 0) {
         // T: DEBUG
         // println!("Entered in wolves if");
@@ -645,6 +650,9 @@ fn cimitery_system(
     // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (END)
     }    
 
+    std::mem::drop(span_effectively_recycling);
+
+
 
     // T: Handle the two problematic case (START)
 
@@ -652,17 +660,27 @@ fn cimitery_system(
     // T: NOTES: there is the inefficiency to re-allocate some memory during this operation
     // T: I cannot find a way to pass a slice to spawn_batch
     if (wolves_buffer_vec.len() > deleted_wolves_buffer_vec.len()) {
+        let span_spawning_remaining_agents = info_span!("spawning remaining agents(WOLFS)");
+        let span_spawning_remaining_agents = span_spawning_remaining_agents.enter();     
+
         let remaining_wolves_to_spawn: Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)> = wolves_buffer_vec.drain(min_wolves_number+1..).collect();
         world.spawn_batch(remaining_wolves_to_spawn);
+
+        std::mem::drop(span_spawning_remaining_agents);
     }
     // T: Case where the dead agents is less than the number of agents to spawn for this type (END)
     
     // T: Case where the dead agents is more than the number of agents to spawn for this type (START)
     else if(wolves_buffer_vec.len() < deleted_wolves_buffer_vec.len()) {
+        let span_despawn_remaining_agents = info_span!("despawning remaining agents(WOLFS)");
+        let span_despawn_remaining_agents = span_despawn_remaining_agents.enter();
+
         let remaining_slice_for_deleted_wolves = &deleted_wolves_buffer_vec[min_wolves_number+1..];
         remaining_slice_for_deleted_wolves.iter().for_each(|(deleted_wolf_entity)| {
             world.despawn(*deleted_wolf_entity);
         });
+
+        std::mem::drop(span_despawn_remaining_agents);
     }
     // T: Case where the dead agents is more than the number of agents to spawn for this type (END)
 
@@ -696,6 +714,11 @@ fn cimitery_system(
     // T: compute minimum between size of buffers
     let min_sheep_number = min(sheep_buffer_vec.len(), deleted_sheep_buffer_vec.len());
 
+    let span_effectively_recycling = info_span!("Effectively recycling sheep");
+    let span_effectively_recycling = span_effectively_recycling.enter();
+
+
+
     if(sheep_buffer_vec.len() > 0 && deleted_sheep_buffer_vec.len() > 0) {
         // T: DEBUG
         // println!("Entered in sheep if");
@@ -722,24 +745,38 @@ fn cimitery_system(
     // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (END)
     }
 
+    std::mem::drop(span_effectively_recycling);
+
+
 
     // T: Handle the two problematic case (START)
 
     // T: Case where the dead agents is less than the number of agents to spawn for this type (START)
     // T: NOTES: there is the inefficiency to re-allocate some memory during this operation
     // T: I cannot find a way to pass a slice to spawn_batch
+    
     if (sheep_buffer_vec.len() > deleted_sheep_buffer_vec.len()) {
+        let span_spawning_remaining_agents = info_span!("spawning remaining agents(SHEEP)");
+        let span_spawning_remaining_agents = span_spawning_remaining_agents.enter();     
+
         let remaining_sheep_to_spawn: Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)> = sheep_buffer_vec.drain(min_sheep_number+1..).collect();
         world.spawn_batch(remaining_sheep_to_spawn);
+
+        std::mem::drop(span_spawning_remaining_agents);
     }
     // T: Case where the dead agents is less than the number of agents to spawn for this type (END)
     
     // T: Case where the dead agents is more than the number of agents to spawn for this type (START)
     else if(sheep_buffer_vec.len() < deleted_sheep_buffer_vec.len()) {
+        let span_despawn_remaining_agents = info_span!("despawning remaining agents(SHEEP)");
+        let span_despawn_remaining_agents = span_despawn_remaining_agents.enter();
+
         let remaining_slice_for_deleted_sheep = &deleted_sheep_buffer_vec[min_sheep_number+1..];
         remaining_slice_for_deleted_sheep.iter().for_each(|(deleted_sheep_entity)| {
             world.despawn(*deleted_sheep_entity);
         });
+
+        std::mem::drop(span_despawn_remaining_agents);
     }
     // T: Case where the dead agents is more than the number of agents to spawn for this type (END)
 
