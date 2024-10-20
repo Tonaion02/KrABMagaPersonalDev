@@ -637,16 +637,17 @@ fn cimitery_system(
 
     // T: compute minimum between size of buffers
     let min_wolves_number = min(wolves_buffer_vec.len(), deleted_wolves_buffer_vec.len());
-    let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number];
-    let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number];
+    let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number+1];
+    let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number+1];
 
-    let mut slice_for_wolves_iter_mut = slice_for_wolves.iter_mut();
-    let mut slice_for_deleted_wolves_iter_mut = slice_for_deleted_wolves.iter_mut();
+    // T: Retrieve slices on the base of mimimum size buffers
+    let mut iter_mut_slice_for_wolves = slice_for_wolves.iter_mut();
+    let mut iter_mut_slice_for_deleted_wolves = slice_for_deleted_wolves.iter_mut();
     
     // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (START)
     // T: new_wolf is an n-uple formed by all the data necessary to initialize a new wolf
     // T: deleted_wolf is an Entity that indicates an Entity that has died and can be re-used 
-    slice_for_wolves_iter_mut.zip(slice_for_deleted_wolves_iter_mut).for_each(|(new_wolf, deleted_wolf_entity)|{
+    iter_mut_slice_for_wolves.zip(iter_mut_slice_for_deleted_wolves).for_each(|(new_wolf, deleted_wolf_entity)|{
         let mut deleted_wolf = query_wolves.get_mut(world, *deleted_wolf_entity).expect("Is not possible!");
         
         // T: NOTES very problematic part to search to automize this part of the code (START)
@@ -662,8 +663,32 @@ fn cimitery_system(
     });
     // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (END)
     
-    
 
+
+    // T: Handle the two problematic case (START)
+
+    // T: Case where the dead agents is less than the number of agents to spawn for this type (START)
+    // T: NOTES: there is the inefficiency to re-allocate some memory during this operation
+    // T: I cannot find a way to pass a slice to spawn_batch
+    if (wolves_buffer_vec.len() > deleted_wolves_buffer_vec.len()) {
+        let remaining_wolves_to_spawn: Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)> = wolves_buffer_vec.drain(min_wolves_number+1..).collect();
+        world.spawn_batch(remaining_wolves_to_spawn);
+    }
+    // T: Case where the dead agents is less than the number of agents to spawn for this type (END)
+    
+    // T: Case where the dead agents is more than the number of agents to spawn for this type (START)
+    else if(wolves_buffer_vec.len() < deleted_wolves_buffer_vec.len()) {
+        let remaining_slice_for_deleted_wolves = &deleted_wolves_buffer_vec[min_wolves_number+1..];
+        remaining_slice_for_deleted_wolves.iter().for_each(|(deleted_wolf_entity)| {
+            world.despawn(*deleted_wolf_entity);
+        });
+    }
+    // T: Case where the dead agents is more than the number of agents to spawn for this type (END)
+
+    // T: Handle the two problematic case (END)
+
+
+    
     std::mem::drop(span);
     // T: Recycle entities from pool of death entities for WOLVES (END)
 
