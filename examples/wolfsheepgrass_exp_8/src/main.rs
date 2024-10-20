@@ -280,7 +280,7 @@ fn build_simulation() -> Simulation {
 
     // T: added to recycle entities
     // app.add_systems(Update, cimitery_system.in_set(AfterStep));
-    app.add_systems(Update, cimitery_system);
+    app.add_systems(Update, cimitery_system.in_set(AfterStep));
     
     // app.add_systems(Update, count_agents.in_set(BeforeStep));
     // app.add_systems(Update, count_sheeps.in_set(BeforeStep));
@@ -435,9 +435,13 @@ fn step (
                     
                 }
                 if sheep_data.energy <= 0. {
-                    parallel_commands.command_scope(|mut commands| {
-                        commands.entity(entity).despawn();
-                    });
+                    // parallel_commands.command_scope(|mut commands| {
+                    //     commands.entity(entity).despawn();
+                    // });
+
+                    deleted_sheep_buffer.internal_buffer.scope(|(coll)| {
+                        coll.push(entity);
+                    });                    
                 }
     });
 
@@ -477,8 +481,12 @@ fn step (
 
                 if sheep_data.energy > 0. {
 
-                    parallel_commands.command_scope(|mut commands: Commands| {
-                        commands.entity(sheep_entity).despawn();
+                    // parallel_commands.command_scope(|mut commands: Commands| {
+                    //     commands.entity(sheep_entity).despawn();
+                    // });
+
+                    deleted_sheep_buffer.internal_buffer.scope(|(coll)| {
+                        coll.push(sheep_entity);
                     });
 
                     let wolf_entity = wolf_bag[wolf_index];
@@ -539,8 +547,12 @@ fn step (
 
             }
             if *energy_wolf <= 0. {
-                parallel_commands.command_scope(|mut commands| {
-                    commands.entity(entity).despawn();
+                // parallel_commands.command_scope(|mut commands| {
+                //     commands.entity(entity).despawn();
+                // });
+
+                deleted_wolves_buffer.internal_buffer.scope(|(coll)| {
+                    coll.push(entity);
                 });
             }              
             
@@ -552,32 +564,32 @@ fn step (
     
 
 
-    // T: factively spawn entities at the end of the step (START)
-    let span = info_span!("creating commands to spawn entities");
-    let span = span.enter();
+    // // T: factively spawn entities at the end of the step (START)
+    // let span = info_span!("creating commands to spawn entities");
+    // let span = span.enter();
 
 
 
-    parallel_commands.command_scope(|mut commands:Commands| {
-        // T: TODO Move the declaration of global_vec in a place where we can reuse this fucking memory
-        // T: NOTES: we have the problem that this piece of memory must be reused for different 
-        // T: kind of data.
-        // T: NOTES: we have the problem that we must retrieve another time the internal_buffer but this time
-        // T: like a mutable buffer.
-        // T: TODO evaluate to make a method to abstract away this feature 
-        let mut global_vec = Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
-        let mut wolves_buffer = query_wolves_buffer.single_mut();
-        wolves_buffer.internal_buffer.drain_into(&mut global_vec);
-        commands.spawn_batch(global_vec);
+    // parallel_commands.command_scope(|mut commands:Commands| {
+    //     // T: TODO Move the declaration of global_vec in a place where we can reuse this fucking memory
+    //     // T: NOTES: we have the problem that this piece of memory must be reused for different 
+    //     // T: kind of data.
+    //     // T: NOTES: we have the problem that we must retrieve another time the internal_buffer but this time
+    //     // T: like a mutable buffer.
+    //     // T: TODO evaluate to make a method to abstract away this feature 
+    //     let mut global_vec = Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+    //     let mut wolves_buffer = query_wolves_buffer.single_mut();
+    //     wolves_buffer.internal_buffer.drain_into(&mut global_vec);
+    //     commands.spawn_batch(global_vec);
 
-        let mut global_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
-        let mut sheep_buffer = query_sheep_buffer.single_mut();
-        sheep_buffer.internal_buffer.drain_into(&mut global_vec);
-        commands.spawn_batch(global_vec);        
-    });
+    //     let mut global_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+    //     let mut sheep_buffer = query_sheep_buffer.single_mut();
+    //     sheep_buffer.internal_buffer.drain_into(&mut global_vec);
+    //     commands.spawn_batch(global_vec);        
+    // });
 
-    std::mem::drop(span);
-    // T: factively spawn entities at the end of the step (END)
+    // std::mem::drop(span);
+    // // T: factively spawn entities at the end of the step (END)
 }
 
 
@@ -589,6 +601,7 @@ fn step (
 // T: probably the user must define only the archetype that reppresent a Type
 // T: of agent in the simulation, and then the system can recycle existing
 // T: agents to spawn the new agents
+// T: NOTES:
 // T: we must consider two different situations:
 // T:   - we don't have enough dead entities to cover the entities that we
 // T:     want to spawn.
@@ -596,10 +609,6 @@ fn step (
 // T: For the first, we can simple spawn a batch of new agents with spawn_batch
 // T: hoping that this can be really 
 // T: TODO consider to not re-allocate each time a new buffer for the agents.
-// T: TODO consider to find a method to re-use multiple times the same buffer,
-// T: probably we can use a Union to create a buffer that can store multiple elements
-// T: that probably isn't the best idea for the performance: problem with cache
-// T: alining and with branch statement necessary.
 fn cimitery_system(
     world: &mut World,
 
@@ -630,13 +639,17 @@ fn cimitery_system(
     let wolves_buffer = query_wolves_buffer.single(world);
     let deleted_wolves_buffer = query_deleted_wolves_buffer.single(world);
 
+
     let mut wolves_buffer_vec = Vec::<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
     let mut deleted_wolves_buffer_vec = Vec::<(Entity)>::new();
 
-
-
+    
     // T: compute minimum between size of buffers
     let min_wolves_number = min(wolves_buffer_vec.len(), deleted_wolves_buffer_vec.len());
+
+    if(wolves_buffer_vec.len() > 0 && deleted_wolves_buffer_vec.len() > 0) {
+
+        println!("Entered in wolves if");
     let mut slice_for_wolves = &mut wolves_buffer_vec[..min_wolves_number+1];
     let mut slice_for_deleted_wolves = &mut deleted_wolves_buffer_vec[..min_wolves_number+1];
 
@@ -662,7 +675,7 @@ fn cimitery_system(
         // T: NOTES very problematic part to search to automize this part of the code (END)
     });
     // T: Iterate on couple formed by new_wolf and deleted_wolf_entity (END)
-    
+    }    
 
 
     // T: Handle the two problematic case (START)
@@ -694,6 +707,8 @@ fn cimitery_system(
 
 
 
+
+
     // T: Recycle entities from pool of death entities for SHEEP (START)
     let span = info_span!("Recycling entities of sheep");
     let span = span.enter();
@@ -703,8 +718,61 @@ fn cimitery_system(
     let sheep_buffer = query_sheep_buffer.single(world);
     let deleted_sheep_buffer = query_deleted_sheep_buffer.single(world);    
 
-    let sheep_buffer_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
-    let deleted_sheep_buffer_vec = Vec::<(Entity)>::new();
+    let mut sheep_buffer_vec = Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)>::new();
+    let mut deleted_sheep_buffer_vec = Vec::<(Entity)>::new();
+
+    // T: compute minimum between size of buffers
+    let min_sheep_number = min(sheep_buffer_vec.len(), deleted_sheep_buffer_vec.len());
+
+    if(sheep_buffer_vec.len() > 0 && deleted_sheep_buffer_vec.len() > 0) {
+        println!("Entered in sheep if");
+    let mut slice_for_sheep = &mut sheep_buffer_vec[..min_sheep_number+1];
+    let mut slice_for_deleted_sheep = &mut deleted_sheep_buffer_vec[..min_sheep_number+1];
+
+    // T: Retrieve slices on the base of mimimum size buffers
+    let mut iter_mut_slice_for_sheep = slice_for_sheep.iter_mut();
+    let mut iter_mut_slice_for_deleted_sheep = slice_for_deleted_sheep.iter_mut();
+
+    // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (START)
+    // T: new_sheep is an n-uple formed by all the data necessary to initialize a new sheep
+    // T: deleted_sheep is an Entity that indicates an Entity that has died and can be re-used 
+    iter_mut_slice_for_sheep.zip(iter_mut_slice_for_deleted_sheep).for_each(|(new_sheep, deleted_sheep_entity)|{
+        let mut deleted_sheep = query_sheep.get_mut(world, *deleted_sheep_entity).expect("Is not possible!");
+        
+        *deleted_sheep.0 = new_sheep.0;
+        *deleted_sheep.1 = new_sheep.1.write;
+        *deleted_sheep.2 = new_sheep.1.read;
+        *deleted_sheep.3 = new_sheep.2.write;
+        *deleted_sheep.4 = new_sheep.2.read;
+        *deleted_sheep.5 = new_sheep.3;
+    });
+    // T: Iterate on couple formed by new_sheep and deleted_sheep_entity (END)
+    }
+
+
+    // T: Handle the two problematic case (START)
+
+    // T: Case where the dead agents is less than the number of agents to spawn for this type (START)
+    // T: NOTES: there is the inefficiency to re-allocate some memory during this operation
+    // T: I cannot find a way to pass a slice to spawn_batch
+    if (sheep_buffer_vec.len() > deleted_sheep_buffer_vec.len()) {
+        let remaining_sheep_to_spawn: Vec::<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent)> = sheep_buffer_vec.drain(min_sheep_number+1..).collect();
+        world.spawn_batch(remaining_sheep_to_spawn);
+    }
+    // T: Case where the dead agents is less than the number of agents to spawn for this type (END)
+    
+    // T: Case where the dead agents is more than the number of agents to spawn for this type (START)
+    else if(sheep_buffer_vec.len() < deleted_sheep_buffer_vec.len()) {
+        let remaining_slice_for_deleted_sheep = &deleted_sheep_buffer_vec[min_sheep_number+1..];
+        remaining_slice_for_deleted_sheep.iter().for_each(|(deleted_sheep_entity)| {
+            world.despawn(*deleted_sheep_entity);
+        });
+    }
+    // T: Case where the dead agents is more than the number of agents to spawn for this type (END)
+
+    // T: Handle the two problematic case (END)
+
+
 
     std::mem::drop(span);
     // T: Recycle entities from pool of death entities for SHEEP (END)
