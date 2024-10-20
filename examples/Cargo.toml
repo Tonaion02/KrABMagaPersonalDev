@@ -14,7 +14,11 @@ members = [
     "virusnetwork",
     "wolfsheepgrass",
 
-    # ECS's experiment
+    # ECS's experiments
+    # Flocker's experiments
+    "flockers_exp_1",
+
+    # WolfSheepGrass's experiments
     "wolfsheepgrass_exp_3",
     "wolfsheepgrass_exp_4",
     "wolfsheepgrass_exp_5",
