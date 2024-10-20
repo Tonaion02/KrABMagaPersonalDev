@@ -602,16 +602,16 @@ fn step (
 fn cimitery_system(
     world: &mut World,
 
+    mut query_wolves: &mut QueryState<(&mut Wolf, &mut DoubleBuffered<Location>, &mut DoubleBuffered<LastLocation>, Agent)>,
     mut query_wolves_buffer: &mut QueryState<(&mut AgentBuffer<(Wolf, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), WolvesBuffer>)>,
     mut query_deleted_wolves_buffer: &mut QueryState<(&mut AgentBuffer<(Entity), DeletedWolvesBuffer>)>,
     
     mut query_sheep_buffer: &mut QueryState<(&mut AgentBuffer<(Sheep, DoubleBuffered<Location>, DoubleBuffered<LastLocation>, Agent), SheepBuffer>)>,
     mut query_deleted_sheep_buffer: &mut QueryState<(&mut AgentBuffer<(Entity), DeletedSheepBuffer>)>,
 ) {
-    use std::time::Duration;
+    // T: DEBUG
+    println!("Recycling entities!");
 
-    let millis_to_wait = std::time::Duration::from_millis(1000);
-    std::thread::sleep(millis_to_wait);
 
 
     let recycle_entities_span = info_span!("Recycle entities");
@@ -638,17 +638,16 @@ fn cimitery_system(
     let mut slice_for_wolves = &wolves_buffer_vec[..min_wolves_number];
     let mut slice_for_deleted_wolves = &deleted_wolves_buffer_vec[..min_wolves_number];
 
-    // T: trying to create obtain a slice
+    // T: trying to obtain a slice
     // T: If i can do this, and i can iterate in parallel among multiple slices,
     // T: i can solve the problem that the number of entities cannot be used as the same
+    let wolves_iter = slice_for_wolves.par_iter();
+    let deleted_wolves_iter = slice_for_deleted_wolves.par_iter();
+    wolves_iter.zip(deleted_wolves_iter).for_each(|(wolf, deleted_wolf)| {
 
-    // let deleted_wolves_iter = deleted_wolves_buffer_vec.par_iter();
-    // wolves_buffer_vec.par_iter().zip(deleted_wolves_iter).for_each(|| {
+    });
 
-
-
-    // });
-
+    
     
 
     std::mem::drop(span);
