@@ -439,10 +439,6 @@ fn step (
                     
                 }
                 if sheep_data.energy <= 0. {
-                    // parallel_commands.command_scope(|mut commands| {
-                    //     commands.entity(entity).despawn();
-                    // });
-
                     deleted_sheep_buffer.internal_buffer.scope(|(coll)| {
                         coll.push(entity);
                     });                    
@@ -484,10 +480,6 @@ fn step (
                 sheep_index += 1;
 
                 if sheep_data.energy > 0. {
-
-                    // parallel_commands.command_scope(|mut commands: Commands| {
-                    //     commands.entity(sheep_entity).despawn();
-                    // });
 
                     deleted_sheep_buffer.internal_buffer.scope(|(coll)| {
                         coll.push(sheep_entity);
@@ -551,10 +543,6 @@ fn step (
 
             }
             if *energy_wolf <= 0. {
-                // parallel_commands.command_scope(|mut commands| {
-                //     commands.entity(entity).despawn();
-                // });
-
                 deleted_wolves_buffer.internal_buffer.scope(|(coll)| {
                     coll.push(entity);
                 });
