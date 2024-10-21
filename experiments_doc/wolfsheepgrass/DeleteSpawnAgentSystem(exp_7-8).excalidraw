@@ -1,0 +1,2673 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "type": "text",
+      "version": 149,
+      "versionNonce": 1499573079,
+      "index": "bDJ",
+      "isDeleted": false,
+      "id": "_yTuhci63x61MeRjqIfkS",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 608.75,
+      "y": 179.5,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 273.44793701171875,
+      "height": 45,
+      "seed": 1919946103,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729078549195,
+      "link": null,
+      "locked": false,
+      "fontSize": 36,
+      "fontFamily": 5,
+      "text": "WHAT I WANT?",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "WHAT I WANT?",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text",
+      "version": 737,
+      "versionNonce": 1674284569,
+      "index": "bDM",
+      "isDeleted": false,
+      "id": "3W9rH-BtWcL658w9TDesk",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 611.75,
+      "y": 233.5,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 723.0994873046875,
+      "height": 175,
+      "seed": 1854724409,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729078761936,
+      "link": null,
+      "locked": false,
+      "fontSize": 20,
+      "fontFamily": 5,
+      "text": "I need a faster way to delete and spawn a great quantity of entities\nthat i have acquired during a parallel iteration.\nSo i need, a relatively fast way to collect entities(to delete) and \ntuple(to copy in spawned entities) during a parallel iteration.\nSome sort of buffer that i can use in a parallel context.\nThen i need a fast way to despawn entities and copy new entities in the \nright place.",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "I need a faster way to delete and spawn a great quantity of entities\nthat i have acquired during a parallel iteration.\nSo i need, a relatively fast way to collect entities(to delete) and \ntuple(to copy in spawned entities) during a parallel iteration.\nSome sort of buffer that i can use in a parallel context.\nThen i need a fast way to despawn entities and copy new entities in the \nright place.",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "freedraw",
+      "version": 118,
+      "versionNonce": 191131799,
+      "index": "bDN",
+      "isDeleted": false,
+      "id": "TdRTh3qFXUQITYU1x-WYp",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 608.75,
+      "y": 229.5,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 662.5,
+      "height": 13.75,
+      "seed": 1688955447,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729078767893,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          1.25,
+          0
+        ],
+        [
+          2.5,
+          0
+        ],
+        [
+          10,
+          0
+        ],
+        [
+          18.75,
+          0
+        ],
+        [
+          31.25,
+          0
+        ],
+        [
+          42.5,
+          0
+        ],
+        [
+          51.25,
+          0
+        ],
+        [
+          60,
+          -2.5
+        ],
+        [
+          68.75,
+          -2.5
+        ],
+        [
+          76.25,
+          -2.5
+        ],
+        [
+          83.75,
+          -2.5
+        ],
+        [
+          92.5,
+          -2.5
+        ],
+        [
+          101.25,
+          -3.75
+        ],
+        [
+          111.25,
+          -3.75
+        ],
+        [
+          121.25,
+          -5
+        ],
+        [
+          128.75,
+          -5
+        ],
+        [
+          133.75,
+          -5
+        ],
+        [
+          137.5,
+          -6.25
+        ],
+        [
+          140,
+          -6.25
+        ],
+        [
+          143.75,
+          -6.25
+        ],
+        [
+          152.5,
+          -6.25
+        ],
+        [
+          160,
+          -6.25
+        ],
+        [
+          167.5,
+          -6.25
+        ],
+        [
+          172.5,
+          -6.25
+        ],
+        [
+          178.75,
+          -6.25
+        ],
+        [
+          183.75,
+          -6.25
+        ],
+        [
+          191.25,
+          -5
+        ],
+        [
+          197.5,
+          -5
+        ],
+        [
+          200,
+          -5
+        ],
+        [
+          202.5,
+          -5
+        ],
+        [
+          205,
+          -5
+        ],
+        [
+          208.75,
+          -5
+        ],
+        [
+          215,
+          -5
+        ],
+        [
+          220,
+          -5
+        ],
+        [
+          223.75,
+          -5
+        ],
+        [
+          226.25,
+          -6.25
+        ],
+        [
+          231.25,
+          -6.25
+        ],
+        [
+          236.25,
+          -6.25
+        ],
+        [
+          243.75,
+          -7.5
+        ],
+        [
+          248.75,
+          -7.5
+        ],
+        [
+          252.5,
+          -7.5
+        ],
+        [
+          256.25,
+          -7.5
+        ],
+        [
+          258.75,
+          -7.5
+        ],
+        [
+          263.75,
+          -6.25
+        ],
+        [
+          270,
+          -5
+        ],
+        [
+          273.75,
+          -5
+        ],
+        [
+          278.75,
+          -3.75
+        ],
+        [
+          282.5,
+          -3.75
+        ],
+        [
+          283.75,
+          -3.75
+        ],
+        [
+          288.75,
+          -2.5
+        ],
+        [
+          293.75,
+          -2.5
+        ],
+        [
+          302.5,
+          -2.5
+        ],
+        [
+          308.75,
+          -2.5
+        ],
+        [
+          317.5,
+          -2.5
+        ],
+        [
+          322.5,
+          -2.5
+        ],
+        [
+          326.25,
+          -2.5
+        ],
+        [
+          331.25,
+          -2.5
+        ],
+        [
+          338.75,
+          -2.5
+        ],
+        [
+          348.75,
+          -2.5
+        ],
+        [
+          356.25,
+          -3.75
+        ],
+        [
+          363.75,
+          -3.75
+        ],
+        [
+          370,
+          -3.75
+        ],
+        [
+          377.5,
+          -6.25
+        ],
+        [
+          385,
+          -6.25
+        ],
+        [
+          392.5,
+          -6.25
+        ],
+        [
+          400,
+          -6.25
+        ],
+        [
+          405,
+          -6.25
+        ],
+        [
+          408.75,
+          -6.25
+        ],
+        [
+          416.25,
+          -6.25
+        ],
+        [
+          425,
+          -6.25
+        ],
+        [
+          435,
+          -6.25
+        ],
+        [
+          443.75,
+          -7.5
+        ],
+        [
+          452.5,
+          -7.5
+        ],
+        [
+          458.75,
+          -7.5
+        ],
+        [
+          465,
+          -7.5
+        ],
+        [
+          472.5,
+          -8.75
+        ],
+        [
+          485,
+          -11.25
+        ],
+        [
+          495,
+          -11.25
+        ],
+        [
+          503.75,
+          -12.5
+        ],
+        [
+          510,
+          -12.5
+        ],
+        [
+          516.25,
+          -12.5
+        ],
+        [
+          522.5,
+          -12.5
+        ],
+        [
+          530,
+          -13.75
+        ],
+        [
+          538.75,
+          -13.75
+        ],
+        [
+          547.5,
+          -13.75
+        ],
+        [
+          556.25,
+          -12.5
+        ],
+        [
+          562.5,
+          -11.25
+        ],
+        [
+          567.5,
+          -11.25
+        ],
+        [
+          575,
+          -11.25
+        ],
+        [
+          581.25,
+          -11.25
+        ],
+        [
+          586.25,
+          -11.25
+        ],
+        [
+          591.25,
+          -11.25
+        ],
+        [
+          595,
+          -11.25
+        ],
+        [
+          596.25,
+          -11.25
+        ],
+        [
+          598.75,
+          -11.25
+        ],
+        [
+          600,
+          -11.25
+        ],
+        [
+          603.75,
+          -11.25
+        ],
+        [
+          611.25,
+          -11.25
+        ],
+        [
+          616.25,
+          -11.25
+        ],
+        [
+          620,
+          -11.25
+        ],
+        [
+          621.25,
+          -11.25
+        ],
+        [
+          623.75,
+          -11.25
+        ],
+        [
+          626.25,
+          -11.25
+        ],
+        [
+          630,
+          -11.25
+        ],
+        [
+          635,
+          -11.25
+        ],
+        [
+          638.75,
+          -11.25
+        ],
+        [
+          640,
+          -11.25
+        ],
+        [
+          642.5,
+          -11.25
+        ],
+        [
+          646.25,
+          -11.25
+        ],
+        [
+          648.75,
+          -11.25
+        ],
+        [
+          653.75,
+          -11.25
+        ],
+        [
+          657.5,
+          -11.25
+        ],
+        [
+          660,
+          -10
+        ],
+        [
+          661.25,
+          -10
+        ],
+        [
+          662.5,
+          -10
+        ],
+        [
+          662.5,
+          -10
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "simulatePressure": true,
+      "pressures": []
+    },
+    {
+      "type": "text",
+      "version": 53,
+      "versionNonce": 996002743,
+      "index": "bDO",
+      "isDeleted": false,
+      "id": "VtwIo0oIPQdOcYjAiP_px",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 615,
+      "y": 430.75,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 421.535888671875,
+      "height": 45,
+      "seed": 1543591225,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729079576420,
+      "link": null,
+      "locked": false,
+      "fontSize": 36,
+      "fontFamily": 5,
+      "text": "STRATEGIES TO TRY",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "STRATEGIES TO TRY",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text",
+      "version": 229,
+      "versionNonce": 645763961,
+      "index": "bDP",
+      "isDeleted": false,
+      "id": "AqOptv71qJzPhU61WGuqA",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 615,
+      "y": 494.5,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 373.05975341796875,
+      "height": 75,
+      "seed": 1653433593,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729079002751,
+      "link": null,
+      "locked": false,
+      "fontSize": 20,
+      "fontFamily": 5,
+      "text": "There are different strategies to try:\n    - Less-Naive strategy\n    - Recycle entities strategy",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "There are different strategies to try:\n    - Less-Naive strategy\n    - Recycle entities strategy",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "freedraw",
+      "version": 129,
+      "versionNonce": 1434336953,
+      "index": "bDQ",
+      "isDeleted": false,
+      "id": "Lq3ggEQaMuOnsigFjlhO7",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 611.25,
+      "y": 477,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 653.75,
+      "height": 6.25,
+      "seed": 6798391,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729078976313,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          1.25,
+          0
+        ],
+        [
+          6.25,
+          0
+        ],
+        [
+          12.5,
+          0
+        ],
+        [
+          22.5,
+          0
+        ],
+        [
+          28.75,
+          0
+        ],
+        [
+          35,
+          0
+        ],
+        [
+          40,
+          0
+        ],
+        [
+          45,
+          0
+        ],
+        [
+          48.75,
+          -1.25
+        ],
+        [
+          52.5,
+          -1.25
+        ],
+        [
+          55,
+          -2.5
+        ],
+        [
+          57.5,
+          -2.5
+        ],
+        [
+          62.5,
+          -2.5
+        ],
+        [
+          66.25,
+          -2.5
+        ],
+        [
+          70,
+          -2.5
+        ],
+        [
+          73.75,
+          -2.5
+        ],
+        [
+          77.5,
+          -2.5
+        ],
+        [
+          80,
+          -2.5
+        ],
+        [
+          82.5,
+          -3.75
+        ],
+        [
+          86.25,
+          -3.75
+        ],
+        [
+          90,
+          -3.75
+        ],
+        [
+          93.75,
+          -3.75
+        ],
+        [
+          98.75,
+          -3.75
+        ],
+        [
+          103.75,
+          -3.75
+        ],
+        [
+          108.75,
+          -3.75
+        ],
+        [
+          113.75,
+          -3.75
+        ],
+        [
+          120,
+          -3.75
+        ],
+        [
+          125,
+          -3.75
+        ],
+        [
+          130,
+          -3.75
+        ],
+        [
+          135,
+          -3.75
+        ],
+        [
+          141.25,
+          -5
+        ],
+        [
+          150,
+          -5
+        ],
+        [
+          158.75,
+          -5
+        ],
+        [
+          163.75,
+          -5
+        ],
+        [
+          168.75,
+          -5
+        ],
+        [
+          173.75,
+          -5
+        ],
+        [
+          178.75,
+          -5
+        ],
+        [
+          185,
+          -5
+        ],
+        [
+          190,
+          -5
+        ],
+        [
+          193.75,
+          -5
+        ],
+        [
+          197.5,
+          -5
+        ],
+        [
+          202.5,
+          -5
+        ],
+        [
+          208.75,
+          -5
+        ],
+        [
+          213.75,
+          -3.75
+        ],
+        [
+          221.25,
+          -3.75
+        ],
+        [
+          226.25,
+          -2.5
+        ],
+        [
+          231.25,
+          -1.25
+        ],
+        [
+          238.75,
+          -1.25
+        ],
+        [
+          245,
+          0
+        ],
+        [
+          250,
+          0
+        ],
+        [
+          253.75,
+          0
+        ],
+        [
+          257.5,
+          0
+        ],
+        [
+          260,
+          0
+        ],
+        [
+          265,
+          0
+        ],
+        [
+          271.25,
+          0
+        ],
+        [
+          276.25,
+          0
+        ],
+        [
+          281.25,
+          0
+        ],
+        [
+          286.25,
+          0
+        ],
+        [
+          291.25,
+          0
+        ],
+        [
+          295,
+          0
+        ],
+        [
+          300,
+          0
+        ],
+        [
+          305,
+          0
+        ],
+        [
+          308.75,
+          0
+        ],
+        [
+          313.75,
+          0
+        ],
+        [
+          318.75,
+          1.25
+        ],
+        [
+          323.75,
+          1.25
+        ],
+        [
+          331.25,
+          1.25
+        ],
+        [
+          336.25,
+          1.25
+        ],
+        [
+          342.5,
+          1.25
+        ],
+        [
+          346.25,
+          1.25
+        ],
+        [
+          350,
+          1.25
+        ],
+        [
+          356.25,
+          1.25
+        ],
+        [
+          362.5,
+          1.25
+        ],
+        [
+          367.5,
+          1.25
+        ],
+        [
+          372.5,
+          1.25
+        ],
+        [
+          378.75,
+          1.25
+        ],
+        [
+          385,
+          1.25
+        ],
+        [
+          391.25,
+          1.25
+        ],
+        [
+          396.25,
+          1.25
+        ],
+        [
+          405,
+          1.25
+        ],
+        [
+          410,
+          1.25
+        ],
+        [
+          413.75,
+          1.25
+        ],
+        [
+          420,
+          1.25
+        ],
+        [
+          426.25,
+          1.25
+        ],
+        [
+          432.5,
+          0
+        ],
+        [
+          438.75,
+          0
+        ],
+        [
+          445,
+          0
+        ],
+        [
+          450,
+          0
+        ],
+        [
+          458.75,
+          0
+        ],
+        [
+          472.5,
+          0
+        ],
+        [
+          487.5,
+          0
+        ],
+        [
+          498.75,
+          0
+        ],
+        [
+          508.75,
+          0
+        ],
+        [
+          515,
+          0
+        ],
+        [
+          522.5,
+          0
+        ],
+        [
+          528.75,
+          -1.25
+        ],
+        [
+          540,
+          -3.75
+        ],
+        [
+          547.5,
+          -3.75
+        ],
+        [
+          552.5,
+          -3.75
+        ],
+        [
+          557.5,
+          -3.75
+        ],
+        [
+          560,
+          -3.75
+        ],
+        [
+          562.5,
+          -3.75
+        ],
+        [
+          566.25,
+          -3.75
+        ],
+        [
+          568.75,
+          -3.75
+        ],
+        [
+          571.25,
+          -3.75
+        ],
+        [
+          573.75,
+          -3.75
+        ],
+        [
+          576.25,
+          -3.75
+        ],
+        [
+          580,
+          -3.75
+        ],
+        [
+          587.5,
+          -3.75
+        ],
+        [
+          593.75,
+          -3.75
+        ],
+        [
+          598.75,
+          -3.75
+        ],
+        [
+          601.25,
+          -3.75
+        ],
+        [
+          605,
+          -3.75
+        ],
+        [
+          607.5,
+          -3.75
+        ],
+        [
+          611.25,
+          -3.75
+        ],
+        [
+          615,
+          -3.75
+        ],
+        [
+          620,
+          -3.75
+        ],
+        [
+          625,
+          -3.75
+        ],
+        [
+          627.5,
+          -3.75
+        ],
+        [
+          631.25,
+          -3.75
+        ],
+        [
+          633.75,
+          -3.75
+        ],
+        [
+          637.5,
+          -3.75
+        ],
+        [
+          642.5,
+          -2.5
+        ],
+        [
+          647.5,
+          -2.5
+        ],
+        [
+          651.25,
+          -2.5
+        ],
+        [
+          653.75,
+          -2.5
+        ],
+        [
+          653.75,
+          -2.5
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "simulatePressure": true,
+      "pressures": []
+    },
+    {
+      "type": "text",
+      "version": 24,
+      "versionNonce": 3916121,
+      "index": "bDR",
+      "isDeleted": false,
+      "id": "KLdQvek8fM9xJdMA_erPN",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 620,
+      "y": 608.25,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 274.69189453125,
+      "height": 35,
+      "seed": 1179400729,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729079029838,
+      "link": null,
+      "locked": false,
+      "fontSize": 28,
+      "fontFamily": 5,
+      "text": "Less-Naive Strategy",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "Less-Naive Strategy",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text",
+      "version": 1529,
+      "versionNonce": 1007281560,
+      "index": "bDT",
+      "isDeleted": false,
+      "id": "UgPgg472vn06Hwcc7ETXs",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 615,
+      "y": 668.25,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 743.9996337890625,
+      "height": 575,
+      "seed": 446461271,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729520260562,
+      "link": null,
+      "locked": false,
+      "fontSize": 20,
+      "fontFamily": 5,
+      "text": "In this strategy what i want to do is:\n    - Store during parallel iteration entities to spawn.\n    - Use directly parallel_commands to sign entities to delete.\n    - Use spawn batch at the end of step to spawn the entities \n      in the correct way.\n    - Leave Bevy the possibility to delete entities with apply commands.\n\n\nThe problem of this method:\n    - We need to find a fast way to store the bundles of entities \n      to spawn during a parallel iteration.\n    - We make despawn of entities and then we respawn the same, \n      in italy we say: l'art ri sciem.\n\nRESULTS:\nWe obtained a little speed-up from this technique. Part of the speed-up\nis given by spawn_batch. This is considerable as a better option to create\nthe agents we want.\nAnother part of the speed-up si obtained in the step. Probably the cost of\nuse ParalleCommands is more than the cost to store only some data with\nParallel.\n\n",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "In this strategy what i want to do is:\n    - Store during parallel iteration entities to spawn.\n    - Use directly parallel_commands to sign entities to delete.\n    - Use spawn batch at the end of step to spawn the entities \n      in the correct way.\n    - Leave Bevy the possibility to delete entities with apply commands.\n\n\nThe problem of this method:\n    - We need to find a fast way to store the bundles of entities \n      to spawn during a parallel iteration.\n    - We make despawn of entities and then we respawn the same, \n      in italy we say: l'art ri sciem.\n\nRESULTS:\nWe obtained a little speed-up from this technique. Part of the speed-up\nis given by spawn_batch. This is considerable as a better option to create\nthe agents we want.\nAnother part of the speed-up si obtained in the step. Probably the cost of\nuse ParalleCommands is more than the cost to store only some data with\nParallel.\n\n",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "freedraw",
+      "version": 126,
+      "versionNonce": 1342719799,
+      "index": "bDU",
+      "isDeleted": false,
+      "id": "aesoQWqOIw412rJp_zE40",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 616.25,
+      "y": 649.5,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 605,
+      "height": 6.25,
+      "seed": 700219479,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729079465084,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          2.5,
+          0
+        ],
+        [
+          6.25,
+          0
+        ],
+        [
+          10,
+          -1.25
+        ],
+        [
+          20,
+          -1.25
+        ],
+        [
+          27.5,
+          -1.25
+        ],
+        [
+          32.5,
+          -1.25
+        ],
+        [
+          35,
+          -1.25
+        ],
+        [
+          40,
+          -2.5
+        ],
+        [
+          47.5,
+          -2.5
+        ],
+        [
+          55,
+          -5
+        ],
+        [
+          66.25,
+          -5
+        ],
+        [
+          75,
+          -5
+        ],
+        [
+          80,
+          -5
+        ],
+        [
+          85,
+          -5
+        ],
+        [
+          87.5,
+          -5
+        ],
+        [
+          92.5,
+          -5
+        ],
+        [
+          96.25,
+          -5
+        ],
+        [
+          100,
+          -5
+        ],
+        [
+          102.5,
+          -5
+        ],
+        [
+          105,
+          -5
+        ],
+        [
+          108.75,
+          -5
+        ],
+        [
+          113.75,
+          -5
+        ],
+        [
+          118.75,
+          -5
+        ],
+        [
+          122.5,
+          -5
+        ],
+        [
+          126.25,
+          -5
+        ],
+        [
+          130,
+          -5
+        ],
+        [
+          135,
+          -5
+        ],
+        [
+          140,
+          -5
+        ],
+        [
+          147.5,
+          -5
+        ],
+        [
+          153.75,
+          -5
+        ],
+        [
+          160,
+          -5
+        ],
+        [
+          165,
+          -5
+        ],
+        [
+          170,
+          -5
+        ],
+        [
+          175,
+          -3.75
+        ],
+        [
+          180,
+          -3.75
+        ],
+        [
+          185,
+          -3.75
+        ],
+        [
+          190,
+          -3.75
+        ],
+        [
+          193.75,
+          -3.75
+        ],
+        [
+          200,
+          -3.75
+        ],
+        [
+          206.25,
+          -3.75
+        ],
+        [
+          213.75,
+          -3.75
+        ],
+        [
+          218.75,
+          -3.75
+        ],
+        [
+          226.25,
+          -3.75
+        ],
+        [
+          232.5,
+          -3.75
+        ],
+        [
+          237.5,
+          -3.75
+        ],
+        [
+          241.25,
+          -3.75
+        ],
+        [
+          247.5,
+          -3.75
+        ],
+        [
+          252.5,
+          -3.75
+        ],
+        [
+          257.5,
+          -3.75
+        ],
+        [
+          262.5,
+          -3.75
+        ],
+        [
+          267.5,
+          -3.75
+        ],
+        [
+          271.25,
+          -3.75
+        ],
+        [
+          278.75,
+          -2.5
+        ],
+        [
+          286.25,
+          -2.5
+        ],
+        [
+          295,
+          -2.5
+        ],
+        [
+          307.5,
+          -2.5
+        ],
+        [
+          317.5,
+          -2.5
+        ],
+        [
+          326.25,
+          -1.25
+        ],
+        [
+          331.25,
+          -1.25
+        ],
+        [
+          335,
+          -1.25
+        ],
+        [
+          340,
+          -2.5
+        ],
+        [
+          348.75,
+          -2.5
+        ],
+        [
+          353.75,
+          -2.5
+        ],
+        [
+          361.25,
+          -2.5
+        ],
+        [
+          367.5,
+          -2.5
+        ],
+        [
+          372.5,
+          -3.75
+        ],
+        [
+          376.25,
+          -3.75
+        ],
+        [
+          383.75,
+          -3.75
+        ],
+        [
+          391.25,
+          -3.75
+        ],
+        [
+          400,
+          -3.75
+        ],
+        [
+          411.25,
+          -5
+        ],
+        [
+          421.25,
+          -5
+        ],
+        [
+          428.75,
+          -5
+        ],
+        [
+          435,
+          -6.25
+        ],
+        [
+          441.25,
+          -6.25
+        ],
+        [
+          448.75,
+          -6.25
+        ],
+        [
+          453.75,
+          -6.25
+        ],
+        [
+          463.75,
+          -6.25
+        ],
+        [
+          467.5,
+          -6.25
+        ],
+        [
+          472.5,
+          -6.25
+        ],
+        [
+          478.75,
+          -6.25
+        ],
+        [
+          483.75,
+          -6.25
+        ],
+        [
+          486.25,
+          -6.25
+        ],
+        [
+          490,
+          -6.25
+        ],
+        [
+          491.25,
+          -6.25
+        ],
+        [
+          493.75,
+          -6.25
+        ],
+        [
+          496.25,
+          -6.25
+        ],
+        [
+          500,
+          -6.25
+        ],
+        [
+          501.25,
+          -6.25
+        ],
+        [
+          503.75,
+          -6.25
+        ],
+        [
+          505,
+          -6.25
+        ],
+        [
+          507.5,
+          -6.25
+        ],
+        [
+          510,
+          -6.25
+        ],
+        [
+          513.75,
+          -6.25
+        ],
+        [
+          517.5,
+          -6.25
+        ],
+        [
+          521.25,
+          -6.25
+        ],
+        [
+          526.25,
+          -6.25
+        ],
+        [
+          530,
+          -6.25
+        ],
+        [
+          533.75,
+          -6.25
+        ],
+        [
+          536.25,
+          -6.25
+        ],
+        [
+          540,
+          -6.25
+        ],
+        [
+          542.5,
+          -6.25
+        ],
+        [
+          545,
+          -6.25
+        ],
+        [
+          548.75,
+          -6.25
+        ],
+        [
+          553.75,
+          -6.25
+        ],
+        [
+          557.5,
+          -6.25
+        ],
+        [
+          560,
+          -6.25
+        ],
+        [
+          565,
+          -6.25
+        ],
+        [
+          568.75,
+          -6.25
+        ],
+        [
+          572.5,
+          -6.25
+        ],
+        [
+          577.5,
+          -6.25
+        ],
+        [
+          580,
+          -6.25
+        ],
+        [
+          582.5,
+          -6.25
+        ],
+        [
+          586.25,
+          -6.25
+        ],
+        [
+          587.5,
+          -6.25
+        ],
+        [
+          590,
+          -6.25
+        ],
+        [
+          591.25,
+          -6.25
+        ],
+        [
+          592.5,
+          -6.25
+        ],
+        [
+          595,
+          -6.25
+        ],
+        [
+          596.25,
+          -6.25
+        ],
+        [
+          598.75,
+          -6.25
+        ],
+        [
+          602.5,
+          -6.25
+        ],
+        [
+          605,
+          -6.25
+        ],
+        [
+          605,
+          -6.25
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "simulatePressure": true,
+      "pressures": []
+    },
+    {
+      "type": "text",
+      "version": 440,
+      "versionNonce": 422498536,
+      "index": "bDd",
+      "isDeleted": false,
+      "id": "bwar5hqmolMNeFXxwbalJ",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 614.3091159396702,
+      "y": 1247.9722222222222,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 665.687744140625,
+      "height": 35,
+      "seed": 444189655,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729524080738,
+      "link": null,
+      "locked": false,
+      "fontSize": 28,
+      "fontFamily": 5,
+      "text": "Recycling entities Strategy(Aka: CimiterySystem)",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "Recycling entities Strategy(Aka: CimiterySystem)",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "text",
+      "version": 3145,
+      "versionNonce": 34983144,
+      "index": "bDe",
+      "isDeleted": false,
+      "id": "UEiGFF1tic0bJQq4JnwdI",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 609.3091159396702,
+      "y": 1307.9722222222222,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 677.4796142578125,
+      "height": 775,
+      "seed": 52443383,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729524983627,
+      "link": null,
+      "locked": false,
+      "fontSize": 20,
+      "fontFamily": 5,
+      "text": "In this strategy what i want to do is:\n    - Store during parallel iteration bundles of entities we want to\n      spawn.\n    - Store during parallel iteration entities to remove.\n    - In an exclusive system recycle entities that you must remove\n      and override their data with bundles.\n    - Then we must handle two different cases:\n        1. More entities must die than entities to spawn.\n        2. More entities to span than entities to die.\n\nThe two different cases can be handled in different manners.\nIn the first version my approach is to:\n    - In the case in which we must despawn less entities than\n      how many we must spawn, simply we use spawn_batch to \n      spawn the remaining agents.\n    - In the case in which we must spawn less entities than\n      how many we must despawn, simply i perform a despawn\n      for every of the remanining agents.\n\n\nThe strenghts of this strategy is to not despawn and respawn \nentities of the same Archetype in the same frame/step.\nThe remaining problems is that we don't re-use Archetypes from\nmany frames/steps.\n    \n\nRESULTS:\nIn this case apparently we obtained a better performance boost.\n**ADD A MOTIVATION FOR THIS RESULTS**\n\n    ",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "In this strategy what i want to do is:\n    - Store during parallel iteration bundles of entities we want to\n      spawn.\n    - Store during parallel iteration entities to remove.\n    - In an exclusive system recycle entities that you must remove\n      and override their data with bundles.\n    - Then we must handle two different cases:\n        1. More entities must die than entities to spawn.\n        2. More entities to span than entities to die.\n\nThe two different cases can be handled in different manners.\nIn the first version my approach is to:\n    - In the case in which we must despawn less entities than\n      how many we must spawn, simply we use spawn_batch to \n      spawn the remaining agents.\n    - In the case in which we must spawn less entities than\n      how many we must despawn, simply i perform a despawn\n      for every of the remanining agents.\n\n\nThe strenghts of this strategy is to not despawn and respawn \nentities of the same Archetype in the same frame/step.\nThe remaining problems is that we don't re-use Archetypes from\nmany frames/steps.\n    \n\nRESULTS:\nIn this case apparently we obtained a better performance boost.\n**ADD A MOTIVATION FOR THIS RESULTS**\n\n    ",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "freedraw",
+      "version": 530,
+      "versionNonce": 1102500248,
+      "index": "bDf",
+      "isDeleted": false,
+      "id": "dhAL5tHcjY7uOg2FhEPcG",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 610.5591159396702,
+      "y": 1289.2222222222222,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 658,
+      "height": 6.25,
+      "seed": 582746647,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729524160099,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          2.71900826446281,
+          0
+        ],
+        [
+          6.797520661157025,
+          0
+        ],
+        [
+          10.87603305785124,
+          -1.25
+        ],
+        [
+          21.75206611570248,
+          -1.25
+        ],
+        [
+          29.90909090909091,
+          -1.25
+        ],
+        [
+          35.34710743801653,
+          -1.25
+        ],
+        [
+          38.06611570247934,
+          -1.25
+        ],
+        [
+          43.50413223140496,
+          -2.5
+        ],
+        [
+          51.66115702479339,
+          -2.5
+        ],
+        [
+          59.81818181818182,
+          -5
+        ],
+        [
+          72.05371900826447,
+          -5
+        ],
+        [
+          81.5702479338843,
+          -5
+        ],
+        [
+          87.00826446280992,
+          -5
+        ],
+        [
+          92.44628099173553,
+          -5
+        ],
+        [
+          95.16528925619835,
+          -5
+        ],
+        [
+          100.60330578512396,
+          -5
+        ],
+        [
+          104.68181818181819,
+          -5
+        ],
+        [
+          108.7603305785124,
+          -5
+        ],
+        [
+          111.47933884297521,
+          -5
+        ],
+        [
+          114.19834710743802,
+          -5
+        ],
+        [
+          118.27685950413223,
+          -5
+        ],
+        [
+          123.71487603305785,
+          -5
+        ],
+        [
+          129.15289256198346,
+          -5
+        ],
+        [
+          133.2314049586777,
+          -5
+        ],
+        [
+          137.3099173553719,
+          -5
+        ],
+        [
+          141.38842975206612,
+          -5
+        ],
+        [
+          146.82644628099175,
+          -5
+        ],
+        [
+          152.26446280991735,
+          -5
+        ],
+        [
+          160.4214876033058,
+          -5
+        ],
+        [
+          167.21900826446281,
+          -5
+        ],
+        [
+          174.01652892561984,
+          -5
+        ],
+        [
+          179.45454545454547,
+          -5
+        ],
+        [
+          184.89256198347107,
+          -5
+        ],
+        [
+          190.3305785123967,
+          -3.75
+        ],
+        [
+          195.76859504132233,
+          -3.75
+        ],
+        [
+          201.20661157024793,
+          -3.75
+        ],
+        [
+          206.64462809917356,
+          -3.75
+        ],
+        [
+          210.72314049586777,
+          -3.75
+        ],
+        [
+          217.5206611570248,
+          -3.75
+        ],
+        [
+          224.3181818181818,
+          -3.75
+        ],
+        [
+          232.47520661157026,
+          -3.75
+        ],
+        [
+          237.91322314049586,
+          -3.75
+        ],
+        [
+          246.0702479338843,
+          -3.75
+        ],
+        [
+          252.86776859504133,
+          -3.75
+        ],
+        [
+          258.3057851239669,
+          -3.75
+        ],
+        [
+          262.38429752066116,
+          -3.75
+        ],
+        [
+          269.1818181818182,
+          -3.75
+        ],
+        [
+          274.6198347107438,
+          -3.75
+        ],
+        [
+          280.05785123966945,
+          -3.75
+        ],
+        [
+          285.495867768595,
+          -3.75
+        ],
+        [
+          290.93388429752065,
+          -3.75
+        ],
+        [
+          295.0123966942149,
+          -3.75
+        ],
+        [
+          303.1694214876033,
+          -2.5
+        ],
+        [
+          311.3264462809917,
+          -2.5
+        ],
+        [
+          320.8429752066116,
+          -2.5
+        ],
+        [
+          334.43801652892563,
+          -2.5
+        ],
+        [
+          345.3140495867769,
+          -2.5
+        ],
+        [
+          354.8305785123967,
+          -1.25
+        ],
+        [
+          360.2685950413223,
+          -1.25
+        ],
+        [
+          364.3471074380165,
+          -1.25
+        ],
+        [
+          369.78512396694214,
+          -2.5
+        ],
+        [
+          379.301652892562,
+          -2.5
+        ],
+        [
+          384.73966942148763,
+          -2.5
+        ],
+        [
+          392.89669421487605,
+          -2.5
+        ],
+        [
+          399.6942148760331,
+          -2.5
+        ],
+        [
+          405.1322314049587,
+          -3.75
+        ],
+        [
+          409.2107438016529,
+          -3.75
+        ],
+        [
+          417.36776859504135,
+          -3.75
+        ],
+        [
+          425.52479338842977,
+          -3.75
+        ],
+        [
+          435.0413223140496,
+          -3.75
+        ],
+        [
+          447.27685950413223,
+          -5
+        ],
+        [
+          458.1528925619835,
+          -5
+        ],
+        [
+          466.3099173553719,
+          -5
+        ],
+        [
+          473.10743801652893,
+          -6.25
+        ],
+        [
+          479.90495867768595,
+          -6.25
+        ],
+        [
+          488.06198347107437,
+          -6.25
+        ],
+        [
+          493.5,
+          -6.25
+        ],
+        [
+          504.37603305785126,
+          -6.25
+        ],
+        [
+          508.45454545454544,
+          -6.25
+        ],
+        [
+          513.8925619834711,
+          -6.25
+        ],
+        [
+          520.6900826446281,
+          -6.25
+        ],
+        [
+          526.1280991735538,
+          -6.25
+        ],
+        [
+          528.8471074380166,
+          -6.25
+        ],
+        [
+          532.9256198347108,
+          -6.25
+        ],
+        [
+          534.2851239669421,
+          -6.25
+        ],
+        [
+          537.0041322314049,
+          -6.25
+        ],
+        [
+          539.7231404958678,
+          -6.25
+        ],
+        [
+          543.801652892562,
+          -6.25
+        ],
+        [
+          545.1611570247934,
+          -6.25
+        ],
+        [
+          547.8801652892562,
+          -6.25
+        ],
+        [
+          549.2396694214876,
+          -6.25
+        ],
+        [
+          551.9586776859504,
+          -6.25
+        ],
+        [
+          554.6776859504132,
+          -6.25
+        ],
+        [
+          558.7561983471074,
+          -6.25
+        ],
+        [
+          562.8347107438017,
+          -6.25
+        ],
+        [
+          566.9132231404959,
+          -6.25
+        ],
+        [
+          572.3512396694215,
+          -6.25
+        ],
+        [
+          576.4297520661157,
+          -6.25
+        ],
+        [
+          580.50826446281,
+          -6.25
+        ],
+        [
+          583.2272727272727,
+          -6.25
+        ],
+        [
+          587.305785123967,
+          -6.25
+        ],
+        [
+          590.0247933884298,
+          -6.25
+        ],
+        [
+          592.7438016528926,
+          -6.25
+        ],
+        [
+          596.8223140495868,
+          -6.25
+        ],
+        [
+          602.2603305785124,
+          -6.25
+        ],
+        [
+          606.3388429752066,
+          -6.25
+        ],
+        [
+          609.0578512396694,
+          -6.25
+        ],
+        [
+          614.4958677685951,
+          -6.25
+        ],
+        [
+          618.5743801652893,
+          -6.25
+        ],
+        [
+          622.6528925619834,
+          -6.25
+        ],
+        [
+          628.0909090909091,
+          -6.25
+        ],
+        [
+          630.8099173553719,
+          -6.25
+        ],
+        [
+          633.5289256198347,
+          -6.25
+        ],
+        [
+          637.6074380165289,
+          -6.25
+        ],
+        [
+          638.9669421487604,
+          -6.25
+        ],
+        [
+          641.6859504132232,
+          -6.25
+        ],
+        [
+          643.0454545454545,
+          -6.25
+        ],
+        [
+          644.404958677686,
+          -6.25
+        ],
+        [
+          647.1239669421487,
+          -6.25
+        ],
+        [
+          648.4834710743802,
+          -6.25
+        ],
+        [
+          651.202479338843,
+          -6.25
+        ],
+        [
+          655.2809917355372,
+          -6.25
+        ],
+        [
+          658,
+          -6.25
+        ],
+        [
+          658,
+          -6.25
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "simulatePressure": true,
+      "pressures": []
+    },
+    {
+      "type": "text",
+      "version": 30,
+      "versionNonce": 1536229785,
+      "index": "bDh",
+      "isDeleted": false,
+      "id": "KrQ7Rrl3HlKZGyAbm7ZAY",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 1559.3055555555547,
+      "y": 177.13888888888894,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "width": 324.35992431640625,
+      "height": 45,
+      "seed": 1356135383,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729084446336,
+      "link": null,
+      "locked": false,
+      "fontSize": 36,
+      "fontFamily": 5,
+      "text": "GENERAL NOTES:",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "GENERAL NOTES:",
+      "autoResize": true,
+      "lineHeight": 1.25
+    },
+    {
+      "type": "freedraw",
+      "version": 37,
+      "versionNonce": 249727255,
+      "index": "bDk",
+      "isDeleted": false,
+      "id": "4GVQfLWYfbOs5OeeyLp2g",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 1562.6388888888882,
+      "y": 226.02777777777783,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "width": 424.44444444444434,
+      "height": 6.666666666666686,
+      "seed": 1301678905,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729084458251,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          1.1111111111110858,
+          0
+        ],
+        [
+          2.2222222222221717,
+          0
+        ],
+        [
+          7.777777777777828,
+          0
+        ],
+        [
+          15.55555555555543,
+          0
+        ],
+        [
+          30,
+          0
+        ],
+        [
+          51.111111111111086,
+          0
+        ],
+        [
+          72.22222222222217,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          126.66666666666652,
+          0
+        ],
+        [
+          146.66666666666652,
+          -2.2222222222222285
+        ],
+        [
+          170,
+          -2.2222222222222285
+        ],
+        [
+          191.1111111111111,
+          -2.2222222222222285
+        ],
+        [
+          207.77777777777783,
+          -4.444444444444457
+        ],
+        [
+          223.33333333333326,
+          -5.555555555555543
+        ],
+        [
+          237.77777777777783,
+          -5.555555555555543
+        ],
+        [
+          252.22222222222217,
+          -5.555555555555543
+        ],
+        [
+          272.2222222222222,
+          -5.555555555555543
+        ],
+        [
+          288.8888888888889,
+          -5.555555555555543
+        ],
+        [
+          304.44444444444434,
+          -4.444444444444457
+        ],
+        [
+          316.6666666666665,
+          -4.444444444444457
+        ],
+        [
+          326.6666666666665,
+          -2.2222222222222285
+        ],
+        [
+          335.55555555555543,
+          -2.2222222222222285
+        ],
+        [
+          345.55555555555543,
+          -2.2222222222222285
+        ],
+        [
+          355.55555555555543,
+          -2.2222222222222285
+        ],
+        [
+          364.44444444444434,
+          -2.2222222222222285
+        ],
+        [
+          373.33333333333326,
+          -4.444444444444457
+        ],
+        [
+          386.6666666666665,
+          -5.555555555555543
+        ],
+        [
+          395.55555555555543,
+          -5.555555555555543
+        ],
+        [
+          403.33333333333326,
+          -5.555555555555543
+        ],
+        [
+          410,
+          -5.555555555555543
+        ],
+        [
+          414.44444444444434,
+          -6.666666666666686
+        ],
+        [
+          417.7777777777776,
+          -6.666666666666686
+        ],
+        [
+          423.33333333333326,
+          -6.666666666666686
+        ],
+        [
+          424.44444444444434,
+          -6.666666666666686
+        ],
+        [
+          424.44444444444434,
+          -6.666666666666686
+        ]
+      ],
+      "lastCommittedPoint": null,
+      "simulatePressure": true,
+      "pressures": []
+    },
+    {
+      "type": "text",
+      "version": 1064,
+      "versionNonce": 653749736,
+      "index": "bDl",
+      "isDeleted": false,
+      "id": "3qRKMEJenIakaithyfvT1",
+      "fillStyle": "solid",
+      "strokeWidth": 1,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 1565.9722222222215,
+      "y": 244.91666666666669,
+      "strokeColor": "#e03131",
+      "backgroundColor": "transparent",
+      "width": 857.159423828125,
+      "height": 300,
+      "seed": 1594692793,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1729520281657,
+      "link": null,
+      "locked": false,
+      "fontSize": 20,
+      "fontFamily": 5,
+      "text": "- To store entities in parallel we can use a structure that use a vec for each tread.\n  I must see the factability of this, i think that we can handle that without any\n  real race condition...(must see factability of that).\n  Create this kind of data structures is not the easiest thing to do. I noticed that\n  in some manner ParallelCommands need to do that. So i opened an issue(\n  https://github.com/bevyengine/bevy/discussions/15471) to understand on what data \n  structure ParallelCommands is based. I discovered that is based on: Parallel(\n  https://doc.qu1x.dev/bevy_trackball/bevy/utils/struct.Parallel.html).\n- I discovered that   \n- We must evaluate any Unsafe cell that we can use, cause part of this code can be\n  embedded in Simulation and became a \"not modifiable\" code.  \n",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "- To store entities in parallel we can use a structure that use a vec for each tread.\n  I must see the factability of this, i think that we can handle that without any\n  real race condition...(must see factability of that).\n  Create this kind of data structures is not the easiest thing to do. I noticed that\n  in some manner ParallelCommands need to do that. So i opened an issue(\n  https://github.com/bevyengine/bevy/discussions/15471) to understand on what data \n  structure ParallelCommands is based. I discovered that is based on: Parallel(\n  https://doc.qu1x.dev/bevy_trackball/bevy/utils/struct.Parallel.html).\n- I discovered that   \n- We must evaluate any Unsafe cell that we can use, cause part of this code can be\n  embedded in Simulation and became a \"not modifiable\" code.  \n",
+      "autoResize": true,
+      "lineHeight": 1.25
+    }
+  ],
+  "appState": {
+    "gridSize": 20,
+    "gridStep": 5,
+    "gridModeEnabled": false,
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
