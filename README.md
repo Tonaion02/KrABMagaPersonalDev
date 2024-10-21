@@ -2,7 +2,8 @@
 
 The following is my personal repository for development of [KrABMaga](https://krabmaga.github.io/) during my apprenticeship.
 
-My work is focused above trying to squeeze performance of the framework using the [ECS](https://en.wikipedia.org/wiki/Entity_component_system#:~:text=Entity%E2%80%93component%E2%80%93system) of [Bevy](https://bevyengine.org/). 
+My work is focused above trying to squeeze performance of the framework using the [ECS](https://en.wikipedia.org/wiki/Entity_component_system#:~:text=Entity%E2%80%93component%E2%80%93system) of [Bevy](https://bevyengine.org/).
+I am also exploring the problems and the limits in the use of that.
 
 # EXPLORE MY EXPERIMENTS
 
@@ -33,6 +34,10 @@ Where:
 - NUM_AGENTS are the number of agents of the simulation.
 - DIM_X is the horizzontal dimension of the enviroment.(is used also like vertical dimension of enviroment)
 - STEPS is the number of steps to execute for the simulation.
+
+# HOW I HAVE MADE THE BENCHMARKING
+
+For benchmarking i have used [tracy](https://github.com/wolfpld/tracy).
 
 # WOLFSHEEPGRASS EXPERIMENTS
 

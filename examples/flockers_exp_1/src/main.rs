@@ -160,6 +160,7 @@ fn main() {
 // Main used when only the simulation should run, without any visualization.
 
 
+
 fn build_simulation(mut simulation: Simulation) -> Simulation {
     // T: commented from me
     // let field: Field2D<Entity> = Field2D::new(*DIM_X, *DIM_Y, DISCRETIZATION, TOROIDAL);
@@ -203,6 +204,7 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
 
     simulation
 }
+
 
 
 // TODO couple DBRead and DBWrite queries in a single systemparam
