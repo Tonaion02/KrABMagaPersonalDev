@@ -15,6 +15,14 @@ use std::io::prelude::*;
 
 use core::f32::consts::PI;
 
+// T: importing rayon (START)
+extern crate rayon;
+use crate::rayon::iter::IntoParallelRefIterator;
+use crate::rayon::iter::IntoParallelRefMutIterator;
+use crate::rayon::iter::ParallelIterator;
+use crate::rayon::iter::IndexedParallelIterator;
+// T: importing rayon (END)
+
 use krabmaga::engine::Entity;
 use krabmaga::engine::Query;
 use krabmaga::engine::Res;
@@ -23,8 +31,10 @@ use krabmaga::engine::components::double_buffer::DBRead;
 use krabmaga::engine::components::double_buffer::DBWrite;
 use krabmaga::engine::components::position::Real2DTranslation;
 use krabmaga::engine::fields::field_2d::Field2D;
+// T: TODO move this methods to the right place (START)
 use krabmaga::engine::fields::field_2d::toroidal_distance; 
 use krabmaga::engine::fields::field_2d::toroidal_transform;
+// T: TODO move this methods to the right place (END)
 use krabmaga::engine::location::Real2D;
 use krabmaga::engine::location::Int2D;
 use krabmaga::engine::resources::simulation_descriptor::SimulationDescriptorT;
@@ -32,6 +42,15 @@ use krabmaga::engine::rng::RNG;
 use krabmaga::engine::simulation::Simulation;
 use krabmaga::engine::Commands;
 use krabmaga::engine::components::double_buffer::DoubleBuffered;
+
+use krabmaga::engine::bevy_prelude::*;
+
+use krabmaga::engine::Update;
+use krabmaga::engine::simulation::SimulationSet::Step;
+use krabmaga::engine::simulation::SimulationSet::AfterStep;
+use krabmaga::engine::simulation::SimulationSet::BeforeStep;
+
+use krabmaga::engine::bevy_prelude::IntoSystemSetConfigs;
 
 use crate::model::bird::Bird; 
 use crate::model::bird::LastReal2D;
@@ -144,12 +163,27 @@ fn main() {
 fn build_simulation(mut simulation: Simulation) -> Simulation {
     // T: commented from me
     // let field: Field2D<Entity> = Field2D::new(*DIM_X, *DIM_Y, DISCRETIZATION, TOROIDAL);
-    
+
+    // T: Setting rayon's enviroment variable (START)
+    // T: TODO move this in the correct place
+
+    rayon::ThreadPoolBuilder::new().
+    num_threads(*NUM_THREADS).
+
+    // start_handler(|real_thread_id| {
+    //     thread_id.with(|cell| { cell.set(real_thread_id); });
+    // }).
+    build_global().
+    unwrap();
+    // T: Setting rayon's enviroment variable (END)
+
+
     let mut simulation = simulation
         .with_title(String::from(SIMULATION_TITLE))
         .register_double_buffer::<Real2DTranslation>()
         .register_double_buffer::<LastReal2D>()
-        .register_step_handler(step_system)
+        // T: commented because outdated
+        // .register_step_handler(step_system)
         .with_num_threads(*NUM_THREADS)
         .with_simulation_dim(Real2D {x: *DIM_X, y: *DIM_Y});
         // .with_rng(SEED) // We cannot use this during parallel iteration due to mutable access being required for RNG.
@@ -162,6 +196,11 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
 
     simulation = simulation.register_init_world(init_world);
 
+    let app = &mut simulation.app;
+
+    app.add_systems(Update, step_system.in_set(Step));
+    app.add_systems(Update, update_agents_grid.in_set(BeforeStep));
+
     simulation
 }
 
@@ -172,12 +211,18 @@ fn build_simulation(mut simulation: Simulation) -> Simulation {
 fn step_system(
     mut query: Query<(Entity, &Bird, &DBRead<Real2DTranslation>, &DBRead<LastReal2D>, &mut DBWrite<Real2DTranslation>, &mut DBWrite<LastReal2D>)>,
     neighbour_query: Query<(&DBRead<Real2DTranslation>, &DBRead<LastReal2D>)>,
-    field_query: Query<&Field2D<Entity>>,
+
+    query_grid: Query<( &ParDenseBagGrid2D_flockers_exp_1<Entity, FlockerGrid>)>,
+
+    // T: Commented because outdated
+    // field_query: Query<&Field2D<Entity>>,
+    
     config: Res<SimulationDescriptorT>
 ) {
-    
-    let field = field_query.single();
-    
+
+    // T: Commented because outdated
+    // let field = field_query.single();
+    let grid = query_grid.single();
     
     
     //println!("Step #{}", config.current_step);
@@ -191,7 +236,9 @@ fn step_system(
         // T: check what entity you can put in.
         // T: TODO verify if we can evitate to re-allocate each time buffer to store
         // T: neighbours. Probably we can use: https://doc.rust-lang.org/std/macro.thread_local.html 
-        let mut neighbours = field.get_neighbors_within_relax_distance(cur_pos, 10.);
+        // T: commented because outdated
+        // let mut neighbours = field.get_neighbors_within_relax_distance(cur_pos, 10.);
+        let mut neighbours = grid.get_neighbors_within_relax_distance(cur_pos, 10.);
         neighbours.retain(|x| *x != entity);
         
         let (mut x_avoidance, mut y_avoidance) = (0., 0.);
@@ -345,8 +392,13 @@ fn init_world(
         let mut rng = RNG::new(SEED, bird_id as u64);
         let r1: f32 = rng.gen();
         let r2: f32 = rng.gen();
-        
-        let position = Real2D { x: *DIM_X * r1, y: *DIM_Y * r2 };
+
+        // T: TODO adjust the position
+        let position = Real2D { x: rng.gen_range(0. .. *DIM_X), y: rng.gen_range(0. .. *DIM_Y) };
+        if (position.x as i32 + (position.y as i32) * *DIM_X as i32) > *DIM_X as i32 * *DIM_Y as i32 {
+           println!("ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"); 
+        }
+
         let current_pos = Real2DTranslation(position);
 
         let entity_commands = commands.spawn((
