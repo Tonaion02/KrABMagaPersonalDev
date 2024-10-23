@@ -103,7 +103,7 @@ impl<O: Eq + Hash + Clone + Copy + Send, M: Sized> ParDenseBagGrid2D_flockers_ex
                     neighbors.push(*elem);
                 }
 
-                // T: TODO understand if this is necessary
+                // T: TODO check if this is necessary
                 std::mem::drop(bag);
             }
         }
@@ -115,6 +115,7 @@ impl<O: Eq + Hash + Clone + Copy + Send, M: Sized> ParDenseBagGrid2D_flockers_ex
     // T: NOTES i can't understand what function does
     // T: but like a good programmer, this isn't a problem
     // T: for me.
+    // T: TODO move this method out or make it static or make it macro
     fn t_transform(&self, n: i32, size: i32) -> i32 {
         if n >= 0 {
             n % size
@@ -124,7 +125,8 @@ impl<O: Eq + Hash + Clone + Copy + Send, M: Sized> ParDenseBagGrid2D_flockers_ex
     }
 
     // T: NOTES who know this method what does
-    fn discretize(&self, loc: &Real2D) -> Int2D {
+    // T: TODO move this method out or make it static or make it macro
+    pub fn discretize(&self, loc: &Real2D) -> Int2D {
         let x_floor = (loc.x / self.discretization).floor();
         let x_floor = x_floor as i32;
 

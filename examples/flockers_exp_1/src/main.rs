@@ -344,13 +344,16 @@ fn update_agents_grid(
 
     query_agents.par_iter().for_each(|(entity, bird, loc)| {
 
-        // T: TODO consider to create some methods to convert from Real2D to Int2D
-        let mut bag = grid.get_write_bag(&Int2D { x: loc.0.0.x as i32, y: loc.0.0.y as i32 });
+        // T: TODO add the missing discretization(WARNING: probably it's the cause of the random crashes)
+        let loc = grid.discretize(&loc.0.0);
+
+        let mut bag = grid.get_write_bag(&loc);
         bag.push(entity);
     });
 
 }
 // T: Run before step (END)
+
 
 
 
