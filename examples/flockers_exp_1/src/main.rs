@@ -502,10 +502,15 @@ fn main()
 
 // T: TODO check what macro make this work before ECS experiment
 fn save_elapsed_time(elapsed_time: core::time::Duration) {
-    //Write on file the elapsed time
-    let path = Path::new("C:/source/Python/automaticKrABMagaTesting/garbage/elapsed_time.txt");
-    let display = path.display();
     
+    use std::path::Path;
+    use std::fs::File;
+    use std::io::prelude::*;
+    
+    //Write on file the elapsed time
+    let path = Path::new("elapsed_time.txt");
+    let display = path.display();
+
     // Open a file in write-only mode
     let mut file = match File::create(&path) {
         Err(why) => panic!("couldn't create {}: {}", display, why),
